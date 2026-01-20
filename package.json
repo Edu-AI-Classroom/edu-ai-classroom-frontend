@@ -2,19 +2,25 @@
 	"name": "edu-ai-classroom-frontend",
 	"version": "0.1.0",
 	"private": true,
+	"engines": {
+		"node": ">=22",
+		"pnpm": ">=10"
+	},
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
 		"format": "biome format",
+		"format:write": "biome format --write",
 		"lint": "biome lint .",
-		"check": "biome check --write .",
+		"lint:write": "biome lint --write .",
+		"check": "biome check .",
+		"check:write": "biome check . --write",
 		"prepare": "husky"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,css,md}": [
-			"biome check --write",
-			"biome format --write"
+			"biome check --write"
 		]
 	},
 	"dependencies": {
@@ -41,10 +47,13 @@
 		"@commitlint/cli": "^20.3.1",
 		"@commitlint/config-conventional": "^20.3.1",
 		"@tailwindcss/postcss": "^4",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.2",
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"husky": "^9.1.7",
+		"jest": "^30.2.0",
 		"lint-staged": "^16.2.7",
 		"tailwindcss": "^4",
 		"typescript": "^5"
