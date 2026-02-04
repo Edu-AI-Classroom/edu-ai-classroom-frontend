@@ -1,6 +1,6 @@
 // app/(landing)/layout.tsx
-import { Footer } from '@/features/landing/footer';
-import { Header } from '@/features/landing/header';
+import { Footer } from '@/components/landing/footer';
+import { Header } from '@/components/landing/header';
 
 export default function LandingLayout({ children }: { children: React.ReactNode }) {
 	return (
