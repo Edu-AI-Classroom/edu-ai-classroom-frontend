@@ -1,45 +1,53 @@
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
-import { Geist_Mono, Inter } from 'next/font/google';
-import { Toaster } from 'sonner';
-import { ThemeProvider } from '@/components/theme-provider';
-import './globals.css';
-import { ClerkProvider } from '@clerk/nextjs';
+import { Caveat, Nunito } from 'next/font/google';
+import type React from 'react';
+import '@/app/globals.css';
 
-const inter = Inter({
-	variable: '--font-inter',
-	subsets: ['latin', 'latin-ext'],
+const _nunito = Nunito({
+	subsets: ['latin'],
+	weight: ['400', '600', '700', '800'],
 });
-
-const geistMono = Geist_Mono({
-	variable: '--font-geist-mono',
-	subsets: ['latin', 'latin-ext'],
+const _caveat = Caveat({
+	subsets: ['latin'],
+	weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
-	title: 'Edu AI Classroom',
-	description: 'Nền tảng hỗ trợ giảng dạy và học tập sử dụng AI',
+	title: 'Teachify - AI-Powered Learning Management System',
+	description:
+		'Smarter Teaching. Better Learning. An AI-assisted LMS helping teachers design lessons, assignments, and exams with drag-and-drop Canvas.',
+	generator: 'v0.app',
+	icons: {
+		icon: [
+			{
+				url: '/icon-light-32x32.png',
+				media: '(prefers-color-scheme: light)',
+			},
+			{
+				url: '/icon-dark-32x32.png',
+				media: '(prefers-color-scheme: dark)',
+			},
+			{
+				url: '/icon.svg',
+				type: 'image/svg+xml',
+			},
+		],
+		apple: '/apple-icon.png',
+	},
 };
 
-export default async function AppLayout({
+export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<ClerkProvider>
-			<html lang="en" suppressHydrationWarning>
-				<body className={`${inter.variable} ${geistMono.variable} antialiased`}>
-					<ThemeProvider
-						attribute="class"
-						defaultTheme="system"
-						enableSystem
-						disableTransitionOnChange
-					>
-						{children}
-						<Toaster />
-					</ThemeProvider>
-				</body>
-			</html>
-		</ClerkProvider>
+		<html lang="en">
+			<body className={`font-sans antialiased`}>
+				{children}
+				<Analytics />
+			</body>
+		</html>
 	);
 }
