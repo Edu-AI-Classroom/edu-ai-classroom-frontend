@@ -12,21 +12,40 @@ import {
 	Users,
 } from 'lucide-react';
 import type React from 'react';
-import {
-	type ClassData,
-	getActivityForClass,
-	getAttentionItemsForClass,
-	getClassStats,
-} from '@/lib/mock-data';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassOverviewProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
 export default function ClassOverview({ classData }: ClassOverviewProps) {
-	const stats = getClassStats(classData.id);
-	const attentionItems = getAttentionItemsForClass(classData.id);
-	const recentActivity = getActivityForClass(classData.id);
+	const { data: studentResponse } = useClassStudents(classData.id);
+	const students = studentResponse?.data ?? [];
+
+	const stats = {
+		totalStudents: classData.studentCount ?? students.length,
+		submissionRate: 0,
+		needsAttention: 0,
+		avgGrade: 0,
+		avgAttendance: 0,
+	};
+
+	const attentionItems: Array<{
+		id: string;
+		type: 'meeting' | 'grading' | 'deadline';
+		title: string;
+		description: string;
+		dueDate?: string;
+		priority: 'high' | 'medium' | 'low';
+	}> = [];
+
+	const recentActivity: Array<{
+		id: string;
+		studentName: string;
+		description: string;
+		timestamp: string;
+	}> = [];
 
 	return (
 		<div className="space-y-6">

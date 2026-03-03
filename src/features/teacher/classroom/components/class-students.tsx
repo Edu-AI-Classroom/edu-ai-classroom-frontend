@@ -19,21 +19,44 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { type ClassData, getStudentsForClass } from '@/lib/mock-data';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import type { Student as ApiStudent } from '@/types/class';
+import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassStudentsProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
+type UiStudentStatus = 'all' | 'excellent' | 'on-track' | 'needs-attention';
+
+type UiStudent = {
+	id: number;
+	name: string;
+	email: string;
+	attendance: number;
+	averageGrade: number;
+	submissionRate: number;
+	status: Exclude<UiStudentStatus, 'all'>;
+};
+
+const mapStudentToUi = (student: ApiStudent): UiStudent => ({
+	id: Number(student.userId),
+	name: student.userName ?? '',
+	email: student.email ?? '',
+	attendance: 0,
+	averageGrade: 0,
+	submissionRate: 0,
+	status: 'on-track',
+});
+
 export default function ClassStudents({ classData }: ClassStudentsProps) {
-	const students = getStudentsForClass(classData.id);
+	const { data: studentsResponse } = useClassStudents(classData.id);
+	const students = (studentsResponse?.data ?? []).map(mapStudentToUi);
 	const [searchQuery, setSearchQuery] = useState('');
-	const [filterStatus, setFilterStatus] = useState<
-		'all' | 'excellent' | 'on-track' | 'needs-attention'
-	>('all');
+	const [filterStatus, setFilterStatus] = useState<UiStudentStatus>('all');
 
 	const filteredStudents = students.filter((student) => {
-		const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchesSearch = (student.name ?? '').toLowerCase().includes(searchQuery.toLowerCase());
 		const matchesFilter = filterStatus === 'all' || student.status === filterStatus;
 		return matchesSearch && matchesFilter;
 	});

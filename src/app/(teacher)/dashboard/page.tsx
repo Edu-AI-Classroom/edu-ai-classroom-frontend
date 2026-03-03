@@ -13,46 +13,62 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { classes, currentTeacher } from '@/lib/mock-data';
-
-const features = [
-	{
-		id: 'classroom',
-		title: 'Classroom Management',
-		description: 'Manage your classes, students, assignments, and grades all in one place.',
-		icon: Users,
-		href: '/classroom',
-		color: '#F5B041',
-		stats: `${classes.length} Classes`,
-	},
-	{
-		id: 'canvas',
-		title: 'Lesson Canvas',
-		description: 'Design interactive lessons with our AI-powered drag-and-drop builder.',
-		icon: LayoutGrid,
-		href: '/canvas',
-		color: '#A8D5BA',
-		stats: '12 Lessons',
-	},
-	{
-		id: 'library',
-		title: 'Content Library',
-		description: 'Access and organize your teaching materials, resources, and media.',
-		icon: FolderOpen,
-		href: '/library',
-		color: '#C5B4E3',
-		stats: '48 Resources',
-	},
-];
-
-const quickInsights = [
-	{ label: 'Pending Grading', value: 25, icon: FileCheck, color: '#F5B041' },
-	{ label: 'Upcoming Deadlines', value: 10, icon: Clock, color: '#E57373' },
-	{ label: 'Total Students', value: 109, icon: Users, color: '#A8D5BA' },
-];
+import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import { useClassList } from '@/hooks/queries/class/use-class-query';
 
 export default function TeacherDashboard() {
+	const authUser = useAuthUser();
+	const { data: classListResponse } = useClassList();
 	const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+	const classes = classListResponse?.data ?? [];
+	const classroomCount = classes.length;
+	const totalStudents = classes.reduce((sum, classItem) => sum + (classItem.studentCount ?? 0), 0);
+
+	const teacherName = authUser?.userName ?? 'Teacher';
+	const teacherRole = authUser?.role ?? 'TEACHER';
+	const teacherFirstName = teacherName.split(' ')[1] ?? teacherName.split(' ')[0] ?? 'Teacher';
+
+	const features = [
+		{
+			id: 'classroom',
+			title: 'Classroom Management',
+			description: 'Manage your classes, students, assignments, and grades all in one place.',
+			icon: Users,
+			href: '/classroom',
+			color: '#F5B041',
+			stats: `${classroomCount} Classes`,
+		},
+		{
+			id: 'canvas',
+			title: 'Lesson Canvas',
+			description: 'Design interactive lessons with our AI-powered drag-and-drop builder.',
+			icon: LayoutGrid,
+			href: '/canvas',
+			color: '#A8D5BA',
+			stats: '12 Lessons',
+		},
+		{
+			id: 'library',
+			title: 'Content Library',
+			description: 'Access and organize your teaching materials, resources, and media.',
+			icon: FolderOpen,
+			href: '/library',
+			color: '#C5B4E3',
+			stats: '48 Resources',
+		},
+	];
+
+	const quickInsights = [
+		{ label: 'Pending Grading', value: 0, icon: FileCheck, color: '#F5B041' },
+		{ label: 'Upcoming Deadlines', value: 0, icon: Clock, color: '#E57373' },
+		{
+			label: 'Total Students',
+			value: totalStudents,
+			icon: Users,
+			color: '#A8D5BA',
+		},
+	];
 
 	return (
 		<div className="min-h-screen bg-[#FAF9F6] grid-paper">
@@ -76,14 +92,14 @@ export default function TeacherDashboard() {
 
 						<div className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5]">
 							<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-								{currentTeacher.name
+								{teacherName
 									.split(' ')
 									.map((n) => n[0])
 									.join('')}
 							</div>
 							<div className="hidden sm:block">
-								<p className="font-sans font-semibold text-sm text-[#333]">{currentTeacher.name}</p>
-								<p className="text-xs text-[#666]">{currentTeacher.role}</p>
+								<p className="font-sans font-semibold text-sm text-[#333]">{teacherName}</p>
+								<p className="text-xs text-[#666]">{teacherRole}</p>
 							</div>
 						</div>
 					</div>
@@ -95,7 +111,7 @@ export default function TeacherDashboard() {
 				{/* Welcome Section */}
 				<div className="mb-10">
 					<h1 className="font-sans font-bold text-3xl text-[#333] mb-2">
-						Good morning, {currentTeacher.name.split(' ')[1]}!
+						Good morning, {teacherFirstName}!
 					</h1>
 					<p className="font-serif text-xl text-[#666]">Ready to make learning magical today?</p>
 				</div>

@@ -27,7 +27,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { type ClassData, classes, currentTeacher } from '@/lib/mock-data';
+import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import type { ClassroomUiData } from './classroom.mapper';
 import ClassAssignments from './components/class-assignments';
 import ClassFeed from './components/class-feed';
 import ClassGrades from './components/class-grades';
@@ -44,9 +45,10 @@ type TabType =
 	| 'settings';
 
 interface ClassroomWorkspaceProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
+	classOptions: ClassroomUiData[];
 	onBack: () => void;
-	onSwitchClass: (classId: string) => void;
+	onSwitchClass: (classId: number) => void;
 }
 
 const tabs = [
@@ -61,9 +63,12 @@ const tabs = [
 
 export default function ClassroomWorkspace({
 	classData,
+	classOptions,
 	onBack,
 	onSwitchClass,
 }: ClassroomWorkspaceProps) {
+	const authUser = useAuthUser();
+	const teacherName = authUser?.userName ?? 'Teacher';
 	const [activeTab, setActiveTab] = useState<TabType>('overview');
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -157,7 +162,7 @@ export default function ClassroomWorkspace({
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="start" className="w-56 rounded-xl">
-								{classes.map((c) => (
+								{classOptions.map((c) => (
 									<DropdownMenuItem
 										key={c.id}
 										onClick={() => onSwitchClass(c.id)}
@@ -286,7 +291,7 @@ export default function ClassroomWorkspace({
 
 							<div className="hidden sm:flex items-center gap-3 pl-3 border-l border-[#E0DCD5]">
 								<div className="w-9 h-9 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold text-sm">
-									{currentTeacher.name
+									{teacherName
 										.split(' ')
 										.map((n) => n[0])
 										.join('')}

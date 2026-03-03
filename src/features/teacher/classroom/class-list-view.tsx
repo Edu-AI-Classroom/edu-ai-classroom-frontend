@@ -15,16 +15,19 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { type ClassData, currentTeacher } from '@/lib/mock-data';
+import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import type { ClassroomUiData } from './classroom.mapper';
 
 interface ClassListViewProps {
-	classes: ClassData[];
-	onSelectClass: (classId: string) => void;
+	classes: ClassroomUiData[];
+	onSelectClass: (classId: number) => void;
 }
 
 export default function ClassListView({ classes, onSelectClass }: ClassListViewProps) {
+	const authUser = useAuthUser();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const teacherName = authUser?.userName ?? 'Teacher';
 
 	const filteredClasses = classes.filter(
 		(c) =>
@@ -56,7 +59,7 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 
 						<div className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5]">
 							<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-								{currentTeacher.name
+								{teacherName
 									.split(' ')
 									.map((n) => n[0])
 									.join('')}
@@ -209,7 +212,11 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 						<div className="w-16 h-16 rounded-full bg-[#F0EDE8] flex items-center justify-center mx-auto mb-4">
 							<Search className="w-8 h-8 text-[#999]" />
 						</div>
-						<p className="text-[#666]">No classes found matching your search.</p>
+						<p className="text-[#666]">
+							{classes.length === 0
+								? 'No classes available yet. Create your first class.'
+								: 'No classes found matching your search.'}
+						</p>
 					</div>
 				)}
 			</main>

@@ -25,10 +25,10 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { type ClassData, getAssignmentsForClass } from '@/lib/mock-data';
+import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassAssignmentsProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
 const typeIcons = {
@@ -46,7 +46,18 @@ const typeColors = {
 };
 
 export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
-	const assignments = getAssignmentsForClass(classData.id);
+	const classId = classData.id;
+	const assignments: Array<{
+		id: string;
+		title: string;
+		description: string;
+		dueDate: string;
+		totalPoints: number;
+		submissionCount: number;
+		totalStudents: number;
+		type: 'homework' | 'quiz' | 'project' | 'exam';
+		status: 'active' | 'past-due' | 'graded';
+	}> = [];
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterType, setFilterType] = useState<'all' | 'homework' | 'quiz' | 'project' | 'exam'>(
 		'all',
@@ -54,6 +65,7 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 	const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'past-due' | 'graded'>('all');
 
 	const filteredAssignments = assignments.filter((assignment) => {
+		if (classId <= 0) return false;
 		const matchesSearch = assignment.title.toLowerCase().includes(searchQuery.toLowerCase());
 		const matchesType = filterType === 'all' || assignment.type === filterType;
 		const matchesStatus = filterStatus === 'all' || assignment.status === filterStatus;

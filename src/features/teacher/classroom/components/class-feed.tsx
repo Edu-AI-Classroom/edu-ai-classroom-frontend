@@ -10,14 +10,33 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { type ClassData, currentTeacher, getAnnouncementsForClass } from '@/lib/mock-data';
+import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassFeedProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
 export default function ClassFeed({ classData }: ClassFeedProps) {
-	const announcements = getAnnouncementsForClass(classData.id);
+	const classId = classData.id;
+	const authUser = useAuthUser();
+	const teacherName = authUser?.userName ?? 'Teacher';
+	const announcements: Array<{
+		id: string;
+		author: string;
+		content: string;
+		createdAt: string;
+		isPinned: boolean;
+		audience: 'students' | 'parents' | 'all';
+		commentCount: number;
+		comments: {
+			id: string;
+			author: string;
+			authorRole: 'teacher' | 'student' | 'parent';
+			content: string;
+			createdAt: string;
+		}[];
+	}> = [];
 	const [newPost, setNewPost] = useState('');
 	const [audience, setAudience] = useState<'students' | 'parents' | 'all'>('all');
 	const [expandedComments, setExpandedComments] = useState<string[]>([]);
@@ -29,7 +48,7 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 	};
 
 	const handlePost = () => {
-		if (newPost.trim()) {
+		if (newPost.trim() && classId > 0) {
 			// In a real app, this would add to the feed
 			setNewPost('');
 		}
@@ -56,7 +75,7 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 			>
 				<div className="flex items-start gap-3">
 					<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold shrink-0">
-						{currentTeacher.name
+						{teacherName
 							.split(' ')
 							.map((n) => n[0])
 							.join('')}
@@ -66,7 +85,7 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 							placeholder="Share an announcement with your class..."
 							value={newPost}
 							onChange={(e) => setNewPost(e.target.value)}
-							className="min-h-[80px] border-none bg-transparent resize-none focus-visible:ring-0 p-0 text-[#333] placeholder:text-[#999]"
+							className="min-h-20 border-none bg-transparent resize-none focus-visible:ring-0 p-0 text-[#333] placeholder:text-[#999]"
 						/>
 						<div className="flex items-center justify-between mt-3 pt-3 border-t border-[#E0DCD5]">
 							<div className="flex items-center gap-2">
@@ -182,14 +201,26 @@ interface PostCardProps {
 	onToggleComments: () => void;
 }
 
+const getDeterministicRotation = (seed: string, scale = 0.4) => {
+	let hash = 0;
+	for (let index = 0; index < seed.length; index += 1) {
+		hash = (hash << 5) - hash + seed.charCodeAt(index);
+		hash |= 0;
+	}
+	const normalized = (Math.abs(hash) % 1000) / 1000;
+	return normalized * scale - scale / 2;
+};
+
 function PostCard({ post, isPinned, expanded, onToggleComments }: PostCardProps) {
+	const cardRotation = isPinned ? 0 : getDeterministicRotation(post.id);
+
 	return (
 		<div
 			className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden ${
 				isPinned ? 'border-[#E57373]/50' : 'border-[#E0DCD5]'
 			}`}
 			style={{
-				transform: `rotate(${isPinned ? 0 : Math.random() * 0.4 - 0.2}deg)`,
+				transform: `rotate(${cardRotation}deg)`,
 			}}
 		>
 			{/* Pushpin for pinned posts */}
@@ -247,7 +278,9 @@ function PostCard({ post, isPinned, expanded, onToggleComments }: PostCardProps)
 						<div
 							key={comment.id}
 							className="bg-[#F5B041]/10 rounded-xl p-3 ml-4 border-l-4 border-[#F5B041]"
-							style={{ transform: `rotate(${Math.random() * 0.3 - 0.15}deg)` }}
+							style={{
+								transform: `rotate(${getDeterministicRotation(comment.id, 0.3)}deg)`,
+							}}
 						>
 							<div className="flex items-center gap-2 mb-1">
 								<span className="font-semibold text-sm text-[#333]">{comment.author}</span>

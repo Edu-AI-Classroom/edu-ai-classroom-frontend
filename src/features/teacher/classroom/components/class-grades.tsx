@@ -4,31 +4,38 @@ import { AlertTriangle, CheckCircle2, Clock, Download, Filter, Search } from 'lu
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-	type ClassData,
-	getAssignmentsForClass,
-	getStudentsForClass,
-	getSubmissionsForClass,
-} from '@/lib/mock-data';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassGradesProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
 export default function ClassGrades({ classData }: ClassGradesProps) {
-	const students = getStudentsForClass(classData.id);
-	const assignments = getAssignmentsForClass(classData.id);
-	const submissions = getSubmissionsForClass(classData.id);
+	const { data: studentsResponse } = useClassStudents(classData.id);
+	const students = (studentsResponse?.data ?? []).map((student) => ({
+		id: student.userId,
+		name: student.userName ?? '',
+		status: 'on-track' as const,
+		averageGrade: 0,
+	}));
+	const assignments: Array<{ id: string; title: string; totalPoints: number }> = [];
+	const submissions: Array<{
+		studentId: string;
+		assignmentId: string;
+		status: 'pending' | 'graded' | 'late';
+		grade?: number;
+	}> = [];
 	const [searchQuery, setSearchQuery] = useState('');
 
 	const filteredStudents = students.filter((student) =>
-		student.name.toLowerCase().includes(searchQuery.toLowerCase()),
+		(student.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
 	// Create a grade matrix
-	const getStudentGrade = (studentId: string, assignmentId: string) => {
+	const getStudentGrade = (studentId: string | number, assignmentId: string) => {
 		const submission = submissions.find(
-			(s) => s.studentId === studentId && s.assignmentId === assignmentId,
+			(s) => String(s.studentId) === String(studentId) && s.assignmentId === assignmentId,
 		);
 		return submission;
 	};
@@ -72,16 +79,16 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 					<table className="w-full">
 						<thead>
 							<tr className="border-b border-[#E0DCD5] bg-[#FAF9F6]">
-								<th className="text-left p-4 font-sans font-semibold text-[#333] sticky left-0 bg-[#FAF9F6] min-w-[200px]">
+								<th className="text-left p-4 font-sans font-semibold text-[#333] sticky left-0 bg-[#FAF9F6] min-w-50">
 									Student
 								</th>
 								{assignments.slice(0, 4).map((assignment) => (
 									<th
 										key={assignment.id}
-										className="text-center p-4 font-sans font-semibold text-[#333] min-w-[120px]"
+										className="text-center p-4 font-sans font-semibold text-[#333] min-w-30"
 									>
 										<div className="flex flex-col items-center gap-1">
-											<span className="text-sm truncate max-w-[100px]" title={assignment.title}>
+											<span className="text-sm truncate max-w-25" title={assignment.title}>
 												{assignment.title}
 											</span>
 											<span className="text-xs text-[#999] font-normal">
@@ -90,7 +97,7 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 										</div>
 									</th>
 								))}
-								<th className="text-center p-4 font-sans font-semibold text-[#333] min-w-[100px] bg-[#F5B041]/10">
+								<th className="text-center p-4 font-sans font-semibold text-[#333] min-w-25 bg-[#F5B041]/10">
 									Average
 								</th>
 							</tr>
