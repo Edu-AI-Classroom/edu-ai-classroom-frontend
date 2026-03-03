@@ -1,16 +1,19 @@
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
-import { Caveat, Nunito } from 'next/font/google';
+import { Caveat, Fredoka } from 'next/font/google';
 import type React from 'react';
 import '@/app/globals.css';
+import Providers from '@/components/providers/Providers';
 
-const _nunito = Nunito({
+const _fredoka = Fredoka({
 	subsets: ['latin'],
-	weight: ['400', '600', '700', '800'],
+	weight: ['300', '400', '500', '600', '700'],
+	variable: '--font-fredoka',
 });
 const _caveat = Caveat({
 	subsets: ['latin'],
 	weight: ['400', '500', '600', '700'],
+	variable: '--font-caveat',
 });
 
 export const metadata: Metadata = {
@@ -44,9 +47,13 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={`font-sans antialiased`}>
-				{children}
-				<Analytics />
+			<body
+				className={`${_fredoka.variable} ${_caveat.variable} font-sans antialiased text-[#333333]`}
+			>
+				<Providers>
+					{children}
+					<Analytics />
+				</Providers>
 			</body>
 		</html>
 	);
