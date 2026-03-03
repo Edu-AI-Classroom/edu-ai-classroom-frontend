@@ -52,4 +52,10 @@ export const queryKeys = {
 			},
 		},
 	},
+
+	news: {
+		all: ['news'] as const,
+		list: (classId: number, params?: any) => ['news', 'class', classId, params ?? {}] as const,
+		detail: (id: number | string) => ['news', 'detail', id] as const,
+	},
 };

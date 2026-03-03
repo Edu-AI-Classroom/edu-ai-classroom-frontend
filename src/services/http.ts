@@ -14,19 +14,35 @@ export async function http<T>(url: string, options: RequestInit = {}): Promise<T
 	}, DEFAULT_TIMEOUT);
 
 	try {
+		// 1. Nhận diện FormData
+		const isFormData = options.body instanceof FormData;
+
+		// 2. Xử lý body: Không stringify nếu là FormData
 		const resolvedBody =
-			options.body && typeof options.body !== 'string'
+			options.body && typeof options.body !== 'string' && !isFormData
 				? JSON.stringify(options.body)
 				: options.body;
-		const resolvedHeaders = {
-			'Content-Type': 'application/json',
-			...(token ? { Authorization: `Bearer ${token}` } : {}),
-			...(options.headers ?? {}),
-		};
+
+		// 3. Xử lý an toàn Headers bằng class Headers (tránh lỗi khi spread object)
+		const headers = new Headers(options.headers);
+
+		if (token) {
+			headers.set('Authorization', `Bearer ${token}`);
+		}
+
+		// 4. Thiết lập Content-Type linh hoạt
+		if (isFormData) {
+			// Trình duyệt sẽ tự động thêm 'multipart/form-data' và chuỗi 'boundary'.
+			// Cần xóa Content-Type (nếu vô tình bị set) để trình duyệt tự làm việc của nó.
+			headers.delete('Content-Type');
+		} else if (!headers.has('Content-Type')) {
+			// Nếu không phải gửi file và chưa có Content-Type, mặc định là JSON
+			headers.set('Content-Type', 'application/json');
+		}
 
 		const res = await fetch(`${API_URL}${url}`, {
 			...options,
-			headers: resolvedHeaders,
+			headers, // Gắn headers đã xử lý
 			body: resolvedBody,
 			signal: controller.signal,
 		});

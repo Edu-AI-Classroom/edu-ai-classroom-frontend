@@ -40,4 +40,19 @@ export const API_ENDPOINTS = {
 		REMOVE_STUDENT_FROM_GROUP: (classId: number, groupId: number, studentId: number) =>
 			`/api/classrooms/${classId}/groups/${groupId}/students/${studentId}`,
 	},
+
+	NEWS: {
+		CREATE: '/api/news',
+		GET_BY_CLASS: (classId: number) => `/api/news/class/${classId}`,
+		GET_DETAIL: (id: number | string) => `/api/news/${id}`,
+		UPDATE: (id: number | string) => `/api/news/${id}`,
+		DELETE: (id: number | string) => `/api/news/${id}`,
+	},
+
+	COMMENTS: {
+		CREATE: '/api/comments',
+		GET_BY_NEWS: (newsId: number | string) => `/api/comments/news/${newsId}`,
+		UPDATE: (id: number | string) => `/api/comments/${id}`,
+		DELETE: (id: number | string) => `/api/comments/${id}`,
+	},
 };
