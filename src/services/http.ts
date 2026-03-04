@@ -5,7 +5,11 @@ import type { ApiError, ApiResponse } from '@/types/api';
 const DEFAULT_TIMEOUT = 15_000; // 15s
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
-export async function http<T>(url: string, options: RequestInit = {}): Promise<T> {
+type HttpOptions = Omit<RequestInit, 'body'> & {
+	body?: unknown;
+};
+
+export async function http<T>(url: string, options: HttpOptions = {}): Promise<T> {
 	const token = useAuthStore.getState().token;
 
 	const controller = new AbortController();
@@ -14,10 +18,17 @@ export async function http<T>(url: string, options: RequestInit = {}): Promise<T
 	}, DEFAULT_TIMEOUT);
 
 	try {
-		const resolvedBody =
-			options.body && typeof options.body !== 'string'
-				? JSON.stringify(options.body)
-				: options.body;
+		const resolvedBody: BodyInit | null | undefined =
+			options.body == null
+				? undefined
+				: typeof options.body === 'string' ||
+						options.body instanceof Blob ||
+						options.body instanceof FormData ||
+						options.body instanceof URLSearchParams ||
+						options.body instanceof ReadableStream ||
+						options.body instanceof ArrayBuffer
+					? options.body
+					: JSON.stringify(options.body);
 		const resolvedHeaders = {
 			'Content-Type': 'application/json',
 			...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -47,8 +58,8 @@ export async function http<T>(url: string, options: RequestInit = {}): Promise<T
 			try {
 				await handleAuthError(error);
 				return http<T>(url, options); // retry request
-			} catch {
-				throw error;
+			} catch (authError) {
+				throw authError;
 			}
 		}
 

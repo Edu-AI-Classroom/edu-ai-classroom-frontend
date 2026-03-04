@@ -33,14 +33,14 @@ type UiStudent = {
 	id: number;
 	name: string;
 	email: string;
-	attendance: number;
-	averageGrade: number;
-	submissionRate: number;
-	status: Exclude<UiStudentStatus, 'all'>;
+	attendance?: number;
+	averageGrade?: number;
+	submissionRate?: number;
+	status?: Exclude<UiStudentStatus, 'all'>;
 };
 
 const mapStudentToUi = (student: ApiStudent): UiStudent => ({
-	id: Number(student.userId),
+	id: student.userId,
 	name: student.userName ?? '',
 	email: student.email ?? '',
 	attendance: 0,
@@ -49,9 +49,11 @@ const mapStudentToUi = (student: ApiStudent): UiStudent => ({
 	status: 'on-track',
 });
 
+const isApiStudent = (user: { role?: string }): user is ApiStudent => user.role === 'STUDENT';
+
 export default function ClassStudents({ classData }: ClassStudentsProps) {
 	const { data: studentsResponse } = useClassStudents(classData.id);
-	const students = (studentsResponse?.data ?? []).map(mapStudentToUi);
+	const students = (studentsResponse?.data ?? []).filter(isApiStudent).map(mapStudentToUi);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterStatus, setFilterStatus] = useState<UiStudentStatus>('all');
 

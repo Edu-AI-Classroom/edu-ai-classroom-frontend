@@ -16,7 +16,7 @@ export const AuthService = {
 
 	refreshToken: (_token?: string) => httpPost<AuthTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN),
 
-	getUserProfile: async (userId: string, token?: string) => {
+	getUserProfile: async (userId: number, token?: string) => {
 		const profile = await httpGet<AuthUserResponse>(API_ENDPOINTS.USER.USER_PROFILE(userId), {
 			headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 		});

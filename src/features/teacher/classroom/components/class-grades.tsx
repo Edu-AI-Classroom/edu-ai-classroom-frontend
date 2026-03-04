@@ -11,18 +11,25 @@ interface ClassGradesProps {
 	classData: ClassroomUiData;
 }
 
+type StudentStatus = 'excellent' | 'needs-attention' | 'on-track';
+
 export default function ClassGrades({ classData }: ClassGradesProps) {
 	const { data: studentsResponse } = useClassStudents(classData.id);
-	const students = (studentsResponse?.data ?? []).map((student) => ({
+	const students: Array<{
+		id: number;
+		name: string;
+		status: StudentStatus;
+		averageGrade: number;
+	}> = (studentsResponse?.data ?? []).map((student) => ({
 		id: student.userId,
 		name: student.userName ?? '',
-		status: 'on-track' as const,
+		status: 'on-track',
 		averageGrade: 0,
 	}));
-	const assignments: Array<{ id: string; title: string; totalPoints: number }> = [];
+	const assignments: Array<{ id: number; title: string; totalPoints: number }> = [];
 	const submissions: Array<{
-		studentId: string;
-		assignmentId: string;
+		studentId: number;
+		assignmentId: number;
 		status: 'pending' | 'graded' | 'late';
 		grade?: number;
 	}> = [];
@@ -33,9 +40,9 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 	);
 
 	// Create a grade matrix
-	const getStudentGrade = (studentId: string | number, assignmentId: string) => {
+	const getStudentGrade = (studentId: string | number, assignmentId: number) => {
 		const submission = submissions.find(
-			(s) => String(s.studentId) === String(studentId) && s.assignmentId === assignmentId,
+			(s) => s.studentId === studentId && s.assignmentId === assignmentId,
 		);
 		return submission;
 	};
