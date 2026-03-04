@@ -11,12 +11,21 @@ interface ClassGradesProps {
 	classData: ClassroomUiData;
 }
 
+type StudentStatus = 'on-track' | 'excellent' | 'needs-attention';
+
+interface Student {
+	id: string | number;
+	name: string;
+	status: StudentStatus;
+	averageGrade: number;
+}
+
 export default function ClassGrades({ classData }: ClassGradesProps) {
 	const { data: studentsResponse } = useClassStudents(classData.id);
-	const students = (studentsResponse?.data ?? []).map((student) => ({
+	const students: Student[] = (studentsResponse?.data ?? []).map((student) => ({
 		id: student.userId,
 		name: student.userName ?? '',
-		status: 'on-track' as const,
+		status: 'on-track' as StudentStatus,
 		averageGrade: 0,
 	}));
 	const assignments: Array<{ id: string; title: string; totalPoints: number }> = [];

@@ -10,6 +10,7 @@ import {
 	Paperclip,
 	Pencil,
 	Pin,
+	PinOff,
 	Send,
 	Star,
 	Trash2,
@@ -360,6 +361,18 @@ function PostCard({
 		},
 	});
 
+	// Mutation: Ghim/Bỏ ghim bài viết
+	const togglePinMut = useMutation({
+		mutationFn: () =>
+			NewsService.updateNews(post.id, {
+				classId,
+				content: post.content,
+				audience: post.audience as any,
+				isPinned: !post.isPinned,
+			}),
+		onSuccess: invalidateFeed,
+	});
+
 	const addCommentMut = useMutation({
 		mutationFn: () => NewsService.createComment({ newsId: post.id, content: newComment }),
 		onSuccess: () => {
@@ -428,7 +441,21 @@ function PostCard({
 									<MoreHorizontal className="w-5 h-5" />
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="rounded-xl min-w-[120px]">
+							<DropdownMenuContent align="end" className="rounded-xl min-w-[140px]">
+								{/* NÚT GHIM ĐƯỢC THÊM VÀO ĐÂY */}
+								<DropdownMenuItem
+									onClick={() => togglePinMut.mutate()}
+									disabled={togglePinMut.isPending}
+									className="cursor-pointer text-[#666]"
+								>
+									{post.isPinned ? (
+										<PinOff className="w-4 h-4 mr-2" />
+									) : (
+										<Pin className="w-4 h-4 mr-2" />
+									)}
+									{post.isPinned ? 'Unpin Post' : 'Pin to Top'}
+								</DropdownMenuItem>
+
 								<DropdownMenuItem
 									onClick={() => setIsEditingPost(true)}
 									className="cursor-pointer text-[#666]"
