@@ -14,19 +14,33 @@ export async function http<T>(url: string, options: RequestInit = {}): Promise<T
 	}, DEFAULT_TIMEOUT);
 
 	try {
+		// 1. Nhận diện FormData
+		const isFormData = options.body instanceof FormData;
+
+		// 2. Xử lý body: Không stringify nếu là FormData
 		const resolvedBody =
-			options.body && typeof options.body !== 'string'
+			options.body && typeof options.body !== 'string' && !isFormData
 				? JSON.stringify(options.body)
 				: options.body;
-		const resolvedHeaders = {
-			'Content-Type': 'application/json',
-			...(token ? { Authorization: `Bearer ${token}` } : {}),
-			...(options.headers ?? {}),
-		};
+
+		// 3. Xử lý an toàn Headers bằng class Headers (tránh lỗi khi spread object)
+		const headers = new Headers(options.headers);
+
+		if (token) {
+			headers.set('Authorization', `Bearer ${token}`);
+		}
+
+		// 4. Thiết lập Content-Type linh hoạt
+		if (isFormData) {
+			// Trình duyệt tự set multipart/form-data + boundary
+			headers.delete('Content-Type');
+		} else if (!headers.has('Content-Type')) {
+			headers.set('Content-Type', 'application/json');
+		}
 
 		const res = await fetch(`${API_URL}${url}`, {
 			...options,
-			headers: resolvedHeaders,
+			headers,
 			body: resolvedBody,
 			signal: controller.signal,
 		});

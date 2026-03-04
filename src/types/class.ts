@@ -29,6 +29,14 @@ export interface Student extends User {
 	groupName?: string;
 }
 
+export interface TeacherApiResponse {
+	teacherId: number;
+	teacherName: string;
+	email: string;
+	addedAt: string;
+	isOwner: boolean;
+}
+
 export interface Teacher extends User {
 	role: 'TEACHER';
 	isOwner: boolean;
