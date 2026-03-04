@@ -6,4 +6,7 @@ import { httpGet } from '../http.helpers';
 // So T should be SubscriptionPlan[]
 export const subscriptionService = {
 	getPlans: () => httpGet<SubscriptionPlan[]>('/api/subscription-plans'),
+
+	getUserCurrentSubscription: () =>
+		httpGet<SubscriptionPlan>('/api/users/current-subscription').catch(() => null),
 };

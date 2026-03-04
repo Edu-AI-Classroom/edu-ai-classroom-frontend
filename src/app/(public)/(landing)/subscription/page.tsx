@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSubscriptionPlans } from '@/hooks/queries/subscription/use-subscription-query';
+import { useUserSubscription } from '@/hooks/queries/subscription/use-user-subscription';
 import { paymentService } from '@/services/payment/payment.service';
 import type { SubscriptionPlan } from '@/types/subscription';
 
@@ -134,6 +135,7 @@ function formatPrice(price: number): string {
 export default function SubscriptionPage() {
 	const router = useRouter();
 	const { data: plans, isLoading, error } = useSubscriptionPlans();
+	const { data: userSubscription } = useUserSubscription();
 	const plansArray = plans ?? [];
 	const [paymentLoading, setPaymentLoading] = useState<number | null>(null);
 
@@ -268,17 +270,24 @@ export default function SubscriptionPage() {
 										<Button
 											size="lg"
 											onClick={() => handleChoosePlan(plan)}
-											disabled={paymentLoading !== null}
+											disabled={paymentLoading !== null || userSubscription?.subId === plan.subId}
 											className={`w-full mb-8 font-semibold ${
-												isPopular
-													? 'bg-[#f5b041] hover:bg-[#e5a030] text-[#333333] disabled:bg-[#d4a037]'
-													: 'bg-[#e8e4df] hover:bg-[#d8d4cf] text-[#333333] disabled:bg-[#d0ccc7]'
+												userSubscription?.subId === plan.subId
+													? 'bg-[#a8d5ba] hover:bg-[#9dcaa9] text-[#333333]'
+													: isPopular
+														? 'bg-[#f5b041] hover:bg-[#e5a030] text-[#333333] disabled:bg-[#d4a037]'
+														: 'bg-[#e8e4df] hover:bg-[#d8d4cf] text-[#333333] disabled:bg-[#d0ccc7]'
 											}`}
 										>
 											{paymentLoading === plan.subId ? (
 												<>
 													<div className="w-4 h-4 border-2 border-[#333333] border-t-transparent rounded-full animate-spin mr-2" />
 													Processing...
+												</>
+											) : userSubscription?.subId === plan.subId ? (
+												<>
+													<Check className="w-4 h-4 mr-2" />
+													Bạn đã đăng ký
 												</>
 											) : (
 												<>
