@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
 	},
 
 	USER: {
+		LIST: '/api/users',
 		USER_PROFILE: (userId: number) => `/api/users/${userId}`,
 	},
 

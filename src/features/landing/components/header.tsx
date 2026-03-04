@@ -1,8 +1,9 @@
 'use client';
 
-import { BookOpen, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { TeachifyIcon } from '@/components/common/Teachify';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { getAvatarColor } from '@/lib/user/avatar';
@@ -21,12 +22,7 @@ export function Header() {
 		<header className="sticky top-0 z-50 w-full border-b border-border/50 bg-cream/95 backdrop-blur supports-backdrop-filter:bg-cream/80">
 			<div className="container mx-auto flex h-16 items-center justify-between px-4">
 				{/* Logo */}
-				<Link href="/" className="flex items-center gap-2">
-					<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5B041]">
-						<BookOpen className="h-5 w-5 text-charcoal" />
-					</div>
-					<span className="font-sans text-xl font-bold text-charcoal">Teachify</span>
-				</Link>
+				<TeachifyIcon />
 
 				{/* Desktop Navigation */}
 				<nav className="hidden items-center gap-8 md:flex">

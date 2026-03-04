@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
 import { httpGet, httpPost } from '@/services/http.helpers';
+import type { PaginatedResponse } from '@/types/api';
 import type {
 	AuthLoginPayload,
 	AuthRegisterPayload,
@@ -21,6 +22,17 @@ export const AuthService = {
 			headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 		});
 		return profile;
+	},
+
+	searchTeachers: (search: string, limit = 8) => {
+		const searchParams = new URLSearchParams();
+		searchParams.set('role', 'TEACHER');
+		searchParams.set('limit', String(limit));
+		if (search.trim()) searchParams.set('search', search.trim());
+
+		return httpGet<PaginatedResponse<AuthUserResponse>>(
+			`${API_ENDPOINTS.USER.LIST}?${searchParams.toString()}`,
+		);
 	},
 };
 

@@ -1,17 +1,9 @@
 'use client';
 
-import {
-	Bell,
-	BookOpen,
-	ChevronRight,
-	Clock,
-	FileCheck,
-	FolderOpen,
-	LayoutGrid,
-	Users,
-} from 'lucide-react';
+import { Bell, ChevronRight, Clock, FileCheck, FolderOpen, LayoutGrid, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { TeachifyIcon } from '@/components/common/Teachify';
 import { Button } from '@/components/ui/button';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import { useClassList } from '@/hooks/queries/class/use-class-query';
@@ -75,12 +67,7 @@ export default function TeacherDashboard() {
 			{/* Header */}
 			<header className="sticky top-0 z-50 bg-[#FAF9F6]/95 backdrop-blur-sm border-b border-[#E0DCD5]">
 				<div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-					<Link href="/" className="flex items-center gap-2">
-						<div className="w-10 h-10 rounded-xl bg-[#F5B041] flex items-center justify-center">
-							<BookOpen className="w-5 h-5 text-[#333]" />
-						</div>
-						<span className="font-sans font-bold text-xl text-[#333]">Teachify</span>
-					</Link>
+					<TeachifyIcon />
 
 					<div className="flex items-center gap-4">
 						<Button variant="ghost" size="icon" className="relative">
