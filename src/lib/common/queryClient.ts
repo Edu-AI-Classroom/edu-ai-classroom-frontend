@@ -34,12 +34,37 @@ function handleGlobalError(error: unknown, query?: QueryLikeMeta) {
 	}
 }
 
+function handleMutationError(error: Error) {
+	const apiError = error as unknown as ApiError;
+	console.log('Mutation error handler:', apiError);
+	if (!apiError) {
+		toast.error('Something went wrong');
+		return;
+	}
+	switch (apiError.code) {
+		case 'REQUEST_TIMEOUT':
+			toast.error('Server phản hồi quá chậm');
+			break;
+
+		case 'NETWORK_ERROR':
+			toast.error('Không thể kết nối server');
+			break;
+
+		case 'NOT_FOUND':
+			toast.error('Không tìm thấy tài nguyên');
+			break;
+
+		default:
+			toast.error(apiError.message ?? 'Something went wrong');
+	}
+}
+
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: handleGlobalError,
 	}),
 	mutationCache: new MutationCache({
-		onError: handleGlobalError,
+		onError: handleMutationError,
 	}),
 
 	defaultOptions: {

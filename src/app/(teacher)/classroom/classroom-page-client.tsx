@@ -31,6 +31,13 @@ export default function ClassroomPageClient() {
 		[classListResponse],
 	);
 
+	// Cập nhật selectedClassId khi URL classId thay đổi
+	useEffect(() => {
+		if (classIdFromUrl) {
+			setSelectedClassId(parseClassId(classIdFromUrl));
+		}
+	}, [classIdFromUrl]);
+
 	const selectedClass = useMemo(() => {
 		if (selectedClassId === null) return null;
 

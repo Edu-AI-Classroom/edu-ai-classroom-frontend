@@ -23,6 +23,10 @@ export interface Student extends User {
 	gradeLevel: number | null;
 	parentPhone?: string | null;
 	groupId?: number | null;
+	studentId?: number;
+	studentName?: string;
+	joinedAt?: string;
+	groupName?: string;
 }
 
 export interface Teacher extends User {
@@ -88,3 +92,44 @@ export interface UpdateStudentGroupPayload {
 export interface AssignStudentToGroupPayload {
 	studentId: string;
 }
+
+// Assignment/Document Types
+export interface Assignment {
+	docId: number;
+	docTitle: string;
+	docType: 'ASSIGNMENT';
+	gradeLevel?: number | null;
+	subjectId?: number | null;
+	note?: string | null;
+	status: 'draft' | 'published' | 'archived' | 'graded';
+	dueDate?: string | null;
+	ownerId: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CreateAssignmentPayload {
+	title: string;
+	note?: string;
+	gradeLevel?: number;
+	subjectId?: number;
+	classId: number;
+}
+
+export interface UpdateAssignmentPayload {
+	title?: string;
+	note?: string;
+	gradeLevel?: number;
+	subjectId?: number;
+	dueDate?: string;
+}
+
+export interface AssignmentListResponse extends PaginatedResponse<Assignment> {
+	data: Assignment[];
+}
+
+export interface AssignmentResponse {
+	message: string;
+	data: Assignment;
+}
+

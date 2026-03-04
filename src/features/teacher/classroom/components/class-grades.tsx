@@ -11,12 +11,21 @@ interface ClassGradesProps {
 	classData: ClassroomUiData;
 }
 
+type StudentStatus = 'on-track' | 'excellent' | 'needs-attention';
+
+interface Student {
+	id: string | number;
+	name: string;
+	status: StudentStatus;
+	averageGrade: number;
+}
+
 export default function ClassGrades({ classData }: ClassGradesProps) {
 	const { data: studentsResponse } = useClassStudents(classData.id);
-	const students = (studentsResponse?.data ?? []).map((student) => ({
+	const students: Student[] = (studentsResponse?.data ?? []).map((student) => ({
 		id: student.userId,
 		name: student.userName ?? '',
-		status: 'on-track' as const,
+		status: 'on-track' as StudentStatus,
 		averageGrade: 0,
 	}));
 	const assignments: Array<{ id: string; title: string; totalPoints: number }> = [];
@@ -119,13 +128,12 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 											<div>
 												<p className="font-semibold text-sm text-[#333]">{student.name}</p>
 												<span
-													className={`text-xs ${
-														student.status === 'excellent'
-															? 'text-[#2E7D32]'
-															: student.status === 'needs-attention'
-																? 'text-[#C62828]'
-																: 'text-[#666]'
-													}`}
+													className={`text-xs ${student.status === 'excellent'
+														? 'text-[#2E7D32]'
+														: student.status === 'needs-attention'
+															? 'text-[#C62828]'
+															: 'text-[#666]'
+														}`}
 												>
 													{student.status === 'excellent'
 														? 'Excellent'
@@ -145,13 +153,12 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 														{submission.status === 'graded' && submission.grade !== undefined ? (
 															<>
 																<span
-																	className={`font-semibold ${
-																		submission.grade >= assignment.totalPoints * 0.9
-																			? 'text-[#2E7D32]'
-																			: submission.grade >= assignment.totalPoints * 0.7
-																				? 'text-[#333]'
-																				: 'text-[#C62828]'
-																	}`}
+																	className={`font-semibold ${submission.grade >= assignment.totalPoints * 0.9
+																		? 'text-[#2E7D32]'
+																		: submission.grade >= assignment.totalPoints * 0.7
+																			? 'text-[#333]'
+																			: 'text-[#C62828]'
+																		}`}
 																>
 																	{submission.grade}/{assignment.totalPoints}
 																</span>

@@ -52,4 +52,21 @@ export const queryKeys = {
 			},
 		},
 	},
+
+	assignment: {
+		all: ['assignment'] as const,
+		list: (params?: {
+			page?: number;
+			limit?: number;
+			sortBy?: string;
+			sortOrder?: 'asc' | 'desc';
+			search?: string;
+		}) => ['assignment', 'list', params ?? {}] as const,
+		detail: (assignmentId: string | number) =>
+			['assignment', 'detail', assignmentId] as const,
+	},
+
+	subject: {
+		all: ['subject'] as const,
+	},
 };

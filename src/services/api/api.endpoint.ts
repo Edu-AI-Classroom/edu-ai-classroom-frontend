@@ -9,6 +9,10 @@ export const API_ENDPOINTS = {
 		USER_PROFILE: (userId: number) => `/api/users/${userId}`,
 	},
 
+	SUBJECT: {
+		GET_SUBJECTS: '/api/subjects',
+	},
+
 	CLASS: {
 		CREATE_CLASS: '/api/classrooms',
 		GET_CLASS_LIST: '/api/classrooms',
@@ -39,5 +43,13 @@ export const API_ENDPOINTS = {
 			`/api/classrooms/${classId}/groups/${groupId}/students`,
 		REMOVE_STUDENT_FROM_GROUP: (classId: number, groupId: number, studentId: number) =>
 			`/api/classrooms/${classId}/groups/${groupId}/students/${studentId}`,
+	},
+
+	ASSIGNMENT: {
+		CREATE_ASSIGNMENT: '/api/assignments',
+		GET_ASSIGNMENTS: '/api/assignments',
+		GET_ASSIGNMENT_DETAIL: (assignmentId: number) => `/api/assignments/${assignmentId}`,
+		UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
+		DELETE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
 	},
 };
