@@ -42,9 +42,29 @@ export const NewsService = {
 		return httpPost<any>(API_ENDPOINTS.NEWS.CREATE, formData);
 	},
 
+	updateNews: (id: string, payload: Partial<CreateNewsPayload>) => {
+		const formData = new FormData();
+		if (payload.file) formData.append('file', payload.file);
+		const newsData = {
+			content: payload.content,
+			audience: payload.audience,
+			isPinned: payload.isPinned,
+		};
+		formData.append('data', JSON.stringify(newsData));
+		return httpPut<any>(API_ENDPOINTS.NEWS.UPDATE(id), formData);
+	},
+
+	// THÊM MỚI: Xóa bài viết
 	deleteNews: (id: string) => httpDelete<void>(API_ENDPOINTS.NEWS.DELETE(id)),
 
 	// --- COMMENTS ---
 	createComment: (payload: CreateCommentPayload) =>
 		httpPost<any>(API_ENDPOINTS.COMMENTS.CREATE, payload),
+
+	// THÊM MỚI: Cập nhật bình luận
+	updateComment: (id: string, content: string) =>
+		httpPut<any>(API_ENDPOINTS.COMMENTS.UPDATE(id), { content }),
+
+	// THÊM MỚI: Xóa bình luận
+	deleteComment: (id: string) => httpDelete<void>(API_ENDPOINTS.COMMENTS.DELETE(id)),
 };
