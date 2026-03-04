@@ -40,4 +40,12 @@ export const API_ENDPOINTS = {
 		REMOVE_STUDENT_FROM_GROUP: (classId: number, groupId: number, studentId: number) =>
 			`/api/classrooms/${classId}/groups/${groupId}/students/${studentId}`,
 	},
+
+	SUBSCRIPTION: {
+		GET_PLANS: '/api/subscription-plans',
+	},
+
+	TRANSACTION: {
+		CREATE_PAYMENT_LINK: '/api/transactions/payment-link',
+	},
 };
