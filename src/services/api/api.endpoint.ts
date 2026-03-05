@@ -53,6 +53,7 @@ export const API_ENDPOINTS = {
 	TRANSACTION: {
 		CREATE_PAYMENT_LINK: '/api/transactions/payment-link',
 	},
+
 	NEWS: {
 		CREATE: '/api/news',
 		GET_BY_CLASS: (classId: number) => `/api/news/class/${classId}`,
