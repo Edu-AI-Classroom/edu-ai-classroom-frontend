@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSubscriptionPlans } from '@/hooks/queries/subscription/use-subscription-query';
 import { useUserSubscription } from '@/hooks/queries/subscription/use-user-subscription';
 import { paymentService } from '@/services/payment/payment.service';
+import { useAuthStore } from '@/stores/auth-store';
 import type { SubscriptionPlan } from '@/types/subscription';
 
 const faqs = [
@@ -134,12 +135,22 @@ function formatPrice(price: number): string {
 
 export default function SubscriptionPage() {
 	const router = useRouter();
+	const { token, hasHydrated } = useAuthStore();
 	const { data: plans, isLoading, error } = useSubscriptionPlans();
 	const { data: userSubscription } = useUserSubscription();
 	const plansArray = plans ?? [];
 	const [paymentLoading, setPaymentLoading] = useState<number | null>(null);
+	const isAuthenticated = !!token;
+	const loginRedirect = `/login?redirect=${encodeURIComponent('/subscription')}`;
 
 	const handleChoosePlan = async (plan: SubscriptionPlan) => {
+		if (!hasHydrated) return;
+
+		if (!isAuthenticated) {
+			router.push(loginRedirect);
+			return;
+		}
+
 		try {
 			setPaymentLoading(plan.subId);
 
@@ -270,7 +281,11 @@ export default function SubscriptionPage() {
 										<Button
 											size="lg"
 											onClick={() => handleChoosePlan(plan)}
-											disabled={paymentLoading !== null || userSubscription?.subId === plan.subId}
+											disabled={
+												!hasHydrated ||
+												paymentLoading !== null ||
+												userSubscription?.subId === plan.subId
+											}
 											className={`w-full mb-8 font-semibold ${
 												userSubscription?.subId === plan.subId
 													? 'bg-[#a8d5ba] hover:bg-[#9dcaa9] text-[#333333]'
@@ -439,8 +454,16 @@ export default function SubscriptionPage() {
 								title: 'Enterprise Security',
 								desc: 'Bank-level encryption and compliance',
 							},
-							{ icon: Headset, title: '24/7 Support', desc: 'Dedicated support team always ready' },
-							{ icon: MessageSquare, title: 'Community', desc: 'Connect with 10,000+ educators' },
+							{
+								icon: Headset,
+								title: '24/7 Support',
+								desc: 'Dedicated support team always ready',
+							},
+							{
+								icon: MessageSquare,
+								title: 'Community',
+								desc: 'Connect with 10,000+ educators',
+							},
 						].map((item) => (
 							<Card
 								key={item.title}
