@@ -1,22 +1,13 @@
 'use client';
 
-import { ArrowLeft, Bell, BookOpen, Clock, FileWarning, Plus, Search, Users } from 'lucide-react';
+import { ArrowLeft, Bell, BookOpen, Clock, FileWarning, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import type { ClassroomUiData } from './classroom.mapper';
+import { CreateClassModal } from './components/create-class-modal';
 
 interface ClassListViewProps {
 	classes: ClassroomUiData[];
@@ -26,7 +17,6 @@ interface ClassListViewProps {
 export default function ClassListView({ classes, onSelectClass }: ClassListViewProps) {
 	const authUser = useAuthUser();
 	const [searchQuery, setSearchQuery] = useState('');
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const teacherName = authUser?.userName ?? 'Teacher';
 
 	const filteredClasses = classes.filter(
@@ -86,55 +76,7 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 							<p className="font-serif text-lg text-[#666]">Select a class to manage</p>
 						</div>
 
-						<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-							<DialogTrigger asChild>
-								<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-									<Plus className="w-4 h-4 mr-2" />
-									Create New Class
-								</Button>
-							</DialogTrigger>
-							<DialogContent className="sm:max-w-md bg-white rounded-2xl">
-								<DialogHeader>
-									<DialogTitle className="font-sans font-bold text-xl">
-										Create New Class
-									</DialogTitle>
-									<DialogDescription className="text-[#666]">
-										Add a new class to your roster.
-									</DialogDescription>
-								</DialogHeader>
-								<div className="space-y-4 py-4">
-									<div className="space-y-2">
-										<Label htmlFor="className">Class Name</Label>
-										<Input id="className" placeholder="e.g., Class 7A" className="rounded-xl" />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="subject">Subject</Label>
-										<Input id="subject" placeholder="e.g., Mathematics" className="rounded-xl" />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="grade">Grade Level</Label>
-										<Input id="grade" placeholder="e.g., Grade 7" className="rounded-xl" />
-									</div>
-								</div>
-								<DialogFooter>
-									<Button
-										type="button"
-										variant="outline"
-										onClick={() => setIsDialogOpen(false)}
-										className="rounded-xl"
-									>
-										Cancel
-									</Button>
-									<Button
-										type="submit"
-										className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] rounded-xl"
-										onClick={() => setIsDialogOpen(false)}
-									>
-										Create Class
-									</Button>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+						<CreateClassModal />
 					</div>
 				</div>
 

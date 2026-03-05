@@ -56,12 +56,24 @@ export default function ClassroomPageClient() {
 		window.history.pushState({}, '', '/classroom');
 	};
 
-	if (isClassListLoading && classes.length === 0) {
-		return <div className="p-6 text-[#666]">Loading classes...</div>;
+	if (isClassListLoading) {
+		return (
+			<div className="fixed inset-0 flex flex-col items-center justify-center bg-[#FAF9F6] z-50">
+				<div className="animate-bounce text-4xl mb-4">📚</div>
+				<p className="text-[#666] font-medium tracking-wide animate-pulse">
+					Loading your classes...
+				</p>
+			</div>
+		);
 	}
 
 	if (selectedClassId !== null && isClassDetailLoading && !selectedClass) {
-		return <div className="p-6 text-[#666]">Loading classroom...</div>;
+		return (
+			<div className="fixed inset-0 flex flex-col items-center justify-center bg-[#FAF9F6]/80 backdrop-blur-sm z-50">
+				<div className="animate-spin text-4xl mb-4">✏️</div>
+				<p className="text-[#666] font-medium italic">Loading the classroom...</p>
+			</div>
+		);
 	}
 
 	if (selectedClass) {

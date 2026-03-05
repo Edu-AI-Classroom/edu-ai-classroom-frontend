@@ -33,6 +33,7 @@ import ClassAssignments from './components/class-assignments';
 import ClassFeed from './components/class-feed';
 import ClassGrades from './components/class-grades';
 import ClassOverview from './components/class-overview';
+import { ClassroomSettings } from './components/class-setting';
 import ClassStudents from './components/class-students';
 
 type TabType =
@@ -95,14 +96,7 @@ export default function ClassroomWorkspace({
 					</div>
 				);
 			case 'settings':
-				return (
-					<div className="flex items-center justify-center h-64 text-[#666]">
-						<div className="text-center">
-							<Settings className="w-12 h-12 mx-auto mb-4 text-[#A8D4E6]" />
-							<p className="font-serif text-lg">Settings feature coming soon!</p>
-						</div>
-					</div>
-				);
+				return <ClassroomSettings classData={classData} onDeleted={onBack} />;
 			default:
 				return <ClassOverview classData={classData} />;
 		}
