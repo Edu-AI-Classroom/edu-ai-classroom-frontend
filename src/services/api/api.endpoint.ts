@@ -46,6 +46,12 @@ export const API_ENDPOINTS = {
 			`/api/classrooms/${classId}/groups/${groupId}/students/${studentId}`,
 	},
 
+	SUBSCRIPTION: {
+		GET_PLANS: '/api/subscription-plans',
+	},
+
+	TRANSACTION: {
+		CREATE_PAYMENT_LINK: '/api/transactions/payment-link',
 	NEWS: {
 		CREATE: '/api/news',
 		GET_BY_CLASS: (classId: number) => `/api/news/class/${classId}`,

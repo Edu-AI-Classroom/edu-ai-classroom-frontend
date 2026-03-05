@@ -53,6 +53,10 @@ export const queryKeys = {
 		},
 	},
 
+	subscription: {
+		all: ['subscription'] as const,
+		plans: () => [...queryKeys.subscription.all, 'plans'] as const,
+		userCurrent: () => [...queryKeys.subscription.all, 'user-current'] as const,
 	assignment: {
 		all: ['assignment'] as const,
 		list: (params?: {

@@ -57,6 +57,12 @@ export function Header() {
 					>
 						Students
 					</a>
+					<a
+						href="/subscription"
+						className="text-sm font-semibold text-charcoal/80 transition-colors hover:text-charcoal"
+					>
+						Subscription
+					</a>
 					{isAuthenticated && user ? (
 						<Button variant="ghost" className="font-semibold text-charcoal" onClick={handleLogout}>
 							Log out
@@ -139,6 +145,9 @@ export function Header() {
 						</a>
 						<a href="#students" className="font-semibold text-charcoal">
 							Students
+						</a>
+						<a href="/subscription" className="font-semibold text-charcoal">
+							Subscription
 						</a>
 						<hr className="border-border" />
 						{isAuthenticated && user ? (
