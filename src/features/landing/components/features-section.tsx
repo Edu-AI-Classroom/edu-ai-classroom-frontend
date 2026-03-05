@@ -13,7 +13,7 @@ import {
 	Video,
 } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { StickerIcon } from './sticker-icon';
 
 type Role = 'teachers' | 'students' | 'parents';
