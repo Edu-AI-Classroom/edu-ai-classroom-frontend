@@ -85,7 +85,15 @@ export default function ClassroomWorkspace({
 			case 'assignments':
 				return <ClassAssignments classData={classData} />;
 			case 'grades':
-				return <ClassGrades classData={classData} />;
+				// return <ClassGrades classData={classData} />;
+				return (
+					<div className="flex items-center justify-center h-64 text-[#666]">
+						<div className="text-center">
+							<BarChart3 className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
+							<p className="font-serif text-lg">Grade Report feature coming soon!</p>
+						</div>
+					</div>
+				);
 			case 'conversation':
 				return (
 					<div className="flex items-center justify-center h-64 text-[#666]">

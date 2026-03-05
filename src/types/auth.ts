@@ -21,6 +21,7 @@ export interface AuthRegisterPayload {
 	name: string;
 	email: string;
 	password: string;
+	role: Extract<Role, 'TEACHER' | 'STUDENT'>;
 }
 
 export interface AuthUserResponse {

@@ -148,8 +148,14 @@ export function RegisterFlow() {
 			return;
 		}
 
+		if (!formData.role) {
+			setStepError('Please select a role.');
+			return;
+		}
+
 		registerMutation.mutate(
 			{
+				role: formData.role,
 				name: formData.name.trim(),
 				email: formData.email.trim(),
 				password: formData.password,
