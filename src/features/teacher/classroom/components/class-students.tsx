@@ -231,10 +231,6 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 										<User className="w-4 h-4 mr-2" />
 										View Profile
 									</DropdownMenuItem>
-									<DropdownMenuItem>
-										<Mail className="w-4 h-4 mr-2" />
-										Send Message
-									</DropdownMenuItem>
 									<DropdownMenuItem
 										onClick={() => handleRemoveStudent(student.id, student.name)}
 										disabled={removingStudentId === student.id}
