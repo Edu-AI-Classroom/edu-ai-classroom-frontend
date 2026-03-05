@@ -54,13 +54,8 @@ export async function http<T>(url: string, options: HttpOptions = {}): Promise<T
 				code: json.code ?? 'UNKNOWN_ERROR',
 				message: json.message ?? 'Something went wrong',
 			};
-
-			try {
-				await handleAuthError(error);
-				return http<T>(url, options); // retry request
-			} catch (authError) {
-				throw authError;
-			}
+			await handleAuthError(error);
+			return http<T>(url, options); // retry request
 		}
 
 		return (json as ApiResponse<T>).data;

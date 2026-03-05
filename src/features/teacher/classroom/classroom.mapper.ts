@@ -12,6 +12,8 @@ export interface ClassroomUiData {
 	rotation: number;
 	pendingGrading: number;
 	upcomingDeadlines: number;
+	isOwner?: boolean;
+	createdBy?: number;
 }
 
 const CLASSROOM_COLORS = ['#F5B041', '#A8D5BA', '#C5B4E3', '#A8D4E6', '#E8B4B8'] as const;
@@ -29,4 +31,6 @@ export const mapClassroomToUi = (classroom: Classroom, index = 0): ClassroomUiDa
 	rotation: CLASSROOM_ROTATIONS[index % CLASSROOM_ROTATIONS.length],
 	pendingGrading: 0,
 	upcomingDeadlines: 0,
+	isOwner: classroom.isOwner,
+	createdBy: classroom.createdBy,
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useTeacherSearch } from '@/hooks/queries/auth/use-auth-query';
 import type { RegisterFormData } from '../types';
 

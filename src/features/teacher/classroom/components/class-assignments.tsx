@@ -6,13 +6,12 @@ import {
 	Calendar,
 	CheckCircle2,
 	Clock,
-	Edit,
 	Eye,
 	FileText,
 	FolderOpen,
 	HelpCircle,
+	Loader2,
 	MoreHorizontal,
-	Plus,
 	Search,
 	Trash2,
 } from 'lucide-react';
@@ -25,7 +24,17 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/common/use-toast';
+import {
+	useAssignmentsByClassroom,
+	useCreateAssignment,
+	useDeleteAssignment,
+	useUpdateAssignment,
+} from '@/hooks/queries/assignment/use-assignment-query';
+import type { Assignment } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
+import { AssignmentDetailModal } from './assignment-detail-modal';
+import { CreateAssignmentDialog } from './create-assignment-dialog';
 
 interface ClassAssignmentsProps {
 	classData: ClassroomUiData;
@@ -45,35 +54,134 @@ const typeColors = {
 	exam: '#E57373',
 };
 
+type AssignmentStatus = 'PUBLISHED' | 'OVERDUE' | 'GRADED';
+
+function getUiStatus(assignment: Assignment): AssignmentStatus {
+	if (assignment.status === 'graded' || assignment.status === 'archived') {
+		return 'GRADED';
+	}
+
+	const _due = assignment.dueDate ? new Date(assignment.dueDate) : new Date(assignment.updatedAt);
+	const _now = new Date();
+
+	// if (due < now) {
+	// 	return 'OVERDUE';
+	// }
+
+	return 'PUBLISHED';
+}
+
 export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
-	const classId = classData.id;
-	const assignments: Array<{
-		id: string;
-		title: string;
-		description: string;
-		dueDate: string;
-		totalPoints: number;
-		submissionCount: number;
-		totalStudents: number;
-		type: 'homework' | 'quiz' | 'project' | 'exam';
-		status: 'active' | 'past-due' | 'graded';
-	}> = [];
+	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
+	const {
+		data: assignmentsResponse,
+		isLoading,
+		error: queryError,
+	} = useAssignmentsByClassroom(classId);
+	const createMutation = useCreateAssignment(classId);
+	const updateMutation = useUpdateAssignment(classId);
+	const deleteMutation = useDeleteAssignment(classId);
+	const { toast } = useToast();
+
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterType, setFilterType] = useState<'all' | 'homework' | 'quiz' | 'project' | 'exam'>(
 		'all',
 	);
-	const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'past-due' | 'graded'>('all');
+	const [filterStatus, setFilterStatus] = useState<AssignmentStatus | 'ALL'>('ALL');
+	const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
+	const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-	const filteredAssignments = assignments.filter((assignment) => {
-		if (classId <= 0) return false;
+	const assignments = (
+		Array.isArray(assignmentsResponse) ? assignmentsResponse : []
+	) as Assignment[];
+
+	const mappedAssignments = assignments.map((assignment) => {
+		const uiStatus = getUiStatus(assignment);
+		return {
+			raw: assignment,
+			id: String(assignment.docId),
+			title: assignment.docTitle,
+			description: assignment.note || 'No description',
+			dueDate: assignment.dueDate || assignment.updatedAt,
+			totalPoints: 100,
+			submissionCount: 0,
+			totalStudents: 0,
+			type: 'homework' as const,
+			status: uiStatus,
+		};
+	});
+
+	const filteredAssignments = mappedAssignments.filter((assignment) => {
 		const matchesSearch = assignment.title.toLowerCase().includes(searchQuery.toLowerCase());
 		const matchesType = filterType === 'all' || assignment.type === filterType;
-		const matchesStatus = filterStatus === 'all' || assignment.status === filterStatus;
+		const matchesStatus = filterStatus === 'ALL' || assignment.status === filterStatus;
 		return matchesSearch && matchesType && matchesStatus;
 	});
 
-	const activeAssignments = filteredAssignments.filter((a) => a.status === 'active');
-	const pastAssignments = filteredAssignments.filter((a) => a.status !== 'active');
+	const handleCreateAssignment = async (payload: {
+		title: string;
+		note?: string;
+		gradeLevel?: number;
+		subjectId?: number;
+		classId: number;
+	}) => {
+		try {
+			await createMutation.mutateAsync(payload);
+			toast({
+				title: 'Success',
+				description: 'Assignment created successfully',
+			});
+		} catch (_error) {
+			toast({
+				title: 'Error',
+				description: 'Failed to create assignment',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	const handleDeleteAssignment = async (assignmentId: string) => {
+		if (!confirm('Delete this assignment?')) return;
+
+		try {
+			await deleteMutation.mutateAsync(parseInt(assignmentId, 10));
+			toast({
+				title: 'Success',
+				description: 'Assignment deleted successfully',
+			});
+		} catch (_error) {
+			toast({
+				title: 'Error',
+				description: 'Failed to delete assignment',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center py-12">
+				<div className="text-center">
+					<Loader2 className="w-8 h-8 animate-spin text-[#F5B041] mx-auto mb-3" />
+					<p className="text-gray-600">Loading assignments...</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (queryError) {
+		return (
+			<div className="space-y-6">
+				<div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3">
+					<AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+					<div>
+						<h3 className="font-semibold mb-1">Failed to load assignments</h3>
+						<p className="text-sm">{String(queryError)}</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6">
@@ -81,12 +189,15 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
 					<h1 className="font-sans font-bold text-2xl text-[#333]">Assignments</h1>
-					<p className="font-serif text-lg text-[#666]">{assignments.length} total assignments</p>
+					<p className="font-serif text-lg text-[#666]">
+						{mappedAssignments.length} total assignments
+					</p>
 				</div>
-				<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-					<Plus className="w-4 h-4 mr-2" />
-					Create Assignment
-				</Button>
+				<CreateAssignmentDialog
+					onSubmit={handleCreateAssignment}
+					classId={classId}
+					isLoading={createMutation.isPending}
+				/>
 			</div>
 
 			{/* Filters */}
@@ -130,52 +241,47 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 				</div>
 
 				<div className="flex gap-2">
-					{(['all', 'active', 'graded'] as const).map((status) => (
+					{(['ALL', 'PUBLISHED', 'OVERDUE', 'GRADED'] as const).map((status) => (
 						<button
 							type="button"
 							key={status}
 							onClick={() => setFilterStatus(status)}
 							className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
 								filterStatus === status
-									? 'bg-[#A8D4E6] text-[#333]'
+									? status === 'PUBLISHED'
+										? 'bg-[#A8D4E6] text-[#1565C0]'
+										: status === 'OVERDUE'
+											? 'bg-[#FEE2E2] text-[#B91C1C]'
+											: status === 'GRADED'
+												? 'bg-[#DCFCE7] text-[#166534]'
+												: 'bg-[#333] text-white'
 									: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
 							}`}
 						>
-							{status.charAt(0).toUpperCase() + status.slice(1)}
+							{status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
 						</button>
 					))}
 				</div>
 			</div>
 
-			{/* Active Assignments */}
-			{activeAssignments.length > 0 && (
-				<div className="space-y-4">
-					<h2 className="font-sans font-semibold text-sm text-[#666] uppercase tracking-wide flex items-center gap-2">
-						<Clock className="w-4 h-4" />
-						Active Assignments
-					</h2>
-					<div className="grid lg:grid-cols-2 gap-4">
-						{activeAssignments.map((assignment, index) => (
-							<AssignmentCard key={assignment.id} assignment={assignment} index={index} />
-						))}
-					</div>
+			<div className="space-y-4">
+				<div className="grid lg:grid-cols-2 gap-4">
+					{filteredAssignments.map((assignment, index) => (
+						<AssignmentCard
+							key={assignment.id}
+							assignment={assignment}
+							index={index}
+							onViewDetails={() => {
+								setSelectedAssignmentId(assignment.raw.docId);
+								setIsDetailOpen(true);
+							}}
+							onDelete={() => handleDeleteAssignment(assignment.id)}
+							isUpdating={updateMutation.isPending}
+							isDeleting={deleteMutation.isPending}
+						/>
+					))}
 				</div>
-			)}
-
-			{/* Past Assignments */}
-			{pastAssignments.length > 0 && (
-				<div className="space-y-4">
-					<h2 className="font-sans font-semibold text-sm text-[#666] uppercase tracking-wide flex items-center gap-2">
-						<CheckCircle2 className="w-4 h-4" />
-						Completed & Graded
-					</h2>
-					<div className="grid lg:grid-cols-2 gap-4">
-						{pastAssignments.map((assignment, index) => (
-							<AssignmentCard key={assignment.id} assignment={assignment} index={index} />
-						))}
-					</div>
-				</div>
-			)}
+			</div>
 
 			{filteredAssignments.length === 0 && (
 				<div className="text-center py-16">
@@ -185,6 +291,18 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 						Try adjusting your filters or create a new assignment.
 					</p>
 				</div>
+			)}
+			{selectedAssignmentId !== null && (
+				<AssignmentDetailModal
+					open={isDetailOpen}
+					onOpenChange={(open) => {
+						setIsDetailOpen(open);
+						if (!open) {
+							setSelectedAssignmentId(null);
+						}
+					}}
+					assignmentId={selectedAssignmentId}
+				/>
 			)}
 		</div>
 	);
@@ -200,16 +318,27 @@ interface AssignmentCardProps {
 		submissionCount: number;
 		totalStudents: number;
 		type: 'homework' | 'quiz' | 'project' | 'exam';
-		status: 'active' | 'past-due' | 'graded';
+		status: AssignmentStatus;
 	};
 	index: number;
+	onViewDetails: () => void;
+	onDelete: () => void;
+	isUpdating: boolean;
+	isDeleting: boolean;
 }
 
-function AssignmentCard({ assignment, index }: AssignmentCardProps) {
+function AssignmentCard({
+	assignment,
+	index,
+	onViewDetails,
+	onDelete,
+	isUpdating,
+	isDeleting,
+}: AssignmentCardProps) {
 	const Icon = typeIcons[assignment.type];
 	const color = typeColors[assignment.type];
 	const submissionRate = Math.round((assignment.submissionCount / assignment.totalStudents) * 100);
-	const isOverdue = new Date(assignment.dueDate) < new Date() && assignment.status === 'active';
+	const _isOverdue = assignment.status === 'OVERDUE';
 
 	return (
 		<div
@@ -237,17 +366,13 @@ function AssignmentCard({ assignment, index }: AssignmentCardProps) {
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="rounded-xl">
-						<DropdownMenuItem>
+						<DropdownMenuItem onClick={onViewDetails}>
 							<Eye className="w-4 h-4 mr-2" />
 							View Details
 						</DropdownMenuItem>
-						<DropdownMenuItem>
-							<Edit className="w-4 h-4 mr-2" />
-							Edit
-						</DropdownMenuItem>
-						<DropdownMenuItem className="text-[#E57373]">
+						<DropdownMenuItem onClick={onDelete} disabled={isDeleting} className="text-[#E57373]">
 							<Trash2 className="w-4 h-4 mr-2" />
-							Delete
+							{isDeleting ? 'Deleting...' : 'Delete'}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -286,20 +411,20 @@ function AssignmentCard({ assignment, index }: AssignmentCardProps) {
 			<div className="mt-4 flex items-center justify-between">
 				<span
 					className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-						assignment.status === 'graded'
-							? 'bg-[#A8D5BA]/20 text-[#2E7D32]'
-							: isOverdue
-								? 'bg-[#E57373]/20 text-[#C62828]'
-								: 'bg-[#A8D4E6]/20 text-[#1565C0]'
+						assignment.status === 'GRADED'
+							? 'bg-[#DCFCE7] text-[#166534]'
+							: assignment.status === 'OVERDUE'
+								? 'bg-[#FEE2E2] text-[#B91C1C]'
+								: 'bg-[#DBEAFE] text-[#1D4ED8]'
 					}`}
 				>
-					{assignment.status === 'graded' && <CheckCircle2 className="w-3 h-3" />}
-					{isOverdue && <AlertCircle className="w-3 h-3" />}
-					{assignment.status === 'active' && !isOverdue && <Clock className="w-3 h-3" />}
-					{assignment.status === 'graded' ? 'Graded' : isOverdue ? 'Overdue' : 'Active'}
+					{assignment.status === 'GRADED' && <CheckCircle2 className="w-3 h-3" />}
+					{assignment.status === 'OVERDUE' && <AlertCircle className="w-3 h-3" />}
+					{assignment.status === 'PUBLISHED' && <Clock className="w-3 h-3" />}
+					{assignment.status}
 				</span>
 
-				{assignment.status === 'active' && (
+				{assignment.status === 'PUBLISHED' && (
 					<Button variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
 						View Submissions
 					</Button>
