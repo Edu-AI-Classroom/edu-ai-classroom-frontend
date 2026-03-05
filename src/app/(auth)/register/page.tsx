@@ -1,5 +1,5 @@
-import { AuthFlipBook } from '@/features/auth/auth-flip-book';
+import { RegisterFlow } from '@/features/auth/register/register-flow';
 
 export default function RegisterPage() {
-	return <AuthFlipBook initialMode="register" />;
+	return <RegisterFlow />;
 }

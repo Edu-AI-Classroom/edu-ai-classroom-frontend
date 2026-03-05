@@ -1,7 +1,7 @@
 export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
 
 export interface User {
-	userId: string;
+	userId: number;
 	userName: string;
 	email: string;
 	role: Role;
@@ -21,6 +21,7 @@ export interface AuthRegisterPayload {
 	name: string;
 	email: string;
 	password: string;
+	role: Extract<Role, 'TEACHER' | 'STUDENT'>;
 }
 
 export interface AuthUserResponse {

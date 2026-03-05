@@ -8,8 +8,8 @@ type QueryLikeMeta = {
 	};
 };
 
-function handleGlobalError(error: unknown, query?: QueryLikeMeta) {
-	if (query?.meta?.silent) return;
+function handleGlobalError(error: unknown, target?: QueryLikeMeta) {
+	if (target?.meta?.silent) return;
 	const apiError = error as ApiError;
 	console.log('Global error handler:', apiError);
 	if (!apiError) {
@@ -34,12 +34,25 @@ function handleGlobalError(error: unknown, query?: QueryLikeMeta) {
 	}
 }
 
+const handleQueryError = (error: unknown, query: QueryLikeMeta) => {
+	handleGlobalError(error, query);
+};
+
+const handleMutationError = (
+	error: unknown,
+	_variables: unknown,
+	_onMutateResult: unknown,
+	mutation: { options?: QueryLikeMeta },
+) => {
+	handleGlobalError(error, mutation.options);
+};
+
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
-		onError: handleGlobalError,
+		onError: handleQueryError,
 	}),
 	mutationCache: new MutationCache({
-		onError: handleGlobalError,
+		onError: handleMutationError,
 	}),
 
 	defaultOptions: {
