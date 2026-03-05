@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/services/api/query-keys';
-import { subscriptionService } from '@/services/api/subscription.service';
+import { subscriptionService } from '@/services/payment/subscription.service';
 
 export function useUserSubscription() {
 	return useQuery({

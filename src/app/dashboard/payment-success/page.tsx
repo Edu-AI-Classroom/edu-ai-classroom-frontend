@@ -3,11 +3,11 @@
 import { ArrowRight, CheckCircle, Download, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [mounted, setMounted] = useState(false);
@@ -16,7 +16,7 @@ export default function PaymentSuccessPage() {
 		setMounted(true);
 	}, []);
 
-	const planName = searchParams.get('plan') || 'Gói Chuyên Nghiệp';
+	const planName = searchParams.get('plan') || 'Professional Plan';
 	const amount = searchParams.get('amount') || '500,000';
 
 	if (!mounted) return null;
@@ -36,7 +36,7 @@ export default function PaymentSuccessPage() {
 					className="inline-flex items-center gap-2 text-[#f5b041] hover:text-[#e5a030] transition-colors mb-8"
 				>
 					<Home className="w-5 h-5" />
-					<span className="font-semibold">Quay lại dashboard</span>
+					<span className="font-semibold">Back to Dashboard</span>
 				</Link>
 			</div>
 
@@ -55,7 +55,7 @@ export default function PaymentSuccessPage() {
 
 							{/* Success icon */}
 							<div className="relative flex items-center justify-center">
-								<div className="w-32 h-32 bg-gradient-to-br from-[#a8d5ba] to-[#7bb89e] rounded-full flex items-center justify-center shadow-2xl animate-bounce">
+								<div className="w-32 h-32 bg-linear-to-br from-[#a8d5ba] to-[#7bb89e] rounded-full flex items-center justify-center shadow-2xl animate-bounce">
 									<CheckCircle className="w-16 h-16 text-white" />
 								</div>
 							</div>
@@ -64,11 +64,9 @@ export default function PaymentSuccessPage() {
 
 					{/* Success Message */}
 					<div className="text-center space-y-4 mb-12">
-						<h1 className="text-5xl md:text-6xl font-bold text-[#333333]">
-							Thanh toán thành công!
-						</h1>
+						<h1 className="text-5xl md:text-6xl font-bold text-[#333333]">Payment Successful!</h1>
 						<p className="text-xl text-[#666666] max-w-2xl mx-auto">
-							Cảm ơn bạn đã đăng ký. Gói dịch vụ của bạn đã được kích hoạt.
+							Thank you for subscribing. Your plan has been activated.
 						</p>
 					</div>
 
@@ -78,55 +76,55 @@ export default function PaymentSuccessPage() {
 							{/* Plan info */}
 							<div className="flex items-center justify-between pb-6 border-b border-[#e0dcd5]">
 								<div>
-									<p className="text-sm text-[#666666] font-medium mb-1">Gói đã mua</p>
+									<p className="text-sm text-[#666666] font-medium mb-1">Purchased Plan</p>
 									<h2 className="text-3xl font-bold text-[#333333]">{planName}</h2>
 								</div>
-								<div className="text-right">
-									<p className="text-sm text-[#666666] font-medium mb-1">Tổng tiền</p>
-									<p className="text-3xl font-bold text-[#f5b041]">{amount}đ</p>
-								</div>
+								{/* <div className="text-right">
+                  <p className="text-sm text-[#666666] font-medium mb-1">Total Amount</p>
+                  <p className="text-3xl font-bold text-[#f5b041]">{amount} VND</p>
+                </div> */}
 							</div>
 
 							{/* Transaction details */}
 							<div className="grid md:grid-cols-3 gap-4">
 								<div className="p-4 bg-[#a8d5ba]/5 rounded-lg">
-									<p className="text-sm text-[#666666] mb-2">Mã giao dịch</p>
+									<p className="text-sm text-[#666666] mb-2">Transaction ID</p>
 									<p className="font-mono text-[#333333] font-semibold break-all">TXN20260304001</p>
 								</div>
 								<div className="p-4 bg-[#f5b041]/5 rounded-lg">
-									<p className="text-sm text-[#666666] mb-2">Ngày thanh toán</p>
+									<p className="text-sm text-[#666666] mb-2">Payment Date</p>
 									<p className="font-semibold text-[#333333]">
-										{new Date().toLocaleDateString('vi-VN')}
+										{new Date().toLocaleDateString('en-US')}
 									</p>
 								</div>
 								<div className="p-4 bg-[#c5b4e3]/5 rounded-lg">
-									<p className="text-sm text-[#666666] mb-2">Trạng thái</p>
+									<p className="text-sm text-[#666666] mb-2">Status</p>
 									<p className="font-semibold text-[#a8d5ba] flex items-center gap-2">
 										<span className="w-2 h-2 bg-[#a8d5ba] rounded-full"></span>
-										Thành công
+										Success
 									</p>
 								</div>
 							</div>
 
 							{/* What's included */}
 							<div className="pt-6 border-t border-[#e0dcd5]">
-								<p className="text-sm font-semibold text-[#333333] mb-4">Gói của bạn bao gồm:</p>
+								<p className="text-sm font-semibold text-[#333333] mb-4">Your plan includes:</p>
 								<div className="grid md:grid-cols-2 gap-3">
 									<div className="flex items-start gap-3">
 										<CheckCircle className="w-5 h-5 text-[#a8d5ba] flex-shrink-0 mt-0.5" />
-										<span className="text-sm text-[#333333]">Truy cập đầy đủ nền tảng</span>
+										<span className="text-sm text-[#333333]">Full platform access</span>
 									</div>
 									<div className="flex items-start gap-3">
 										<CheckCircle className="w-5 h-5 text-[#a8d5ba] flex-shrink-0 mt-0.5" />
-										<span className="text-sm text-[#333333]">AI tokens hạn chế</span>
+										<span className="text-sm text-[#333333]">AI token allocation</span>
 									</div>
 									<div className="flex items-start gap-3">
 										<CheckCircle className="w-5 h-5 text-[#a8d5ba] flex-shrink-0 mt-0.5" />
-										<span className="text-sm text-[#333333]">Hỗ trợ ưu tiên</span>
+										<span className="text-sm text-[#333333]">Priority support</span>
 									</div>
 									<div className="flex items-start gap-3">
 										<CheckCircle className="w-5 h-5 text-[#a8d5ba] flex-shrink-0 mt-0.5" />
-										<span className="text-sm text-[#333333]">Cập nhật tính năng mới</span>
+										<span className="text-sm text-[#333333]">New feature updates</span>
 									</div>
 								</div>
 							</div>
@@ -135,16 +133,16 @@ export default function PaymentSuccessPage() {
 
 					{/* Next Steps */}
 					<div className="w-full max-w-2xl mb-12">
-						<h3 className="text-lg font-bold text-[#333333] mb-6 text-center">Bước tiếp theo</h3>
+						<h3 className="text-lg font-bold text-[#333333] mb-6 text-center">Next Steps</h3>
 						<div className="space-y-4">
 							<div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-[#e0dcd5]">
 								<div className="flex-shrink-0 w-8 h-8 bg-[#a8d5ba] text-white rounded-full flex items-center justify-center font-bold">
 									1
 								</div>
 								<div>
-									<p className="font-semibold text-[#333333]">Truy cập dashboard</p>
+									<p className="font-semibold text-[#333333]">Access your dashboard</p>
 									<p className="text-sm text-[#666666] mt-1">
-										Bắt đầu sử dụng các tính năng cao cấp của gói dịch vụ
+										Start using your premium plan features
 									</p>
 								</div>
 							</div>
@@ -154,9 +152,9 @@ export default function PaymentSuccessPage() {
 									2
 								</div>
 								<div>
-									<p className="font-semibold text-[#333333]">Nhận hóa đơn điện tử</p>
+									<p className="font-semibold text-[#333333]">Get your invoice</p>
 									<p className="text-sm text-[#666666] mt-1">
-										Kiểm tra email để nhận hóa đơn và thông tin gói dịch vụ
+										Check your email for invoice and subscription details
 									</p>
 								</div>
 							</div>
@@ -166,9 +164,9 @@ export default function PaymentSuccessPage() {
 									3
 								</div>
 								<div>
-									<p className="font-semibold text-[#333333]">Liên hệ hỗ trợ nếu cần</p>
+									<p className="font-semibold text-[#333333]">Contact support if needed</p>
 									<p className="text-sm text-[#666666] mt-1">
-										Đội hỗ trợ 24/7 sẵn sàng trợ giúp bạn
+										Our 24/7 support team is here for you
 									</p>
 								</div>
 							</div>
@@ -183,7 +181,7 @@ export default function PaymentSuccessPage() {
 							onClick={() => router.push('/dashboard')}
 						>
 							<ArrowRight className="w-4 h-4 mr-2" />
-							Vào Dashboard
+							Go to Dashboard
 						</Button>
 						<Button
 							size="lg"
@@ -191,17 +189,24 @@ export default function PaymentSuccessPage() {
 							className="flex-1 border-[#e0dcd5] text-[#333333] hover:bg-[#f0ede8]"
 						>
 							<Download className="w-4 h-4 mr-2" />
-							Tải hóa đơn
+							Download Invoice
 						</Button>
 					</div>
 
 					{/* Footer Note */}
 					<p className="text-sm text-[#666666] text-center mt-12 max-w-2xl">
-						Nếu bạn không thấy gói dịch vụ được kích hoạt, hãy chờ vài phút hoặc liên hệ với bộ phận
-						hỗ trợ.
+						If your plan is not activated yet, please wait a few minutes or contact support.
 					</p>
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function PaymentSuccessPage() {
+	return (
+		<Suspense fallback={<div className="min-h-screen bg-[#FAF9F6]" />}>
+			<PaymentSuccessContent />
+		</Suspense>
 	);
 }

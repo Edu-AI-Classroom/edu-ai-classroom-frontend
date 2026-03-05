@@ -63,11 +63,6 @@ export function Header() {
 					>
 						Subscription
 					</a>
-					{isAuthenticated && user ? (
-						<Button variant="ghost" className="font-semibold text-charcoal" onClick={handleLogout}>
-							Log out
-						</Button>
-					) : null}
 				</nav>
 
 				{/* CTA Buttons */}

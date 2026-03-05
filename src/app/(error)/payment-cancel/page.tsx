@@ -15,7 +15,7 @@ export default function PaymentCancelPage() {
 					className="inline-flex items-center gap-2 text-[#f5b041] hover:text-[#e5a030] transition-colors mb-8"
 				>
 					<Home className="w-5 h-5" />
-					<span className="font-semibold">Quay lại trang chủ</span>
+					<span className="font-semibold">Back to Home</span>
 				</Link>
 			</div>
 
@@ -57,19 +57,19 @@ export default function PaymentCancelPage() {
 					<div className="space-y-6">
 						{/* Title Section */}
 						<div className="space-y-2">
-							<h1 className="text-4xl font-bold text-[#333333]">Đã hủy thanh toán</h1>
-							<p className="text-lg text-[#666666]">Bạn đã hủy giao dịch thanh toán của mình</p>
+							<h1 className="text-4xl font-bold text-[#333333]">Payment Canceled</h1>
+							<p className="text-lg text-[#666666]">You have canceled your payment transaction.</p>
 						</div>
 
 						{/* Info Card */}
 						<Card className="bg-white border border-[#e0dcd5] p-4 space-y-3">
 							<div className="space-y-2">
-								<h3 className="font-semibold text-[#333333] text-sm">Thông tin:</h3>
+								<h3 className="font-semibold text-[#333333] text-sm">Information:</h3>
 								<p className="text-[#666666] text-sm flex items-start gap-2">
 									<span className="text-[#a8d4e6] mt-1">•</span>
 									<span>
-										Giao dịch của bạn đã được hủy an toàn. Không có khoản tiền nào được trừ từ tài
-										khoản của bạn.
+										Your transaction was canceled safely. No money has been deducted from your
+										account.
 									</span>
 								</p>
 							</div>
@@ -77,16 +77,16 @@ export default function PaymentCancelPage() {
 
 						{/* What You Can Do Section */}
 						<div className="space-y-3">
-							<h3 className="font-semibold text-[#333333]">Bước tiếp theo:</h3>
+							<h3 className="font-semibold text-[#333333]">Next steps:</h3>
 							<div className="space-y-2">
 								<div className="flex items-start gap-3 p-3 bg-[#a8d5ba]/10 rounded-lg">
 									<span className="flex items-center justify-center w-6 h-6 bg-[#a8d5ba] text-white rounded-full text-sm font-bold flex-shrink-0">
 										1
 									</span>
 									<div>
-										<p className="font-medium text-[#333333] text-sm">Quay lại trang giá</p>
+										<p className="font-medium text-[#333333] text-sm">Go back to pricing</p>
 										<p className="text-xs text-[#666666]">
-											Xem lại các gói dịch vụ và chọn gói phù hợp
+											Review the available plans and choose the one that fits you best.
 										</p>
 									</div>
 								</div>
@@ -96,9 +96,9 @@ export default function PaymentCancelPage() {
 										2
 									</span>
 									<div>
-										<p className="font-medium text-[#333333] text-sm">Thử lại thanh toán</p>
+										<p className="font-medium text-[#333333] text-sm">Try payment again</p>
 										<p className="text-xs text-[#666666]">
-											Khi sẵn sàng, bạn có thể tiếp tục thanh toán
+											When you are ready, you can continue with payment.
 										</p>
 									</div>
 								</div>
@@ -108,9 +108,9 @@ export default function PaymentCancelPage() {
 										3
 									</span>
 									<div>
-										<p className="font-medium text-[#333333] text-sm">Liên hệ bộ phận hỗ trợ</p>
+										<p className="font-medium text-[#333333] text-sm">Contact support</p>
 										<p className="text-xs text-[#666666]">
-											Có câu hỏi? Đội hỗ trợ của chúng tôi sẵn lòng giúp
+											Have questions? Our support team is ready to help.
 										</p>
 									</div>
 								</div>
@@ -126,7 +126,7 @@ export default function PaymentCancelPage() {
 							>
 								<Link href="/subscription">
 									<RefreshCw className="w-4 h-4" />
-									<span>Quay lại trang giá</span>
+									<span>Back to Pricing</span>
 								</Link>
 							</Button>
 
@@ -136,7 +136,7 @@ export default function PaymentCancelPage() {
 								className="border-[#e0dcd5] text-[#333333] hover:bg-[#f0ede8] flex items-center gap-2 flex-1"
 							>
 								<HeadsetIcon className="w-4 h-4" />
-								Liên hệ hỗ trợ
+								Contact Support
 							</Button>
 						</div>
 
@@ -145,7 +145,7 @@ export default function PaymentCancelPage() {
 							href="/dashboard"
 							className="inline-flex items-center gap-2 text-[#f5b041] hover:text-[#e5a030] font-medium transition-colors"
 						>
-							<span>Tiếp tục quản lý lớp học</span>
+							<span>Continue managing your classroom</span>
 							<ArrowRight className="w-4 h-4" />
 						</Link>
 					</div>

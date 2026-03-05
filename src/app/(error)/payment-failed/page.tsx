@@ -15,7 +15,7 @@ export default function PaymentFailedPage() {
 					className="inline-flex items-center gap-2 text-[#f5b041] hover:text-[#e5a030] transition-colors mb-8"
 				>
 					<Home className="w-5 h-5" />
-					<span className="font-semibold">Quay lại trang chủ</span>
+					<span className="font-semibold">Back to Home</span>
 				</Link>
 			</div>
 
@@ -57,36 +57,36 @@ export default function PaymentFailedPage() {
 					<div className="space-y-6">
 						{/* Title Section */}
 						<div className="space-y-2">
-							<h1 className="text-4xl font-bold text-[#333333]">Thanh toán thất bại</h1>
+							<h1 className="text-4xl font-bold text-[#333333]">Payment Failed</h1>
 							<p className="text-lg text-[#666666]">
-								Rất tiếc, giao dịch của bạn không thể hoàn tất
+								Sorry, your transaction could not be completed.
 							</p>
 						</div>
 
 						{/* Error Details Card */}
 						<Card className="bg-white border border-[#e0dcd5] p-4 space-y-3">
 							<div className="space-y-2">
-								<h3 className="font-semibold text-[#333333] text-sm">Lý do từ chối:</h3>
+								<h3 className="font-semibold text-[#333333] text-sm">Reason for failure:</h3>
 								<p className="text-[#666666] text-sm flex items-start gap-2">
 									<span className="text-[#f5b041] mt-1">•</span>
-									<span>
-										Hạn mức thẻ tín dụng đã được vượt quá. Vui lòng liên hệ ngân hàng của bạn.
-									</span>
+									<span>Your credit card limit has been exceeded. Please contact your bank.</span>
 								</p>
 							</div>
 						</Card>
 
 						{/* What You Can Do Section */}
 						<div className="space-y-3">
-							<h3 className="font-semibold text-[#333333]">Bước tiếp theo:</h3>
+							<h3 className="font-semibold text-[#333333]">Next steps:</h3>
 							<div className="space-y-2">
 								<div className="flex items-start gap-3 p-3 bg-[#a8d5ba]/10 rounded-lg">
 									<span className="flex items-center justify-center w-6 h-6 bg-[#a8d5ba] text-white rounded-full text-sm font-bold flex-shrink-0">
 										1
 									</span>
 									<div>
-										<p className="font-medium text-[#333333] text-sm">Kiểm tra thông tin thẻ</p>
-										<p className="text-xs text-[#666666]">Xác nhận số thẻ và ngày hết hạn</p>
+										<p className="font-medium text-[#333333] text-sm">Check card details</p>
+										<p className="text-xs text-[#666666]">
+											Verify your card number and expiry date.
+										</p>
 									</div>
 								</div>
 
@@ -95,12 +95,8 @@ export default function PaymentFailedPage() {
 										2
 									</span>
 									<div>
-										<p className="font-medium text-[#333333] text-sm">
-											Thử lại với phương thức thanh toán khác
-										</p>
-										<p className="text-xs text-[#666666]">
-											Chúng tôi hỗ trợ nhiều phương thức khác nhau
-										</p>
+										<p className="font-medium text-[#333333] text-sm">Try another payment method</p>
+										<p className="text-xs text-[#666666]">We support multiple payment methods.</p>
 									</div>
 								</div>
 
@@ -109,8 +105,8 @@ export default function PaymentFailedPage() {
 										3
 									</span>
 									<div>
-										<p className="font-medium text-[#333333] text-sm">Liên hệ bộ phận hỗ trợ</p>
-										<p className="text-xs text-[#666666]">Chúng tôi sẵn sàng giúp bạn 24/7</p>
+										<p className="font-medium text-[#333333] text-sm">Contact support</p>
+										<p className="text-xs text-[#666666]">We are here to help you 24/7.</p>
 									</div>
 								</div>
 							</div>
@@ -123,7 +119,7 @@ export default function PaymentFailedPage() {
 								className="bg-[#f5b041] hover:bg-[#e5a030] text-[#333333] font-semibold flex items-center gap-2 flex-1"
 							>
 								<RefreshCw className="w-4 h-4" />
-								Thử lại thanh toán
+								Try Payment Again
 							</Button>
 
 							<Button
@@ -132,7 +128,7 @@ export default function PaymentFailedPage() {
 								className="border-[#e0dcd5] text-[#333333] hover:bg-[#f0ede8] flex items-center gap-2 flex-1"
 							>
 								<HeadsetIcon className="w-4 h-4" />
-								Liên hệ hỗ trợ
+								Contact Support
 							</Button>
 						</div>
 
@@ -141,7 +137,7 @@ export default function PaymentFailedPage() {
 							href="/dashboard"
 							className="inline-flex items-center gap-2 text-[#f5b041] hover:text-[#e5a030] font-medium transition-colors"
 						>
-							<span>Tiếp tục quản lý lớp học</span>
+							<span>Continue managing your classroom</span>
 							<ArrowRight className="w-4 h-4" />
 						</Link>
 					</div>
@@ -151,41 +147,39 @@ export default function PaymentFailedPage() {
 			{/* FAQ Section */}
 			<div className="max-w-4xl mx-auto mt-16">
 				<Card className="bg-white border border-[#e0dcd5] p-6 md:p-8">
-					<h2 className="text-2xl font-bold text-[#333333] mb-6">Câu hỏi thường gặp</h2>
+					<h2 className="text-2xl font-bold text-[#333333] mb-6">Frequently Asked Questions</h2>
 
 					<div className="grid md:grid-cols-2 gap-6">
 						<div className="space-y-2">
-							<h3 className="font-semibold text-[#333333]">
-								Tại sao thanh toán của tôi bị từ chối?
-							</h3>
+							<h3 className="font-semibold text-[#333333]">Why was my payment declined?</h3>
 							<p className="text-sm text-[#666666]">
-								Có nhiều lý do có thể khiến thanh toán bị từ chối: số thẻ không chính xác, ngân hàng
-								từ chối giao dịch, hoặc tài khoản của bạn bị khóa.
+								There are several possible reasons: incorrect card details, a bank-side decline, or
+								a temporarily blocked account.
 							</p>
 						</div>
 
 						<div className="space-y-2">
-							<h3 className="font-semibold text-[#333333]">Dữ liệu của tôi có an toàn không?</h3>
+							<h3 className="font-semibold text-[#333333]">Is my data secure?</h3>
 							<p className="text-sm text-[#666666]">
-								Chúng tôi sử dụng mã hóa SSL 256-bit và không lưu trữ thông tin thẻ tín dụng trên
-								máy chủ của mình.
+								We use 256-bit SSL encryption and do not store credit card information on our
+								servers.
 							</p>
 						</div>
 
 						<div className="space-y-2">
 							<h3 className="font-semibold text-[#333333]">
-								Báo cáo giao dịch này có đạo đức không?
+								What if I do not recognize this transaction?
 							</h3>
 							<p className="text-sm text-[#666666]">
-								Nếu bạn không nhận ra giao dịch này, vui lòng liên hệ ngân hàng của bạn ngay lập tức
-								để báo cáo hoạt động gian lận.
+								If you do not recognize this transaction, please contact your bank immediately to
+								report potential fraud.
 							</p>
 						</div>
 
 						<div className="space-y-2">
-							<h3 className="font-semibold text-[#333333]">Tôi sẽ được tiền hoàn lại khi nào?</h3>
+							<h3 className="font-semibold text-[#333333]">When will I receive my refund?</h3>
 							<p className="text-sm text-[#666666]">
-								Tiền hoàn lại thường mất 3-5 ngày làm việc tùy thuộc vào ngân hàng của bạn để xử lý.
+								Refunds usually take 3-5 business days, depending on your bank's processing time.
 							</p>
 						</div>
 					</div>
@@ -197,14 +191,14 @@ export default function PaymentFailedPage() {
 				<Card className="bg-gradient-to-r from-[#c5b4e3]/20 to-[#a8d4e6]/20 border border-[#c5b4e3]/40 p-6 md:p-8">
 					<div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
 						<div>
-							<h3 className="text-lg font-bold text-[#333333] mb-2">Cần giúp đỡ?</h3>
-							<p className="text-[#666666]">Đội hỗ trợ của chúng tôi sẵn sàng giúp 24/7</p>
+							<h3 className="text-lg font-bold text-[#333333] mb-2">Need Help?</h3>
+							<p className="text-[#666666]">Our support team is available 24/7.</p>
 						</div>
 						<Button
 							size="lg"
 							className="bg-[#f5b041] hover:bg-[#e5a030] text-[#333333] font-semibold"
 						>
-							Chat với hỗ trợ
+							Chat with Support
 						</Button>
 					</div>
 				</Card>
