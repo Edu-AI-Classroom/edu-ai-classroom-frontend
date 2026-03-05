@@ -139,9 +139,12 @@ export const useClassMutations = () => {
 
 	const deleteClassMutation = useMutation({
 		mutationFn: ({ classId }: DeleteClassInput) => ClassService.deleteClass(classId),
-		onSuccess: async (_data, variables) => {
+		onSuccess: (_data, variables) => {
 			setClassError(null);
-			await Promise.all([invalidateClassList(), invalidateClassDetail(variables.classId)]);
+			void invalidateClassList();
+			queryClient.removeQueries({
+				queryKey: queryKeys.class.detail(variables.classId),
+			});
 
 			if (selectedClassId !== null && selectedClassId === variables.classId) {
 				resetClassContext();

@@ -58,4 +58,26 @@ export const queryKeys = {
 		plans: () => [...queryKeys.subscription.all, 'plans'] as const,
 		userCurrent: () => [...queryKeys.subscription.all, 'user-current'] as const,
 	},
+
+	assignment: {
+		all: ['assignment'] as const,
+		list: (params?: {
+			page?: number;
+			limit?: number;
+			sortBy?: string;
+			sortOrder?: 'asc' | 'desc';
+			search?: string;
+		}) => ['assignment', 'list', params ?? {}] as const,
+		detail: (assignmentId: string | number) => ['assignment', 'detail', assignmentId] as const,
+	},
+
+	subject: {
+		all: ['subject'] as const,
+	},
+
+	news: {
+		all: ['news'] as const,
+		list: (classId: number, params?: any) => ['news', 'class', classId, params ?? {}] as const,
+		detail: (id: number | string) => ['news', 'detail', id] as const,
+	},
 };

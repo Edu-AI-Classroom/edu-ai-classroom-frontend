@@ -14,6 +14,7 @@ import type {
 	GroupListResponse,
 	Student,
 	Teacher,
+	TeacherApiResponse,
 	UpdateClassroomPayload,
 	UpdateStudentGroupPayload,
 	UsersInClassResponse,
@@ -37,7 +38,7 @@ export const ClassService = {
 		httpPost<Teacher>(API_ENDPOINTS.CLASS.ADD_TEACHER_TO_CLASS(classId), payload),
 
 	getTeachers: (classId: number, params?: PaginationParams) =>
-		httpGet<UsersInClassResponse>(
+		httpGet<TeacherApiResponse[]>(
 			`${API_ENDPOINTS.CLASS.GET_TEACHERS(classId)}${buildQueryString(params)}`,
 		),
 
