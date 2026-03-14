@@ -12,6 +12,7 @@ export interface ClassroomUiData {
 	rotation: number;
 	pendingGrading: number;
 	upcomingDeadlines: number;
+	teacherName: string;
 	isOwner?: boolean;
 	createdBy?: number;
 }
@@ -31,6 +32,7 @@ export const mapClassroomToUi = (classroom: Classroom, index = 0): ClassroomUiDa
 	rotation: CLASSROOM_ROTATIONS[index % CLASSROOM_ROTATIONS.length],
 	pendingGrading: 0,
 	upcomingDeadlines: 0,
+	teacherName: classroom.createdByName ?? 'Teacher',
 	isOwner: classroom.isOwner,
 	createdBy: classroom.createdBy,
 });
