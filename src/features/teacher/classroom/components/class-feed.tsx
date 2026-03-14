@@ -62,7 +62,7 @@ interface ClassFeedProps {
 	classData: ClassroomUiData;
 }
 
-type PostAudience = 'students' | 'parents' | 'all';
+type PostAudience = 'students' | 'all';
 
 export default function ClassFeed({ classData }: ClassFeedProps) {
 	const classId = classData.id;
@@ -71,7 +71,7 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 	const queryClient = useQueryClient();
 
 	const [newPost, setNewPost] = useState('');
-	const [audience, setAudience] = useState<'students' | 'parents' | 'all'>('all');
+	const [audience, setAudience] = useState<'students' | 'all'>('all');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [expandedComments, setExpandedComments] = useState<string[]>([]);
 
@@ -207,33 +207,6 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 								>
 									<Paperclip className="w-4 h-4 mr-1" /> Attach
 								</Button>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button
-											type="button"
-											variant="outline"
-											size="sm"
-											className="rounded-xl text-[#666] bg-transparent"
-											disabled={createNewsMutation.isPending}
-										>
-											{audience === 'all'
-												? 'Everyone'
-												: audience === 'students'
-													? 'Students'
-													: 'Parents'}
-											<ChevronDown className="w-3 h-3 ml-1" />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start" className="rounded-xl">
-										<DropdownMenuItem onClick={() => setAudience('all')}>Everyone</DropdownMenuItem>
-										<DropdownMenuItem onClick={() => setAudience('students')}>
-											Students Only
-										</DropdownMenuItem>
-										<DropdownMenuItem onClick={() => setAudience('parents')}>
-											Parents Only
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
 							</div>
 							<Button
 								type="button"
@@ -372,9 +345,7 @@ function PostCard({
 	const togglePinMut = useMutation({
 		mutationFn: () => {
 			const audience: PostAudience =
-				post.audience === 'students' || post.audience === 'parents' || post.audience === 'all'
-					? post.audience
-					: 'all';
+				post.audience === 'students' || post.audience === 'all' ? post.audience : 'all';
 
 			return NewsService.updateNews(post.id, {
 				classId,

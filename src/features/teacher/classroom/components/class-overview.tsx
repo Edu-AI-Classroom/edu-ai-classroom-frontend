@@ -174,13 +174,6 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 					rotation={-0.5}
 				/>
 				<StatCard
-					icon={Users}
-					label="Teachers"
-					value={teachers.length}
-					color="#C5B4E3"
-					rotation={0.3}
-				/>
-				<StatCard
 					icon={CheckCircle2}
 					label="Submission Rate"
 					value={`${stats.submissionRate}%`}
@@ -201,89 +194,6 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 					color="#C5B4E3"
 					rotation={0.8}
 				/>
-			</div>
-
-			{/* Teachers Section */}
-			<div
-				className="bg-white rounded-2xl p-6 shadow-sm border border-[#E0DCD5]"
-				style={{ transform: 'rotate(-0.1deg)' }}
-			>
-				<div className="flex items-center justify-between mb-4">
-					<h2 className="font-sans font-bold text-lg text-[#333] flex items-center gap-2">
-						<Users className="w-5 h-5 text-[#C5B4E3]" />
-						Teachers ({teachers.length})
-					</h2>
-					{isOwner && (
-						<Button
-							onClick={() => setIsAddTeacherModalOpen(true)}
-							size="sm"
-							className="rounded-xl bg-[#C5B4E3] text-white border-0 shadow-sm hover:shadow-md transition-all"
-							disabled={addTeacherToClassMutation.isPending}
-						>
-							<Plus className="w-4 h-4 mr-2" />
-							Add Teacher
-						</Button>
-					)}
-				</div>
-
-				{teachers.length > 0 ? (
-					<div className="space-y-3">
-						{teachers.map((teacher) => {
-							const teacherIsOwner = teacher.isOwner;
-							const teacherUserId = teacher.teacherId;
-							const teacherUserName = teacher.teacherName;
-							const teacherEmail = teacher.email;
-
-							return (
-								<div
-									key={teacherUserId}
-									className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F6] border border-[#E0DCD5]"
-								>
-									<div className="flex items-center gap-3">
-										<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white text-sm font-semibold shrink-0">
-											{teacherUserName
-												?.split(' ')
-												.map((n: string) => n[0])
-												.join('') || 'T'}
-										</div>
-										<div>
-											<p className="font-semibold text-sm text-[#333]">
-												{teacherUserName}
-												{teacherIsOwner && (
-													<span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-[#C5B4E3]/20 text-[#C5B4E3]">
-														Owner
-													</span>
-												)}
-											</p>
-											<p className="text-xs text-[#666]">{teacherEmail}</p>
-										</div>
-									</div>
-									{isOwner && !teacherIsOwner && (
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => handleRemoveTeacher(teacherUserId, teacherUserName)}
-											disabled={removeTeacherFromClassMutation.isPending}
-											className="text-[#E57373] hover:text-[#C62828] hover:bg-[#E57373]/10 rounded-xl"
-										>
-											<Trash2 className="w-4 h-4" />
-										</Button>
-									)}
-								</div>
-							);
-						})}
-					</div>
-				) : (
-					<div className="text-center py-8 text-[#666]">
-						<Users className="w-10 h-10 mx-auto mb-2 text-[#C5B4E3]" />
-						<p className="font-serif">No teachers assigned yet.</p>
-						{isOwner && (
-							<p className="text-sm text-[#999] mt-1">
-								Click "Add Teacher" to invite teachers to this class.
-							</p>
-						)}
-					</div>
-				)}
 			</div>
 
 			{/* Marker-style Stats */}

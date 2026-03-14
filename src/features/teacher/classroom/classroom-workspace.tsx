@@ -256,32 +256,6 @@ export default function ClassroomWorkspace({
 							</div>
 						</div>
 
-						{/* Quick Actions */}
-						<div className="hidden sm:flex items-center gap-2">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-										<Plus className="w-4 h-4 mr-2" />
-										Quick Action
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="w-48 rounded-xl">
-									<DropdownMenuItem className="cursor-pointer">
-										<Megaphone className="w-4 h-4 mr-2" />
-										Create Announcement
-									</DropdownMenuItem>
-									<DropdownMenuItem className="cursor-pointer">
-										<FileText className="w-4 h-4 mr-2" />
-										Assign Content
-									</DropdownMenuItem>
-									<DropdownMenuItem className="cursor-pointer">
-										<PlayCircle className="w-4 h-4 mr-2" />
-										Start Live Class
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-
 						{/* Notifications & Profile */}
 						<div className="flex items-center gap-3">
 							<Button variant="ghost" size="icon" className="relative">
