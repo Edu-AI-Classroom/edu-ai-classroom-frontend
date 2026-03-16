@@ -16,7 +16,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils/utils';
 import { StickerIcon } from './sticker-icon';
 
-type Role = 'teachers' | 'students' | 'parents';
+type Role = 'teachers' | 'students';
 
 const features = {
 	teachers: [
@@ -69,27 +69,7 @@ const features = {
 			color: 'bg-[#A8D4E6]',
 		},
 	],
-	parents: [
-		{
-			icon: BarChart3,
-			title: 'Track Progress',
-			description:
-				"Stay informed about your child's learning journey with real-time progress updates.",
-			color: 'bg-[#A8D5BA]',
-		},
-		{
-			icon: Users,
-			title: 'Connect with Teachers',
-			description: "Easy communication channels to stay in touch with your child's educators.",
-			color: 'bg-[#F2C4CE]',
-		},
-		{
-			icon: Heart,
-			title: 'Support Learning',
-			description: 'Understand what your child is learning and how you can help them succeed.',
-			color: 'bg-[#F5B041]',
-		},
-	],
+
 };
 
 const roleIcons = {
@@ -119,7 +99,7 @@ export function FeaturesSection() {
 				{/* Role Tabs */}
 				<div className="mt-12 flex justify-center">
 					<div className="inline-flex rounded-full bg-secondary p-1.5">
-						{(['teachers', 'students', 'parents'] as Role[]).map((role) => {
+						{(['teachers', 'students'] as Role[]).map((role) => {
 							const Icon = roleIcons[role];
 							return (
 								<button
@@ -143,7 +123,7 @@ export function FeaturesSection() {
 
 				{/* Feature Cards */}
 				<div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-					{features[activeRole].map((feature, index) => {
+					{features[activeRole as keyof typeof features].map((feature, index) => {
 						const Icon = feature.icon;
 						const rotations = [-2, 1, -1, 2];
 						return (

@@ -80,4 +80,14 @@ export const queryKeys = {
 		list: (classId: number, params?: any) => ['news', 'class', classId, params ?? {}] as const,
 		detail: (id: number | string) => ['news', 'detail', id] as const,
 	},
+
+	adminDashboard: {
+		all: ['adminDashboard'] as const,
+		overview: (filters: unknown) => ['adminDashboard', 'overview', filters] as const,
+		userGrowth: (filters: unknown) => ['adminDashboard', 'userGrowth', filters] as const,
+		revenue: (filters: unknown) => ['adminDashboard', 'revenue', filters] as const,
+		transactions: (filters: unknown) => ['adminDashboard', 'transactions', filters] as const,
+		aiUsage: (filters: unknown) => ['adminDashboard', 'aiUsage', filters] as const,
+		classrooms: (filters: unknown) => ['adminDashboard', 'classrooms', filters] as const,
+	},
 };

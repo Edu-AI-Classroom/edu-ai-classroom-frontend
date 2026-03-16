@@ -76,4 +76,13 @@ export const API_ENDPOINTS = {
 		UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
 		DELETE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
 	},
+
+	ADMIN_DASHBOARD: {
+		OVERVIEW: '/api/admin/dashboard/overview',
+		USER_GROWTH: '/api/admin/dashboard/user-growth',
+		REVENUE: '/api/admin/dashboard/revenue',
+		TRANSACTIONS: '/api/admin/dashboard/transactions',
+		AI_USAGE: '/api/admin/dashboard/ai-usage',
+		CLASSROOMS: '/api/admin/dashboard/classrooms',
+	},
 };

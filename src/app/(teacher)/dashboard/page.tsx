@@ -31,36 +31,9 @@ export default function TeacherDashboard() {
 			color: '#F5B041',
 			stats: `${classroomCount} Classes`,
 		},
-		{
-			id: 'canvas',
-			title: 'Lesson Canvas',
-			description: 'Design interactive lessons with our AI-powered drag-and-drop builder.',
-			icon: LayoutGrid,
-			href: '/canvas',
-			color: '#A8D5BA',
-			stats: '12 Lessons',
-		},
-		{
-			id: 'library',
-			title: 'Content Library',
-			description: 'Access and organize your teaching materials, resources, and media.',
-			icon: FolderOpen,
-			href: '/library',
-			color: '#C5B4E3',
-			stats: '48 Resources',
-		},
 	];
 
-	const quickInsights = [
-		{ label: 'Pending Grading', value: 0, icon: FileCheck, color: '#F5B041' },
-		{ label: 'Upcoming Deadlines', value: 0, icon: Clock, color: '#E57373' },
-		{
-			label: 'Total Students',
-			value: totalStudents,
-			icon: Users,
-			color: '#A8D5BA',
-		},
-	];
+	const quickInsights: any[] = [];
 
 	return (
 		<div className="min-h-screen bg-[#FAF9F6] grid-paper">
@@ -151,38 +124,6 @@ export default function TeacherDashboard() {
 					</div>
 				</section>
 
-				{/* Quick Insights */}
-				<section>
-					<h2 className="font-sans font-bold text-lg text-[#333] mb-6 flex items-center gap-2">
-						<span className="w-2 h-6 rounded-full bg-[#A8D5BA]" />
-						Quick Insights
-					</h2>
-
-					<div className="grid sm:grid-cols-3 gap-4">
-						{quickInsights.map((insight, index) => (
-							<div
-								key={insight.label}
-								className="bg-white rounded-xl p-5 shadow-sm border border-[#E0DCD5]"
-								style={{
-									transform: `rotate(${index === 0 ? -0.5 : index === 1 ? 0.5 : -0.3}deg)`,
-								}}
-							>
-								<div className="flex items-center gap-3">
-									<div
-										className="w-10 h-10 rounded-lg flex items-center justify-center"
-										style={{ backgroundColor: `${insight.color}20` }}
-									>
-										<insight.icon className="w-5 h-5" style={{ color: insight.color }} />
-									</div>
-									<div>
-										<p className="font-sans font-bold text-2xl text-[#333]">{insight.value}</p>
-										<p className="text-xs text-[#666]">{insight.label}</p>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
-				</section>
 			</main>
 
 			{/* Footer */}
