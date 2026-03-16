@@ -31,6 +31,15 @@ export default function TeacherDashboard() {
 			color: '#F5B041',
 			stats: `${classroomCount} Classes`,
 		},
+		{
+			id: 'quizzes',
+			title: 'Quiz Dashboard',
+			description: 'Create quizzes, build questions, and track student performance.',
+			icon: FileCheck,
+			href: '/quizzes',
+			color: '#A8D5BA',
+			stats: 'Manage quizzes',
+		},
 	];
 
 	const quickInsights: any[] = [];

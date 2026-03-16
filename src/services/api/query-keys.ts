@@ -71,6 +71,16 @@ export const queryKeys = {
 		detail: (assignmentId: string | number) => ['assignment', 'detail', assignmentId] as const,
 	},
 
+	quiz: {
+		all: ['quiz'] as const,
+		overview: () => ['quiz', 'overview'] as const,
+		list: (params?: { search?: string; classId?: number; type?: 'ASSIGNMENT' | 'EXAM' }) =>
+			['quiz', 'list', params ?? {}] as const,
+		detail: (quizId: string) => ['quiz', 'detail', quizId] as const,
+		questions: (quizId: string) => ['quiz', quizId, 'questions'] as const,
+		submissions: (quizId: string) => ['quiz', quizId, 'submissions'] as const,
+	},
+
 	subject: {
 		all: ['subject'] as const,
 	},

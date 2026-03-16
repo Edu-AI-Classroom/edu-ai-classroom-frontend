@@ -77,6 +77,22 @@ export const API_ENDPOINTS = {
 		DELETE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
 	},
 
+	QUIZ: {
+		OVERVIEW: '/api/teacher/quizzes/overview',
+		LIST: '/api/teacher/quizzes',
+		DETAIL: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
+		UPDATE: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
+		DELETE: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
+
+		QUESTIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/questions`,
+		CREATE_QUESTION: '/api/teacher/questions',
+		UPDATE_QUESTION: (questionId: string) => `/api/teacher/questions/${questionId}`,
+		DELETE_QUESTION: (questionId: string) => `/api/teacher/questions/${questionId}`,
+		REORDER_QUESTIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/questions/reorder`,
+
+		SUBMISSIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/submissions`,
+	},
+
 	ADMIN_DASHBOARD: {
 		OVERVIEW: '/api/admin/dashboard/overview',
 		USER_GROWTH: '/api/admin/dashboard/user-growth',
