@@ -275,7 +275,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                 <Sparkles className="w-5 h-5 text-[#5a3ea6]" />
               </div>
               <div>
-                <h2 className="font-sans font-bold text-lg text-[#333]">AI Quiz Generator (Gemini)</h2>
+                <h2 className="font-sans font-bold text-lg text-[#333]">AI Quiz Generator</h2>
                 <p className="text-sm text-[#666]">Nhập yêu cầu bằng tiếng Việt để tạo câu hỏi + đáp án.</p>
               </div>
             </div>
@@ -371,9 +371,8 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                         {q.options.map((opt, i) => (
                           <div
                             key={i}
-                            className={`text-sm px-2 py-1 rounded-lg border ${
-                              i === q.correctIndex ? 'border-[#A8D5BA] bg-[#A8D5BA]/15' : 'border-[#E0DCD5]'
-                            }`}
+                            className={`text-sm px-2 py-1 rounded-lg border ${i === q.correctIndex ? 'border-[#A8D5BA] bg-[#A8D5BA]/15' : 'border-[#E0DCD5]'
+                              }`}
                           >
                             {String.fromCharCode(65 + i)}. {opt}
                           </div>
