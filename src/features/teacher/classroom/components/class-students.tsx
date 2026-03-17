@@ -54,21 +54,25 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 
 	const students = (studentsResponse?.data ?? [])
 		.filter((user: any) => user.role === 'STUDENT')
-		.map((student: any) => ({
-			id: student.studentId ?? student.userId ?? 0,
-			name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
-			email: student.email ?? '',
-			attendance: 0,
-			averageGrade:
-				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.avgGradePct ?? 0,
-			submissionRate:
-				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.submittedPct ?? 0,
-			submittedCount:
-				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.submittedCount ?? 0,
-			totalAssigned:
-				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.totalAssigned ?? 0,
-			status: 'on-track' as const,
-		}));
+		.map((student: any) => {
+			const id = student.studentId ?? student.userId ?? 0;
+			const avg = statsByStudentId.get(id)?.avgGradePct ?? 0;
+
+			const status: Exclude<UiStudentStatus, 'all'> =
+				avg > 8 ? 'excellent' : avg < 4 ? 'needs-attention' : 'on-track';
+
+			return {
+				id,
+				name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
+				email: student.email ?? '',
+				attendance: 0,
+				averageGrade: avg,
+				submissionRate: statsByStudentId.get(id)?.submittedPct ?? 0,
+				submittedCount: statsByStudentId.get(id)?.submittedCount ?? 0,
+				totalAssigned: statsByStudentId.get(id)?.totalAssigned ?? 0,
+				status,
+			};
+		});
 
 	const filteredStudents = students.filter((student) => {
 		const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -78,9 +82,9 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 
 	const statusCounts = {
 		all: students.length,
-		excellent: 0,
-		'on-track': students.length,
-		'needs-attention': 0,
+		excellent: students.filter((s) => s.status === 'excellent').length,
+		'on-track': students.filter((s) => s.status === 'on-track').length,
+		'needs-attention': students.filter((s) => s.status === 'needs-attention').length,
 	};
 
 	const handleAddStudent = async (payload: AddStudentPayload) => {
@@ -169,8 +173,7 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 							type="button"
 							key={status}
 							onClick={() => setFilterStatus(status)}
-							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-								filterStatus === status
+							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterStatus === status
 									? status === 'excellent'
 										? 'bg-[#A8D5BA] text-[#333]'
 										: status === 'on-track'
@@ -179,7 +182,7 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 												? 'bg-[#E57373] text-white'
 												: 'bg-[#F5B041] text-[#333]'
 									: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
-							}`}
+								}`}
 						>
 							{status === 'all'
 								? 'All'

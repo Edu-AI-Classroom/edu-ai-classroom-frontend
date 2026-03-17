@@ -30,6 +30,7 @@ export function CreateQuizDialog({
   const [documentType, setDocumentType] = useState<QuizDocumentType>('ASSIGNMENT');
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | undefined>(undefined);
   const [totalPoints, setTotalPoints] = useState<number | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<string>('');
 
   const create = useCreateQuiz();
 
@@ -49,6 +50,7 @@ export function CreateQuizDialog({
       documentType,
       timeLimitMinutes,
       totalPoints,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
     });
 
     setTitle('');
@@ -57,6 +59,7 @@ export function CreateQuizDialog({
     setDocumentType('ASSIGNMENT');
     setTimeLimitMinutes(undefined);
     setTotalPoints(undefined);
+    setDueDate('');
     setOpen(false);
   };
 
@@ -181,6 +184,21 @@ export function CreateQuizDialog({
                 disabled={isSubmitting}
               />
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="quiz-due-date" className="block text-sm font-semibold text-[#666] mb-2">
+              Due date
+            </label>
+            <Input
+              id="quiz-due-date"
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="rounded-xl border-[#E0DCD5] bg-[#F9F8F6] focus:bg-white text-[#333]"
+              disabled={isSubmitting}
+            />
+            <p className="mt-1 text-xs text-[#999]">Optional. Leave empty for no deadline.</p>
           </div>
 
           <div className="flex gap-3 pt-2">

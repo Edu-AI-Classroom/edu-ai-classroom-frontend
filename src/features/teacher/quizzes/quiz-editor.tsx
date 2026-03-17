@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useClassList } from '@/hooks/queries/class/use-class-query';
 import { useQuizDetail, useQuizQuestions } from '@/hooks/queries/quiz/use-quiz-query';
 import {
@@ -44,12 +45,14 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
   const [documentType, setDocumentType] = useState<QuizDocumentType>('ASSIGNMENT');
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | undefined>(undefined);
   const [totalPoints, setTotalPoints] = useState<number | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<string>('');
 
   const [newQType, setNewQType] = useState<QuizQuestionType>('MCQ');
   const [newQText, setNewQText] = useState('');
   const [newOptions, setNewOptions] = useState<string[]>(['', '', '', '']);
   const [newCorrectIndex, setNewCorrectIndex] = useState(0);
   const [newMaxScore, setNewMaxScore] = useState<number>(1);
+  const [newExpectedAnswer, setNewExpectedAnswer] = useState<string>('');
 
   // Hydrate local form from server once
   const [hydrated, setHydrated] = useState(false);
@@ -61,6 +64,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
     setDocumentType(quiz.documentType);
     setTimeLimitMinutes(quiz.timeLimitMinutes ?? undefined);
     setTotalPoints(quiz.totalPoints ?? undefined);
+    setDueDate(quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : '');
     setHydrated(true);
   }, [hydrated, quiz]);
 
@@ -72,6 +76,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
       documentType,
       timeLimitMinutes,
       totalPoints,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
     });
   };
 
@@ -116,6 +121,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
         type: 'ESSAY',
         questionText,
         maxScore: newMaxScore,
+        expectedAnswer: newExpectedAnswer.trim() || undefined,
       });
     }
 
@@ -123,6 +129,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
     setNewOptions(['', '', '', '']);
     setNewCorrectIndex(0);
     setNewMaxScore(1);
+    setNewExpectedAnswer('');
   };
 
   const onUpdateQuestion = async (q: QuizQuestion, patch: Partial<QuizQuestion>) => {
@@ -146,6 +153,10 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
         type: 'ESSAY',
         questionText: patch.questionText ?? q.questionText,
         maxScore: (patch as any).maxScore ?? q.maxScore,
+        expectedAnswer:
+          (patch as any).expectedAnswer !== undefined
+            ? ((patch as any).expectedAnswer as any)
+            : ((q as any).expectedAnswer ?? null),
       },
     });
   };
@@ -260,6 +271,17 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                 />
               </div>
             </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-[#666] mb-2">Due date</label>
+              <Input
+                type="datetime-local"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="rounded-xl border-[#E0DCD5] bg-[#F9F8F6] focus:bg-white text-[#333]"
+              />
+              <p className="mt-1 text-xs text-[#999]">Optional. Leave empty for no deadline.</p>
+            </div>
           </div>
         </section>
 
@@ -347,6 +369,20 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                 </div>
               )}
 
+              {newQType === 'ESSAY' && (
+                <div className="mt-4">
+                  <label className="block text-xs font-semibold text-[#666] mb-1">
+                    Expected answer / rubric (optional)
+                  </label>
+                  <Textarea
+                    value={newExpectedAnswer}
+                    onChange={(e) => setNewExpectedAnswer(e.target.value)}
+                    placeholder="Provide a sample answer or grading rubric..."
+                    className="rounded-xl bg-white"
+                  />
+                </div>
+              )}
+
               <div className="mt-4">
                 <Button
                   onClick={onAddQuestion}
@@ -426,6 +462,24 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                               ))}
                             </select>
                           </div>
+                        </div>
+                      )}
+
+                      {q.type === 'ESSAY' && (
+                        <div className="mt-3">
+                          <label className="block text-xs font-semibold text-[#666] mb-1">
+                            Expected answer / rubric (optional)
+                          </label>
+                          <Textarea
+                            defaultValue={(q as any).expectedAnswer ?? ''}
+                            onBlur={(e) => {
+                              const value = e.target.value;
+                              const current = (q as any).expectedAnswer ?? '';
+                              if (value === current) return;
+                              onUpdateQuestion(q, { ...(q as any), expectedAnswer: value } as any);
+                            }}
+                            className="rounded-xl bg-[#F9F8F6] focus:bg-white"
+                          />
                         </div>
                       )}
 

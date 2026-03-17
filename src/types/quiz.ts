@@ -16,6 +16,7 @@ export type QuizListItem = {
   documentType: QuizDocumentType;
   questionCount: number;
   createdAt: string;
+  dueDate?: string | null;
   status: QuizStatus;
 };
 
@@ -28,6 +29,7 @@ export type QuizDetail = {
   timeLimitMinutes?: number | null;
   totalPoints?: number | null;
   createdAt: string;
+  dueDate?: string | null;
   status: QuizStatus;
 };
 
@@ -51,6 +53,7 @@ export type QuizQuestionMcq = QuizQuestionBase & {
 export type QuizQuestionEssay = QuizQuestionBase & {
   type: 'ESSAY';
   maxScore: number;
+  expectedAnswer?: string | null;
 };
 
 export type QuizQuestion = QuizQuestionMcq | QuizQuestionEssay;
@@ -62,41 +65,44 @@ export type CreateQuizPayload = {
   documentType: QuizDocumentType;
   timeLimitMinutes?: number;
   totalPoints?: number;
+  dueDate?: string;
 };
 
 export type UpdateQuizPayload = Partial<CreateQuizPayload>;
 
 export type CreateQuizQuestionPayload =
   | {
-      quizId: string;
-      type: 'MCQ';
-      questionText: string;
-      options: string[];
-      correctIndex: number;
-      maxScore: number;
-      positionOrder?: number;
-    }
+    quizId: string;
+    type: 'MCQ';
+    questionText: string;
+    options: string[];
+    correctIndex: number;
+    maxScore: number;
+    positionOrder?: number;
+  }
   | {
-      quizId: string;
-      type: 'ESSAY';
-      questionText: string;
-      maxScore: number;
-      positionOrder?: number;
-    };
+    quizId: string;
+    type: 'ESSAY';
+    questionText: string;
+    maxScore: number;
+    expectedAnswer?: string;
+    positionOrder?: number;
+  };
 
 export type UpdateQuizQuestionPayload =
   | {
-      type: 'MCQ';
-      questionText?: string;
-      options?: string[];
-      correctIndex?: number;
-      maxScore?: number;
-    }
+    type: 'MCQ';
+    questionText?: string;
+    options?: string[];
+    correctIndex?: number;
+    maxScore?: number;
+  }
   | {
-      type: 'ESSAY';
-      questionText?: string;
-      maxScore?: number;
-    };
+    type: 'ESSAY';
+    questionText?: string;
+    maxScore?: number;
+    expectedAnswer?: string | null;
+  };
 
 export type ReorderQuestionsPayload = {
   quizId: string;

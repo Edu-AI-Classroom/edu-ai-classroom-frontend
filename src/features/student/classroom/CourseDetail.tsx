@@ -78,7 +78,7 @@ const CourseDetail = () => {
 			case 'assignments':
 				return <CourseAssignments classData={classData} />;
 			case 'grades':
-				return <CourseGrades />;
+				return <CourseGrades classData={classData} />;
 			case 'settings':
 				return <CourseSettings />;
 			default:

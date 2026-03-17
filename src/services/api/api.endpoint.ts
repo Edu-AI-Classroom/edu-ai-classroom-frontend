@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
 		GET_DETAIL: (classId: number) => `/api/classrooms/${classId}`,
 		UPDATE_DETAIL: (classId: number) => `/api/classrooms/${classId}`,
 		DELETE_CLASS: (classId: number) => `/api/classrooms/${classId}`,
+		GRADEBOOK: (classId: number) => `/api/classrooms/${classId}/gradebook`,
 
 		ASSIGN_STUDENT_TO_CLASS: (classId: number) => `/api/classrooms/${classId}/students`,
 		GET_STUDENTS: (classId: number) => `/api/classrooms/${classId}/students`,

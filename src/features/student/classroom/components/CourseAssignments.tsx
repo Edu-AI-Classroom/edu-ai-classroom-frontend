@@ -12,18 +12,20 @@ import {
 } from '@/hooks/queries/quiz/use-student-quiz-query';
 import type { StudentQuizQuestion } from '@/types/student-quiz';
 
-type UiStatus = 'pending' | 'submitted' | 'graded';
+type UiStatus = 'pending' | 'submitted' | 'graded' | 'late';
 
 const statusConfig: Record<UiStatus, { label: string; icon: React.ElementType; className: string }> = {
 	pending: { label: 'Not Submitted', icon: AlertTriangle, className: 'bg-warning/15 text-warning' },
 	submitted: { label: 'Submitted', icon: Clock, className: 'bg-primary/15 text-primary' },
 	graded: { label: 'Graded', icon: CheckCircle, className: 'bg-success/15 text-success' },
+	late: { label: 'Late Submission', icon: AlertTriangle, className: 'bg-destructive/15 text-destructive' },
 };
 
 function mapAttemptStatus(status?: string | null, score?: number | null): UiStatus {
+	if (String(status ?? '').toUpperCase().includes('LATE')) return 'late';
 	if (score != null) return 'graded';
 	if (!status) return 'pending';
-	if (String(status).toUpperCase() === 'SUBMITTED') return 'submitted';
+	if (String(status).toUpperCase().includes('SUBMITTED')) return 'submitted';
 	return 'pending';
 }
 
@@ -43,7 +45,9 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 	const [answers, setAnswers] = useState<Record<string, StudentAnswer | undefined>>({});
 	const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
-	const { data: questions, isLoading: isQuestionsLoading } = useStudentQuizQuestions(activeQuizId ?? undefined);
+	const { data: questions, isLoading: isQuestionsLoading } = useStudentQuizQuestions(
+		attemptId != null ? (activeQuizId ?? undefined) : undefined,
+	);
 	const { data: quizDetail } = useStudentQuizDetail(activeQuizId ?? undefined);
 	const startAttempt = useStartStudentQuizAttempt();
 	const submitAttempt = useSubmitStudentQuizAttempt();
@@ -173,7 +177,11 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 					</div>
 				)}
 
-				{isQuestionsLoading ? (
+				{attemptId == null ? (
+					<div className="bg-card rounded-xl border border-border p-4 text-sm text-muted-foreground">
+						Questions will be shown after you press <span className="font-semibold">Start quiz</span>.
+					</div>
+				) : isQuestionsLoading ? (
 					<div className="flex items-center py-10 text-muted-foreground">
 						<Loader2 className="w-5 h-5 animate-spin mr-2" />
 						Loading questions...
@@ -195,13 +203,11 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 												<button
 													type="button"
 													key={String(i)}
-													className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
-														checked
-															? 'border-primary bg-primary/10 text-foreground'
-															: 'border-border hover:bg-secondary'
-													}`}
+													className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${checked
+														? 'border-primary bg-primary/10 text-foreground'
+														: 'border-border hover:bg-secondary'
+														}`}
 													onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: { index: i } }))}
-													disabled={attemptId == null}
 												>
 													<span className="text-sm">{opt}</span>
 												</button>
@@ -220,7 +226,6 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 											}
 											placeholder="Type your answer..."
 											className="rounded-xl"
-											disabled={attemptId == null}
 										/>
 									</div>
 								)}

@@ -7,6 +7,7 @@ export type StudentQuizListItem = {
   documentType: QuizDocumentType;
   status: QuizStatus;
   createdAt: string;
+  dueDate?: string | null;
   lastAttempt?: {
     attemptId: number;
     status?: string | null;
@@ -24,6 +25,7 @@ export type StudentQuizDetail = {
   totalPoints?: number | null;
   status: QuizStatus;
   createdAt: string;
+  dueDate?: string | null;
   classId: number;
 };
 

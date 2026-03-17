@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { BarChart3, ClipboardList, FileText, Plus, Search, Shield, Trophy } from 'lucide-react';
+import { ArrowLeft, BarChart3, ClipboardList, FileText, Plus, Search, Shield, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,33 @@ import { useDeleteQuiz } from '@/hooks/queries/quiz/use-quiz-mutation';
 import { ConfirmActionModal } from '@/features/teacher/classroom/components/confirm-action-modal';
 import { CreateQuizDialog } from './widgets/create-quiz-dialog';
 import type { QuizDocumentType } from '@/types/quiz';
+
+function getQuizStatusLabel(q: { status: string; dueDate?: string | null; questionCount: number }) {
+  const status = String(q.status ?? '').toUpperCase();
+  if (status === 'ARCHIVED') return 'ARCHIVED';
+
+  const due = q.dueDate ? new Date(q.dueDate) : null;
+  const isOverdue = !!due && !Number.isNaN(due.getTime()) && due.getTime() < Date.now();
+  if (isOverdue) return 'OVERDUE';
+
+  // Backend may keep DRAFT by default. Treat quizzes with questions as "published/ready".
+  if (q.questionCount > 0) return 'PUBLISHED';
+
+  return 'DRAFT';
+}
+
+function getQuizStatusBadgeClass(label: string) {
+  switch (label) {
+    case 'PUBLISHED':
+      return 'bg-[#A8D5BA]/25 text-[#256f4b]';
+    case 'OVERDUE':
+      return 'bg-[#E57373]/20 text-[#C62828]';
+    case 'ARCHIVED':
+      return 'bg-[#E0DCD5] text-[#666]';
+    default:
+      return 'bg-[#F0EDE8] text-[#666]';
+  }
+}
 
 function StatCard({
   title,
@@ -67,6 +94,13 @@ export default function TeacherQuizDashboard() {
       <header className="sticky top-0 z-30 bg-[#FAF9F6]/95 backdrop-blur-sm border-b border-[#E0DCD5]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#333] mb-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
             <h1 className="font-sans font-bold text-2xl text-[#333]">Quiz Dashboard</h1>
             <p className="font-serif text-[#666]">Create quizzes, build questions, and track submissions.</p>
           </div>
@@ -167,11 +201,10 @@ export default function TeacherQuizDashboard() {
                     <TableCell className="text-[#666]">{q.classroom?.name ?? '—'}</TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${
-                          q.documentType === 'EXAM'
-                            ? 'bg-[#A8D5BA]/25 text-[#256f4b]'
-                            : 'bg-[#C5B4E3]/25 text-[#5a3ea6]'
-                        }`}
+                        className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${q.documentType === 'EXAM'
+                          ? 'bg-[#A8D5BA]/25 text-[#256f4b]'
+                          : 'bg-[#C5B4E3]/25 text-[#5a3ea6]'
+                          }`}
                       >
                         {q.documentType}
                       </span>
@@ -181,9 +214,16 @@ export default function TeacherQuizDashboard() {
                       {q.createdAt ? format(new Date(q.createdAt), 'dd/MM/yyyy') : '—'}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-[#F0EDE8] text-[#666]">
-                        {q.status}
-                      </span>
+                      {(() => {
+                        const label = getQuizStatusLabel(q);
+                        return (
+                          <span
+                            className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${getQuizStatusBadgeClass(label)}`}
+                          >
+                            {label}
+                          </span>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="inline-flex items-center gap-2">
