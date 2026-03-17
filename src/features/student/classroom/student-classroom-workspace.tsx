@@ -11,7 +11,6 @@ import {
 	Menu,
 	MessageCircle,
 	Newspaper,
-	Users,
 	X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -68,7 +67,7 @@ export default function StudentClassroomWorkspace({
 			case 'feed':
 				return <CourseFeed classData={classData} />;
 			case 'assignments':
-				return <CourseAssignments />;
+				return <CourseAssignments classData={classData} />;
 			case 'grades':
 				return <CourseGrades />;
 			case 'conversation':

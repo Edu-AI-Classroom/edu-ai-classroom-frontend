@@ -9,6 +9,7 @@ import {
 	Users,
 } from 'lucide-react';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
+import { useStudentQuizList } from '@/hooks/queries/quiz/use-student-quiz-query';
 
 interface CourseOverviewProps {
 	classData: ClassroomUiData;
@@ -16,6 +17,23 @@ interface CourseOverviewProps {
 
 const CourseOverview = ({ classData }: CourseOverviewProps) => {
 	const teacherInitial = classData.teacherName ? classData.teacherName.charAt(0) : 'T';
+	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
+	const { data: quizzes } = useStudentQuizList({ classId });
+
+	const list = Array.isArray(quizzes) ? quizzes : [];
+	const total = list.length;
+	const completed = list.filter((q) => String(q.lastAttempt?.status ?? '').toUpperCase() === 'SUBMITTED').length;
+	const graded = list.filter((q) => q.lastAttempt?.totalScore != null).length;
+	const completedOrGraded = Math.max(completed, graded);
+	const progressPct = total > 0 ? Math.round((completedOrGraded / total) * 100) : 0;
+	const avgScore =
+		graded > 0
+			? (
+					list
+						.filter((q) => q.lastAttempt?.totalScore != null)
+						.reduce((s, q) => s + Number(q.lastAttempt?.totalScore ?? 0), 0) / graded
+				).toFixed(1)
+			: '0.0';
 
 	return (
 		<div>
@@ -29,35 +47,35 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 				{[
 					{
 						icon: ClipboardList,
-						value: '6',
-						label: 'Total Assignments',
+						value: String(total),
+						label: 'Total Quizzes',
 						bgColor: 'bg-teachify-green/15',
 						textColor: 'text-teachify-green',
 					},
 					{
 						icon: CheckCircle,
-						value: '4',
+						value: String(completedOrGraded),
 						label: 'Completed',
 						bgColor: 'bg-success/15',
 						textColor: 'text-success',
 					},
 					{
 						icon: TrendingUp,
-						value: '85%',
+						value: `${progressPct}%`,
 						label: 'Progress',
 						bgColor: 'bg-primary/15',
 						textColor: 'text-primary',
 					},
 					{
 						icon: AlertTriangle,
-						value: '1',
+						value: '0',
 						label: 'Needs Attention',
 						bgColor: 'bg-warning/15',
 						textColor: 'text-warning',
 					},
 					{
 						icon: BarChart3,
-						value: '8.5',
+						value: avgScore,
 						label: 'Avg. Grade',
 						bgColor: 'bg-teachify-purple/15',
 						textColor: 'text-teachify-purple',

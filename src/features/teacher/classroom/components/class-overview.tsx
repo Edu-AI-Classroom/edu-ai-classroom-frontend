@@ -29,10 +29,13 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
 import { useClassStudents, useClassTeachers } from '@/hooks/queries/class/use-class-query';
+import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
+import { QuizService } from '@/services/quiz/quiz.service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Teacher } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddTeacherModal } from './AddTeacherModal';
+import { useQueries } from '@tanstack/react-query';
 
 interface ClassOverviewProps {
 	classData: ClassroomUiData;
@@ -41,6 +44,8 @@ interface ClassOverviewProps {
 export default function ClassOverview({ classData }: ClassOverviewProps) {
 	const { data: studentResponse } = useClassStudents(classData.id);
 	const { data: teacherResponse } = useClassTeachers(classData.id);
+	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
+	const { data: quizList } = useQuizList({ classId });
 	const { addTeacherToClassMutation, removeTeacherFromClassMutation } = useClassMutations();
 	const { user } = useAuthStore();
 	const { toast } = useToast();
@@ -54,6 +59,40 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 
 	const students = studentResponse?.data ?? [];
 	const teachers = teacherResponse ?? [];
+	const quizzes = Array.isArray(quizList) ? quizList : [];
+
+	const submissionQueries = useQueries({
+		queries: quizzes.map((q) => ({
+			queryKey: ['teacherQuiz', 'submissions', q.id] as const,
+			queryFn: () => QuizService.getSubmissionsOverview(q.id),
+			enabled: !!q.id,
+		})),
+	});
+
+	const totalAttempts = submissionQueries.reduce(
+		(sum, q) => sum + (q.data?.totalStudentsAttempted ?? 0),
+		0,
+	);
+	const totalStudentsCount = classData.studentCount ?? (studentResponse as any)?.data?.total ?? students.length;
+	const possibleSubmissions = totalStudentsCount > 0 ? totalStudentsCount * quizzes.length : 0;
+	const submissionRatePct =
+		possibleSubmissions > 0 ? Math.round((totalAttempts / possibleSubmissions) * 100) : 0;
+
+	const avgScorePct = (() => {
+		let weightedPctSum = 0;
+		let weightedCount = 0;
+
+		submissionQueries.forEach((q, idx) => {
+			const attempted = q.data?.totalStudentsAttempted ?? 0;
+			const avgScore = q.data?.averageScore ?? 0;
+			const totalPoints = (quizzes[idx] as any)?.totalPoints ?? 100;
+			if (attempted <= 0 || totalPoints <= 0) return;
+			weightedPctSum += (avgScore / totalPoints) * 100 * attempted;
+			weightedCount += attempted;
+		});
+
+		return weightedCount > 0 ? Math.round(weightedPctSum / weightedCount) : 0;
+	})();
 
 	// Check if current user is the class owner
 	const isOwner = classData.isOwner || user?.userId === classData.createdBy;
@@ -91,10 +130,10 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	};
 
 	const stats = {
-		totalStudents: classData.studentCount ?? students.length,
-		submissionRate: 0,
+		totalStudents: totalStudentsCount,
+		submissionRate: submissionRatePct,
 		needsAttention: 0,
-		avgGrade: 0,
+		avgGrade: avgScorePct,
 		avgAttendance: 0,
 	};
 

@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import { useClassStudents, useClassStudentStats } from '@/hooks/queries/class/use-class-query';
 import type { AddStudentPayload } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddStudentDialog } from './add-student-dialog';
@@ -31,12 +31,15 @@ type UiStudent = {
 	attendance?: number;
 	averageGrade?: number;
 	submissionRate?: number;
+	submittedCount?: number;
+	totalAssigned?: number;
 	status?: Exclude<UiStudentStatus, 'all'>;
 };
 
 export default function ClassStudents({ classData }: ClassStudentsProps) {
 	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
 	const { data: studentsResponse, isLoading } = useClassStudents(classId);
+	const { data: studentStats } = useClassStudentStats(classId);
 	const { addStudentToClassMutation } = useClassMutations();
 	const { toast } = useToast();
 
@@ -47,6 +50,8 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 	const [selectedStudent, setSelectedStudent] = useState<any>(null);
 	const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+	const statsByStudentId = new Map((studentStats ?? []).map((s) => [s.studentId, s]));
+
 	const students = (studentsResponse?.data ?? [])
 		.filter((user: any) => user.role === 'STUDENT')
 		.map((student: any) => ({
@@ -54,8 +59,14 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 			name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
 			email: student.email ?? '',
 			attendance: 0,
-			averageGrade: 0,
-			submissionRate: 0,
+			averageGrade:
+				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.avgGradePct ?? 0,
+			submissionRate:
+				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.submittedPct ?? 0,
+			submittedCount:
+				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.submittedCount ?? 0,
+			totalAssigned:
+				statsByStudentId.get(student.studentId ?? student.userId ?? 0)?.totalAssigned ?? 0,
 			status: 'on-track' as const,
 		}));
 
@@ -254,7 +265,9 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 								<p className="text-xs text-[#666]">Avg Grade</p>
 							</div>
 							<div className="p-2 rounded-xl bg-[#FAF9F6]">
-								<p className="font-sans font-bold text-lg text-[#333]">{student.submissionRate}%</p>
+								<p className="font-sans font-bold text-lg text-[#333]">
+									{student.submittedCount}/{student.totalAssigned}
+								</p>
 								<p className="text-xs text-[#666]">Submitted</p>
 							</div>
 						</div>

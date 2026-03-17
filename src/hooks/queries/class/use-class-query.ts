@@ -57,6 +57,14 @@ export function useClassStudents(classId?: ClassId, params?: PaginationParams) {
 	});
 }
 
+export function useClassStudentStats(classId?: ClassId) {
+	return useQuery({
+		queryKey: ['class', 'students', 'stats', classId ?? 0] as const,
+		queryFn: () => ClassService.getStudentStats(classId as number),
+		enabled: classId !== null && classId !== undefined,
+	});
+}
+
 export function useClassTeachers(classId?: ClassId, params?: PaginationParams) {
 	return useQuery({
 		queryKey: queryKeys.class.teachers.list(classId ?? 0),

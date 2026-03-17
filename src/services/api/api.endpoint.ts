@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
 
 		ASSIGN_STUDENT_TO_CLASS: (classId: number) => `/api/classrooms/${classId}/students`,
 		GET_STUDENTS: (classId: number) => `/api/classrooms/${classId}/students`,
+		GET_STUDENT_STATS: (classId: number) => `/api/classrooms/${classId}/students/stats`,
 		REMOVE_STUDENT_FROM_CLASS: (classId: number, studentId: number) =>
 			`/api/classrooms/${classId}/students/${studentId}`,
 
@@ -91,6 +92,15 @@ export const API_ENDPOINTS = {
 		REORDER_QUESTIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/questions/reorder`,
 
 		SUBMISSIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/submissions`,
+	},
+
+	STUDENT_QUIZ: {
+		LIST: '/api/student/quizzes',
+		DETAIL: (quizId: string) => `/api/student/quizzes/${quizId}`,
+		QUESTIONS: (quizId: string) => `/api/student/quizzes/${quizId}/questions`,
+		START_ATTEMPT: (quizId: string) => `/api/student/quizzes/${quizId}/attempts/start`,
+		SUBMIT_ATTEMPT: (quizId: string, attemptId: number) =>
+			`/api/student/quizzes/${quizId}/attempts/${attemptId}/submit`,
 	},
 
 	ADMIN_DASHBOARD: {

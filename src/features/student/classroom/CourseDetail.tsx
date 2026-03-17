@@ -54,71 +54,35 @@ const CourseDetail = () => {
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 	const [currentClass, setCurrentClass] = useState(classOptions[0]);
 
+	const classData = {
+		id: currentClass.id,
+		name: currentClass.name,
+		subject: currentClass.subject,
+		grade: 'Grade 4',
+		studentCount: 30,
+		teacherCount: 1,
+		groupCount: 5,
+		color: currentClass.color,
+		rotation: 0,
+		pendingGrading: 0,
+		upcomingDeadlines: 0,
+		teacherName: 'Mr. Nguyen Toan',
+	};
+
 	const renderContent = () => {
 		switch (activeTab) {
 			case 'overview':
-				return (
-					<CourseOverview
-						classData={{
-							id: currentClass.id,
-							name: currentClass.name,
-							subject: currentClass.subject,
-							grade: 'Grade 4',
-							studentCount: 30,
-							teacherCount: 1,
-							groupCount: 5,
-							color: currentClass.color,
-							rotation: 0,
-							pendingGrading: 0,
-							upcomingDeadlines: 0,
-							teacherName: 'Mr. Nguyen Toan',
-						}}
-					/>
-				);
+				return <CourseOverview classData={classData} />;
 			case 'feed':
-				return (
-					<CourseFeed
-						classData={{
-							id: currentClass.id,
-							name: currentClass.name,
-							subject: currentClass.subject,
-							grade: 'Grade 4',
-							studentCount: 30,
-							teacherCount: 1,
-							groupCount: 5,
-							color: currentClass.color,
-							rotation: 0,
-							pendingGrading: 0,
-							upcomingDeadlines: 0,
-							teacherName: 'Mr. Nguyen Toan',
-						}}
-					/>
-				);
+				return <CourseFeed classData={classData} />;
 			case 'assignments':
-				return <CourseAssignments />;
+				return <CourseAssignments classData={classData} />;
 			case 'grades':
 				return <CourseGrades />;
 			case 'settings':
 				return <CourseSettings />;
 			default:
-				return (
-					<CourseOverview
-						classData={{
-							id: currentClass.id,
-							name: currentClass.name,
-							subject: currentClass.subject,
-							grade: 'Grade 4',
-							studentCount: 30,
-							teacherCount: 1,
-							groupCount: 5,
-							color: currentClass.color,
-							rotation: 0,
-							pendingGrading: 0,
-							upcomingDeadlines: 0,
-							teacherName: 'Mr. Nguyen Toan',
-						}}
-					/>
-				);
+				return <CourseOverview classData={classData} />;
 		}
 	};
 

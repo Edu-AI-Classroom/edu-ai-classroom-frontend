@@ -2,6 +2,7 @@ import buildQueryString from '@/lib/utils/buildQueryString';
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
 import { httpDelete, httpGet, httpPost, httpPut } from '@/services/http.helpers';
 import type { ApiMetaResponse, PaginationParams } from '@/types/api';
+import type { ClassStudentQuizStat } from '@/types/class-stats';
 import type {
 	AddStudentPayload,
 	AddTeacherPayload,
@@ -52,6 +53,9 @@ export const ClassService = {
 		httpGet<UsersInClassResponse>(
 			`${API_ENDPOINTS.CLASS.GET_STUDENTS(classId)}${buildQueryString(params)}`,
 		),
+
+	getStudentStats: (classId: number) =>
+		httpGet<ClassStudentQuizStat[]>(API_ENDPOINTS.CLASS.GET_STUDENT_STATS(classId)),
 
 	removeStudentFromClass: (classId: number, studentId: number) =>
 		httpDelete<void>(API_ENDPOINTS.CLASS.REMOVE_STUDENT_FROM_CLASS(classId, studentId)),
