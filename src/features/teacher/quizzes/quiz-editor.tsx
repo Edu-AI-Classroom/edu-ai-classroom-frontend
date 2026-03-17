@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ChevronDown, ChevronUp, Plus, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,18 @@ import { useQuizDetail, useQuizQuestions } from '@/hooks/queries/quiz/use-quiz-q
 import {
   useCreateQuizQuestion,
   useDeleteQuizQuestion,
+  useGenerateQuizWithAi,
   useReorderQuizQuestions,
   useUpdateQuiz,
   useUpdateQuizQuestion,
 } from '@/hooks/queries/quiz/use-quiz-mutation';
 import { ConfirmActionModal } from '@/features/teacher/classroom/components/confirm-action-modal';
-import type { QuizDocumentType, QuizQuestion, QuizQuestionType } from '@/types/quiz';
+import type {
+  AiGeneratedQuizQuestion,
+  QuizDocumentType,
+  QuizQuestion,
+  QuizQuestionType,
+} from '@/types/quiz';
 
 function QuestionTypePill({ type }: { type: QuizQuestionType }) {
   return (
@@ -36,6 +42,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
   const updateQuestion = useUpdateQuizQuestion(quizId);
   const deleteQuestion = useDeleteQuizQuestion(quizId);
   const reorder = useReorderQuizQuestions(quizId);
+  const aiGenerate = useGenerateQuizWithAi(quizId);
 
   const classOptions = useMemo(() => classes?.data ?? [], [classes]);
 
@@ -53,6 +60,15 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
   const [newCorrectIndex, setNewCorrectIndex] = useState(0);
   const [newMaxScore, setNewMaxScore] = useState<number>(1);
   const [newExpectedAnswer, setNewExpectedAnswer] = useState<string>('');
+
+  // AI generator (Gemini)
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiTotalQuestions, setAiTotalQuestions] = useState<number>(10);
+  const [aiMcqCount, setAiMcqCount] = useState<number>(7);
+  const [aiEssayCount, setAiEssayCount] = useState<number>(3);
+  const [aiPointsPerQuestion, setAiPointsPerQuestion] = useState<number>(1);
+  const [aiGenerated, setAiGenerated] = useState<AiGeneratedQuizQuestion[] | null>(null);
+  const [aiError, setAiError] = useState<string>('');
 
   // Hydrate local form from server once
   const [hydrated, setHydrated] = useState(false);
@@ -132,6 +148,58 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
     setNewExpectedAnswer('');
   };
 
+  const onGenerateWithAi = async () => {
+    setAiError('');
+    setAiGenerated(null);
+    const prompt = aiPrompt.trim();
+    if (!prompt) return;
+
+    try {
+      const res = await aiGenerate.mutateAsync({
+        prompt,
+        totalQuestions: aiTotalQuestions,
+        mcqCount: aiMcqCount,
+        essayCount: aiEssayCount,
+        pointsPerQuestion: aiPointsPerQuestion,
+        language: 'vi',
+      });
+      setAiGenerated(res.questions ?? []);
+    } catch (e: any) {
+      setAiError(e?.message ?? 'AI generate failed');
+    }
+  };
+
+  const onInsertAiQuestions = async () => {
+    if (!aiGenerated || aiGenerated.length === 0) return;
+    setAiError('');
+    try {
+      for (const q of aiGenerated) {
+        if (q.type === 'MCQ') {
+          await createQuestion.mutateAsync({
+            quizId,
+            type: 'MCQ',
+            questionText: q.questionText,
+            options: q.options,
+            correctIndex: q.correctIndex,
+            maxScore: q.maxScore ?? aiPointsPerQuestion,
+          });
+        } else {
+          await createQuestion.mutateAsync({
+            quizId,
+            type: 'ESSAY',
+            questionText: q.questionText,
+            expectedAnswer: q.expectedAnswer,
+            maxScore: q.maxScore ?? aiPointsPerQuestion,
+          });
+        }
+      }
+      setAiGenerated(null);
+      setAiPrompt('');
+    } catch (e: any) {
+      setAiError(e?.message ?? 'Insert questions failed');
+    }
+  };
+
   const onUpdateQuestion = async (q: QuizQuestion, patch: Partial<QuizQuestion>) => {
     if (q.type === 'MCQ') {
       await updateQuestion.mutateAsync({
@@ -199,6 +267,130 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        {/* AI Generator */}
+        <section className="bg-white rounded-2xl border border-[#E0DCD5] shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-[#E0DCD5] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#C5B4E3]/25 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-[#5a3ea6]" />
+              </div>
+              <div>
+                <h2 className="font-sans font-bold text-lg text-[#333]">AI Quiz Generator (Gemini)</h2>
+                <p className="text-sm text-[#666]">Nhập yêu cầu bằng tiếng Việt để tạo câu hỏi + đáp án.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <Textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder='Ví dụ: "Tạo quiz 10 câu về chủ đề Phân số lớp 5, gồm 7 trắc nghiệm và 3 tự luận. Mức độ từ dễ đến trung bình."'
+              className="min-h-[96px] rounded-xl bg-[#F9F8F6] border-[#E0DCD5]"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#666] mb-1">Tổng số câu</label>
+                <Input
+                  type="number"
+                  value={aiTotalQuestions}
+                  onChange={(e) => setAiTotalQuestions(Number(e.target.value) || 10)}
+                  className="rounded-xl border-[#E0DCD5] bg-[#F9F8F6] focus:bg-white text-[#333]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#666] mb-1">Trắc nghiệm (MCQ)</label>
+                <Input
+                  type="number"
+                  value={aiMcqCount}
+                  onChange={(e) => setAiMcqCount(Number(e.target.value) || 0)}
+                  className="rounded-xl border-[#E0DCD5] bg-[#F9F8F6] focus:bg-white text-[#333]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#666] mb-1">Tự luận (Essay)</label>
+                <Input
+                  type="number"
+                  value={aiEssayCount}
+                  onChange={(e) => setAiEssayCount(Number(e.target.value) || 0)}
+                  className="rounded-xl border-[#E0DCD5] bg-[#F9F8F6] focus:bg-white text-[#333]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#666] mb-1">Điểm / câu</label>
+                <Input
+                  type="number"
+                  value={aiPointsPerQuestion}
+                  onChange={(e) => setAiPointsPerQuestion(Number(e.target.value) || 1)}
+                  className="rounded-xl border-[#E0DCD5] bg-[#F9F8F6] focus:bg-white text-[#333]"
+                />
+              </div>
+            </div>
+
+            {aiError ? <p className="text-sm text-red-600">{aiError}</p> : null}
+
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <Button
+                onClick={onGenerateWithAi}
+                disabled={aiGenerate.isPending || !aiPrompt.trim()}
+                className="rounded-xl bg-gradient-to-r from-[#C5B4E3] to-[#A8D4E6] text-[#113] border-0 shadow-md hover:shadow-lg transition-all"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {aiGenerate.isPending ? 'Generating...' : 'Generate'}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={onInsertAiQuestions}
+                disabled={!aiGenerated || aiGenerated.length === 0 || createQuestion.isPending}
+                className="rounded-xl bg-transparent"
+              >
+                Insert into quiz
+              </Button>
+
+              {aiGenerated ? (
+                <span className="text-sm text-[#666]">{aiGenerated.length} questions generated</span>
+              ) : null}
+            </div>
+
+            {aiGenerated && aiGenerated.length > 0 ? (
+              <div className="mt-2 rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-4 space-y-3">
+                {aiGenerated.slice(0, 10).map((q, idx) => (
+                  <div key={idx} className="rounded-xl bg-white border border-[#E0DCD5] p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#333]">
+                          {idx + 1}. {q.questionText}
+                        </p>
+                      </div>
+                      <QuestionTypePill type={q.type} />
+                    </div>
+                    {q.type === 'MCQ' ? (
+                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {q.options.map((opt, i) => (
+                          <div
+                            key={i}
+                            className={`text-sm px-2 py-1 rounded-lg border ${
+                              i === q.correctIndex ? 'border-[#A8D5BA] bg-[#A8D5BA]/15' : 'border-[#E0DCD5]'
+                            }`}
+                          >
+                            {String.fromCharCode(65 + i)}. {opt}
+                          </div>
+                        ))}
+                      </div>
+                    ) : q.expectedAnswer ? (
+                      <p className="mt-2 text-sm text-[#666]">
+                        <span className="font-semibold">Expected:</span> {q.expectedAnswer}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+
         <section className="bg-white rounded-2xl border border-[#E0DCD5] shadow-sm p-5">
           <div className="grid md:grid-cols-2 gap-4">
             <div>

@@ -2,6 +2,8 @@ import buildQueryString from '@/lib/utils/buildQueryString';
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
 import { httpDelete, httpGet, httpPost, httpPut } from '@/services/http.helpers';
 import type {
+  GenerateQuizWithAiPayload,
+  GenerateQuizWithAiResponse,
   CreateQuizPayload,
   CreateQuizQuestionPayload,
   QuizDetail,
@@ -21,6 +23,9 @@ export const QuizService = {
     httpGet<QuizListItem[]>(`${API_ENDPOINTS.QUIZ.LIST}${buildQueryString(params)}`),
 
   getDetail: (quizId: string) => httpGet<QuizDetail>(API_ENDPOINTS.QUIZ.DETAIL(quizId)),
+
+  aiGenerate: (quizId: string, payload: GenerateQuizWithAiPayload) =>
+    httpPost<GenerateQuizWithAiResponse>(API_ENDPOINTS.QUIZ.AI_GENERATE(quizId), payload),
 
   create: (payload: CreateQuizPayload) => httpPost<QuizDetail>(API_ENDPOINTS.QUIZ.LIST, payload),
 

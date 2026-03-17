@@ -1,7 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/services/api/query-keys';
 import { QuizService } from '@/services/quiz/quiz.service';
-import type { CreateQuizPayload, CreateQuizQuestionPayload, ReorderQuestionsPayload, UpdateQuizPayload, UpdateQuizQuestionPayload } from '@/types/quiz';
+import type {
+  CreateQuizPayload,
+  CreateQuizQuestionPayload,
+  GenerateQuizWithAiPayload,
+  ReorderQuestionsPayload,
+  UpdateQuizPayload,
+  UpdateQuizQuestionPayload,
+} from '@/types/quiz';
 
 export function useCreateQuiz() {
   const qc = useQueryClient();
@@ -75,6 +82,12 @@ export function useReorderQuizQuestions(quizId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.quiz.questions(quizId) });
     },
+  });
+}
+
+export function useGenerateQuizWithAi(quizId: string) {
+  return useMutation({
+    mutationFn: (payload: GenerateQuizWithAiPayload) => QuizService.aiGenerate(quizId, payload),
   });
 }
 

@@ -86,6 +86,8 @@ export const API_ENDPOINTS = {
 		UPDATE: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
 		DELETE: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
 
+		AI_GENERATE: (quizId: string) => `/api/teacher/quizzes/${quizId}/ai-generate`,
+
 		QUESTIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/questions`,
 		CREATE_QUESTION: '/api/teacher/questions',
 		UPDATE_QUESTION: (questionId: string) => `/api/teacher/questions/${questionId}`,

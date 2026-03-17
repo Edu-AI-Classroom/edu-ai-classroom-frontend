@@ -118,3 +118,33 @@ export type QuizSubmissionsOverview = {
   scoreDistribution: { bucket: string; count: number }[];
 };
 
+export type GenerateQuizWithAiPayload = {
+  prompt: string;
+  totalQuestions?: number;
+  mcqCount?: number;
+  essayCount?: number;
+  pointsPerQuestion?: number;
+  language?: string;
+};
+
+export type AiGeneratedQuizQuestion =
+  | {
+      type: 'MCQ';
+      questionText: string;
+      options: string[];
+      correctIndex: number;
+      maxScore: number;
+      explanation?: string;
+    }
+  | {
+      type: 'ESSAY';
+      questionText: string;
+      expectedAnswer?: string;
+      maxScore: number;
+    };
+
+export type GenerateQuizWithAiResponse = {
+  quizId: string;
+  questions: AiGeneratedQuizQuestion[];
+};
+

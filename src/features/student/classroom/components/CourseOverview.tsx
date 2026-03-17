@@ -9,6 +9,7 @@ import {
 	Users,
 } from 'lucide-react';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
 import { useStudentQuizList } from '@/hooks/queries/quiz/use-student-quiz-query';
 
 interface CourseOverviewProps {
@@ -34,6 +35,7 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 	const teacherInitial = classData.teacherName ? classData.teacherName.charAt(0) : 'T';
 	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
 	const { data: quizzes } = useStudentQuizList({ classId });
+	const { data: studentsResponse, isLoading: isStudentsLoading } = useClassStudents(classId);
 
 	const list = Array.isArray(quizzes) ? quizzes : [];
 	const total = list.length;
@@ -53,6 +55,9 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 	const avgNum = Number.parseFloat(avgScore);
 	const safeAvgNum = Number.isFinite(avgNum) ? Math.max(0, Math.min(10, avgNum)) : 0;
 	const avgPct = Math.round((safeAvgNum / 10) * 100);
+
+	const classmates = (studentsResponse?.data ?? []).filter((u: any) => String(u?.role ?? '').toUpperCase() === 'STUDENT');
+	const classmatesCount = classmates.length || classData.studentCount || 0;
 
 	return (
 		<div>
@@ -133,6 +138,45 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 						<p className="text-xs text-muted-foreground">Teacher</p>
 					</div>
 				</div>
+			</div>
+
+			{/* Classmates */}
+			<div className="bg-card rounded-xl border border-border p-5 mt-4">
+				<div className="flex items-center justify-between mb-3">
+					<div className="flex items-center gap-2">
+						<Users className="w-4 h-4 text-muted-foreground" />
+						<h2 className="font-bold text-foreground">Classmates</h2>
+					</div>
+					<span className="text-xs text-muted-foreground">{classmatesCount} students</span>
+				</div>
+
+				{isStudentsLoading ? (
+					<p className="text-sm text-muted-foreground">Loading classmates...</p>
+				) : classmates.length === 0 ? (
+					<p className="text-sm text-muted-foreground">No classmates data available.</p>
+				) : (
+					<div className="space-y-2 max-h-36 overflow-auto pr-1">
+						{classmates.slice(0, 12).map((u: any) => {
+							const name = u?.studentName ?? u?.user_name ?? u?.userName ?? 'Student';
+							const initial = String(name).charAt(0) || 'S';
+							return (
+								<div key={u?.studentId ?? u?.userId ?? name} className="flex items-center gap-3">
+									<div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-foreground font-bold text-xs">
+										{initial}
+									</div>
+									<div className="min-w-0">
+										<p className="text-sm font-medium text-foreground truncate">{name}</p>
+										{u?.email ? <p className="text-xs text-muted-foreground truncate">{u.email}</p> : null}
+									</div>
+								</div>
+							);
+						})}
+
+						{classmates.length > 12 ? (
+							<p className="text-xs text-muted-foreground pt-1">+{classmates.length - 12} more</p>
+						) : null}
+					</div>
+				)}
 			</div>
 
 			{/* My Progress */}
