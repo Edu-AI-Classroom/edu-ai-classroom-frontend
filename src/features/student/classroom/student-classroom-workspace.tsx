@@ -11,6 +11,7 @@ import {
 	Menu,
 	MessageCircle,
 	Newspaper,
+	Presentation,
 	X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -24,14 +25,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
-// Note: We use the existing imported student components, but pointing to the components folder.
-// Since student CourseDetail exists, these components might already exist or need refinement.
 import CourseAssignments from './components/CourseAssignments';
 import CourseFeed from './components/CourseFeed';
 import CourseGrades from './components/CourseGrades';
 import CourseOverview from './components/CourseOverview';
+import StudentClassLessons from './components/student-class-lessons';
 
-type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation';
+type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation' | 'lessons';
 
 interface StudentClassroomWorkspaceProps {
 	classData: ClassroomUiData;
@@ -43,6 +43,7 @@ interface StudentClassroomWorkspaceProps {
 const tabs = [
 	{ id: 'overview' as TabType, label: 'Overview', icon: Home },
 	{ id: 'feed' as TabType, label: 'Feed', icon: Newspaper },
+	{ id: 'lessons' as TabType, label: 'Lessons', icon: Presentation },
 	{ id: 'assignments' as TabType, label: 'Assignments', icon: FileText },
 	{ id: 'grades' as TabType, label: 'Grades', icon: BarChart3 },
 	{ id: 'conversation' as TabType, label: 'Conversation', icon: MessageCircle },
@@ -64,6 +65,8 @@ export default function StudentClassroomWorkspace({
 		switch (activeTab) {
 			case 'overview':
 				return <CourseOverview classData={classData} />;
+			case 'lessons':
+				return <StudentClassLessons classData={classData} />;
 			case 'feed':
 				return <CourseFeed classData={classData} />;
 			case 'assignments':

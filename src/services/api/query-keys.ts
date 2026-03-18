@@ -100,4 +100,10 @@ export const queryKeys = {
 		aiUsage: (filters: unknown) => ['adminDashboard', 'aiUsage', filters] as const,
 		classrooms: (filters: unknown) => ['adminDashboard', 'classrooms', filters] as const,
 	},
+
+	lesson: {
+		all: ['lesson'] as const,
+		list: (classId: number) => ['lesson', 'class', classId] as const,
+		detail: (id: string) => ['lesson', 'detail', id] as const,
+	},
 };
