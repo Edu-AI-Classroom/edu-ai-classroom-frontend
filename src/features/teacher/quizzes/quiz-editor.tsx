@@ -23,14 +23,16 @@ import {
 	CheckSquare,
 	ChevronDown,
 	ChevronRight,
+	FileText,
 	GripVertical,
-	Plus,
 	Save,
 	Sparkles,
 	Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,6 +92,7 @@ function SortableQuestionItem({
 }
 
 export default function QuizEditor({ quizId }: { quizId: string }) {
+	const router = useRouter();
 	const { data: quiz, isLoading: isQuizLoading } = useQuizDetail(quizId);
 	const { data: questions, isLoading: isQuestionsLoading } = useQuizQuestions(quizId);
 	const { data: classes } = useClassList();
@@ -111,13 +114,6 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 	const [totalPoints, setTotalPoints] = useState<number | undefined>(undefined);
 	const [dueDate, setDueDate] = useState<string>('');
 
-	const [newQType, setNewQType] = useState<QuizQuestionType>('MCQ');
-	const [newQText, setNewQText] = useState('');
-	const [newOptions, setNewOptions] = useState<string[]>(['', '', '', '']);
-	const optionSlots = ['A', 'B', 'C', 'D'] as const;
-	const [newCorrectIndex, setNewCorrectIndex] = useState(0);
-	const [newMaxScore, setNewMaxScore] = useState<number>(1);
-	const [newExpectedAnswer, setNewExpectedAnswer] = useState<string>('');
 	const [activeQuestionId, setActiveQuestionId] = useState<string>('');
 	const [orderedQuestionIds, setOrderedQuestionIds] = useState<string[]>([]);
 	const questionCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -147,15 +143,149 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 	}, [hydrated, quiz]);
 
 	const onSaveQuiz = async () => {
-		await updateQuiz.mutateAsync({
-			title: title.trim() || undefined,
-			description: description.trim() || undefined,
-			classroomId,
-			documentType,
-			timeLimitMinutes,
-			totalPoints,
-			dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+		if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+			document.activeElement.blur();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		}
+
+		if (createQuestion.isPending || updateQuestion.isPending || reorder.isPending) {
+			toast.error('Please wait', {
+				description: 'Question changes are still syncing. Try save again in a moment.',
+			});
+			return;
+		}
+
+		if (sortedQuestions.length === 0) {
+			toast.error('Validation Error', {
+				description: 'Add at least one question before saving.',
+			});
+			return;
+		}
+
+		const questionsForValidation = sortedQuestions.map((question) => {
+			if (question.id !== activeQuestionId) return question;
+
+			const card = questionCardRefs.current[question.id];
+			if (!card) return question;
+
+			const questionTextInput = card.querySelector<HTMLInputElement>(
+				'[data-field="question-text"]',
+			);
+			const maxScoreInput = card.querySelector<HTMLInputElement>('[data-field="max-score"]');
+
+			if (question.type === 'MCQ') {
+				const optionInputs = Array.from(
+					card.querySelectorAll<HTMLInputElement>('[data-field="option-text"]'),
+				);
+				const checkedOption = card.querySelector<HTMLInputElement>(
+					'[data-field="correct-option"]:checked',
+				);
+
+				return {
+					...question,
+					questionText: questionTextInput?.value ?? question.questionText,
+					maxScore:
+						maxScoreInput?.value !== undefined && maxScoreInput?.value !== ''
+							? Number(maxScoreInput.value)
+							: question.maxScore,
+					options:
+						optionInputs.length > 0
+							? optionInputs.map((optionInput) => optionInput.value)
+							: question.options,
+					correctIndex:
+						checkedOption && checkedOption.value !== ''
+							? Number(checkedOption.value)
+							: question.correctIndex,
+				};
+			}
+
+			const expectedAnswerInput = card.querySelector<HTMLTextAreaElement>(
+				'[data-field="expected-answer"]',
+			);
+
+			return {
+				...question,
+				questionText: questionTextInput?.value ?? question.questionText,
+				maxScore:
+					maxScoreInput?.value !== undefined && maxScoreInput?.value !== ''
+						? Number(maxScoreInput.value)
+						: question.maxScore,
+				expectedAnswer: expectedAnswerInput?.value ?? (question as any).expectedAnswer,
+			};
 		});
+
+		const getQuestionIssue = (question: QuizQuestion): string | null => {
+			const text = question.questionText.trim();
+
+			if (!text) {
+				return 'Question text is missing.';
+			}
+
+			if (!Number.isFinite(question.maxScore) || Number(question.maxScore) <= 0) {
+				return 'Points must be greater than 0.';
+			}
+
+			if (question.type === 'MCQ') {
+				if (question.options.length < 2) {
+					return 'MCQ must have at least 2 options.';
+				}
+
+				const hasInvalidOption = question.options.some((optionText) => {
+					const trimmed = optionText.trim();
+					return !trimmed;
+				});
+
+				if (hasInvalidOption) {
+					return 'MCQ options are incomplete.';
+				}
+
+				if (question.correctIndex < 0 || question.correctIndex >= question.options.length) {
+					return 'Correct answer is not selected.';
+				}
+			}
+
+			if (question.type === 'ESSAY') {
+				const expectedAnswer = ((question as any).expectedAnswer ?? '').trim();
+				if (!expectedAnswer) {
+					return 'Expected answer is missing for essay question.';
+				}
+			}
+
+			return null;
+		};
+
+		for (const [questionIndex, question] of questionsForValidation.entries()) {
+			const issue = getQuestionIssue(question);
+			if (issue) {
+				toast.error('Validation Error', {
+					description: `Question ${questionIndex + 1}: ${issue}`,
+				});
+				handleSelectQuestion(question.id);
+				return;
+			}
+		}
+
+		try {
+			await updateQuiz.mutateAsync({
+				title: title.trim() || undefined,
+				description: description.trim() || undefined,
+				classroomId,
+				documentType,
+				timeLimitMinutes,
+				totalPoints,
+				dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+			});
+
+			toast.success('Save Success', {
+				description: 'Quiz has been saved successfully.',
+			});
+
+			router.push(`/quizzes/${quizId}`);
+		} catch (error: any) {
+			toast.error('Save Failed', {
+				description: error?.message ?? 'Failed to save quiz.',
+			});
+		}
 	};
 
 	const sortedQuestions = useMemo(() => {
@@ -225,37 +355,32 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 		}
 	};
 
-	const onAddQuestion = async () => {
-		const questionText = newQText.trim();
-		if (!questionText) return;
+	const onQuickAddQuestion = async (type: QuizQuestionType) => {
+		try {
+			const createdQuestion =
+				type === 'MCQ'
+					? await createQuestion.mutateAsync({
+							quizId,
+							type: 'MCQ',
+							questionText: 'Untitled multiple choice question',
+							options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+							correctIndex: 0,
+							maxScore: 1,
+						})
+					: await createQuestion.mutateAsync({
+							quizId,
+							type: 'ESSAY',
+							questionText: 'Untitled essay question',
+							maxScore: 1,
+							expectedAnswer: '',
+						});
 
-		if (newQType === 'MCQ') {
-			const options = newOptions.map((o) => o.trim()).filter(Boolean);
-			if (options.length < 2) return;
-			const correctIndex = Math.min(newCorrectIndex, options.length - 1);
-			await createQuestion.mutateAsync({
-				quizId,
-				type: 'MCQ',
-				questionText,
-				options,
-				correctIndex,
-				maxScore: newMaxScore,
-			});
-		} else {
-			await createQuestion.mutateAsync({
-				quizId,
-				type: 'ESSAY',
-				questionText,
-				maxScore: newMaxScore,
-				expectedAnswer: newExpectedAnswer.trim() || undefined,
+			handleSelectQuestion(createdQuestion.id);
+		} catch (error: any) {
+			toast.error('Add Question Failed', {
+				description: error?.message ?? 'Cannot add question now. Please try again.',
 			});
 		}
-
-		setNewQText('');
-		setNewOptions(['', '', '', '']);
-		setNewCorrectIndex(0);
-		setNewMaxScore(1);
-		setNewExpectedAnswer('');
 	};
 
 	const onGenerateWithAi = async () => {
@@ -275,7 +400,11 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 			});
 			setAiGenerated(res.questions ?? []);
 		} catch (e: any) {
-			setAiError(e?.message ?? 'AI generate failed');
+			const message = e?.message ?? 'AI generate failed';
+			setAiError(message);
+			toast.error('Generate Failed', {
+				description: message,
+			});
 		}
 	};
 
@@ -306,7 +435,11 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 			setAiGenerated(null);
 			setAiPrompt('');
 		} catch (e: any) {
-			setAiError(e?.message ?? 'Insert questions failed');
+			const message = e?.message ?? 'Insert questions failed';
+			setAiError(message);
+			toast.error('Insert Failed', {
+				description: message,
+			});
 		}
 	};
 
@@ -423,12 +556,10 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 										<p className="text-xs font-semibold tracking-wide text-[#6A4B95] uppercase">
 											AI Draft
 										</p>
-										<h2 className="text-lg font-bold text-[#2F2344]">
-											AI-generated questions (chua insert)
-										</h2>
+										<h2 className="text-lg font-bold text-[#2F2344]">AI-generated questions</h2>
 										<p className="text-sm text-[#5D4B78]">
-											Cac cau hoi duoc sinh ra tu AI se hien thi o day. Bam Insert moi them vao quiz
-											that.
+											AI-generated draft questions will appear here. Click "Insert" to add them to
+											your quiz.
 										</p>
 									</div>
 									<div className="flex items-center gap-2">
@@ -616,6 +747,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 																<div className="animate-in fade-in-0 slide-in-from-bottom-1 space-y-3 duration-300">
 																	<Input
 																		defaultValue={q.questionText}
+																		data-field="question-text"
 																		onBlur={(e) => {
 																			const value = e.target.value.trim();
 																			if (value && value !== q.questionText) {
@@ -637,10 +769,26 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 																				return (
 																					<div
 																						key={optionKey}
-																						className="grid grid-cols-[1fr_auto] items-center gap-2"
+																						className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-lg"
 																					>
+																						<input
+																							type="radio"
+																							name={`correct-answer-${q.id}`}
+																							data-field="correct-option"
+																							value={optIdx}
+																							checked={q.correctIndex === optIdx}
+																							onChange={() =>
+																								void onUpdateQuestion(q, {
+																									...(q as any),
+																									correctIndex: optIdx,
+																								} as any)
+																							}
+																							className="h-4 w-4 accent-[#F5B041]"
+																							aria-label={`Set option ${optIdx + 1} as correct answer`}
+																						/>
 																						<Input
 																							defaultValue={opt}
+																							data-field="option-text"
 																							onBlur={(e) => {
 																								const value = e.target.value;
 																								if (value === opt) return;
@@ -653,51 +801,16 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 																							}}
 																							className="rounded-lg bg-white"
 																						/>
-																						<Button
-																							variant="outline"
-																							size="sm"
-																							onClick={() =>
-																								void onUpdateQuestion(q, {
-																									...(q as any),
-																									correctIndex: optIdx,
-																								} as any)
-																							}
-																						>
-																							{q.correctIndex === optIdx
-																								? 'Correct'
-																								: 'Set Correct'}
-																						</Button>
 																					</div>
 																				);
 																			})}
-																			<select
-																				value={q.correctIndex}
-																				onChange={(e) =>
-																					void onUpdateQuestion(q, {
-																						...(q as any),
-																						correctIndex: Number(e.target.value),
-																					} as any)
-																				}
-																				className="w-full rounded-xl border border-[#E0DCD5] bg-white p-2 text-sm text-[#333]"
-																			>
-																				{q.options.map((opt, optionIdx) => {
-																					const optionOccurrence =
-																						(correctOccurrenceMap.get(opt) ?? 0) + 1;
-																					correctOccurrenceMap.set(opt, optionOccurrence);
-																					const optionKey = `${q.id}-correct-${opt}-${optionOccurrence}`;
-																					return (
-																						<option key={optionKey} value={optionIdx}>
-																							Option {optionIdx + 1}
-																						</option>
-																					);
-																				})}
-																			</select>
 																		</div>
 																	)}
 
 																	{q.type === 'ESSAY' && (
 																		<Textarea
 																			defaultValue={(q as any).expectedAnswer ?? ''}
+																			data-field="expected-answer"
 																			onBlur={(e) => {
 																				const value = e.target.value;
 																				const current = (q as any).expectedAnswer ?? '';
@@ -717,6 +830,7 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 																			<span className="text-sm text-[#666]">Points:</span>
 																			<Input
 																				type="number"
+																				data-field="max-score"
 																				min={0}
 																				defaultValue={q.maxScore}
 																				onBlur={(e) => {
@@ -762,8 +876,8 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 						</DndContext>
 					</div>
 
-					<div className="sticky top-24 space-y-4">
-						<section className="rounded-2xl border border-[#E0DCD5] bg-white p-4 shadow-sm">
+					<div className="space-y-4">
+						<section className=" rounded-2xl border border-[#E0DCD5] bg-white p-4 shadow-sm">
 							<button
 								type="button"
 								onClick={() => setIsAiToolboxOpen((prev) => !prev)}
@@ -774,9 +888,6 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 										Toolbox
 									</p>
 									<h2 className="text-base font-bold text-[#333]">AI Quiz Generator</h2>
-									<p className="text-xs text-[#666]">
-										Mo khi can generate, dong lai de gon man hinh.
-									</p>
 								</div>
 								{isAiToolboxOpen ? (
 									<ChevronDown className="h-5 w-5 text-[#5a3ea6]" />
@@ -842,11 +953,11 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 
 									<div className="rounded-xl border border-[#E5DDF3] bg-[#FAF7FF] p-3 text-xs text-[#5D4B78]">
 										<p className="mb-2 font-semibold text-[#5a3ea6]">Live input summary</p>
-										<p>Prompt: {aiPrompt.trim() ? aiPrompt.trim() : '(chua nhap)'}</p>
+										<p>Prompt: {aiPrompt.trim() ? aiPrompt.trim() : '(not input)'}</p>
 										<p>
-											Cau hoi: {aiTotalQuestions} | MCQ: {aiMcqCount} | Essay: {aiEssayCount}
+											Question: {aiTotalQuestions} | MCQ: {aiMcqCount} | Essay: {aiEssayCount}
 										</p>
-										<p>Diem moi cau: {aiPointsPerQuestion}</p>
+										<p>Points per question: {aiPointsPerQuestion}</p>
 									</div>
 
 									{aiError && <p className="text-sm text-red-600">{aiError}</p>}
@@ -872,128 +983,143 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 							)}
 						</section>
 
-						<section className="rounded-2xl border border-[#E0DCD5] bg-white p-4 shadow-sm">
-							<h2 className="mb-3 text-base font-bold text-[#333]">Add Question</h2>
+						<section className="sticky top-35 rounded-2xl border border-[#E0DCD5] bg-white p-4 shadow-sm">
+							<h2 className="flex items-center gap-2 text-base font-bold text-[#333]">
+								Add Question
+							</h2>
+							<p className="mb-4 text-xs text-[#75706A]">
+								Pick a type to auto-create a blank template question.
+							</p>
+
 							<div className="space-y-3">
-								<select
-									value={newQType}
-									onChange={(e) => setNewQType(e.target.value as QuizQuestionType)}
-									className="w-full rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-2.5 text-sm text-[#333]"
+								<button
+									type="button"
+									onClick={() => void onQuickAddQuestion('MCQ')}
+									disabled={createQuestion.isPending}
+									className="flex w-full items-center gap-3 rounded-3xl border border-[#D8D2CA] bg-[#F7F6F4] px-4 py-2 text-left text-sm font-medium text-[#3E3A36] transition-all hover:border-[#BFDCC8] hover:bg-[#F1F9F3] disabled:cursor-not-allowed disabled:opacity-60"
 								>
-									<option value="MCQ">Multiple Choice</option>
-									<option value="ESSAY">Essay</option>
-								</select>
-								<Input
-									value={newQText}
-									onChange={(e) => setNewQText(e.target.value)}
-									placeholder="Type question..."
-								/>
-								{newQType === 'MCQ' && (
-									<div className="grid grid-cols-1 gap-2">
-										{optionSlots.map((slot, idx) => (
-											<Input
-												key={slot}
-												value={newOptions[idx] ?? ''}
-												onChange={(e) => {
-													const next = [...newOptions];
-													next[idx] = e.target.value;
-													setNewOptions(next);
-												}}
-												placeholder={`Option ${idx + 1}`}
-											/>
-										))}
-										<select
-											value={newCorrectIndex}
-											onChange={(e) => setNewCorrectIndex(Number(e.target.value))}
-											className="w-full rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-2.5 text-sm text-[#333]"
-										>
-											{optionSlots.map((slot, idx) => (
-												<option key={slot} value={idx}>
-													Correct: Option {idx + 1}
-												</option>
-											))}
-										</select>
-									</div>
-								)}
-								{newQType === 'ESSAY' && (
-									<Textarea
-										value={newExpectedAnswer}
-										onChange={(e) => setNewExpectedAnswer(e.target.value)}
-										placeholder="Expected answer / rubric"
-									/>
-								)}
-								<Input
-									type="number"
-									min={0}
-									value={newMaxScore}
-									onChange={(e) => setNewMaxScore(Number(e.target.value || 0))}
-									placeholder="Max score"
-								/>
-								<Button
-									onClick={onAddQuestion}
-									disabled={createQuestion.isPending || !newQText.trim()}
-									className="w-full rounded-xl"
+									<CheckSquare className="h-5 w-5 text-[#5BBE85]" />
+									<span>Multiple Choice</span>
+								</button>
+
+								{/* <button
+									type="button"
+									disabled
+									className="flex w-full items-center gap-3 rounded-3xl border border-[#D8D2CA] bg-[#F7F6F4] px-4 py-3 text-left text-lg font-medium text-[#88837D] opacity-80"
+									title="Fill in the Blank is coming soon"
 								>
-									<Plus className="mr-2 h-4 w-4" />
-									{createQuestion.isPending ? 'Adding...' : 'Add Question'}
-								</Button>
+									<Pencil className="h-5 w-5 text-[#D9935B]" />
+									<span>Fill in the Blank</span>
+									<span className="ml-auto rounded-full bg-[#EFE8DE] px-2 py-0.5 text-xs font-semibold text-[#8A7C6B]">
+										Soon
+									</span>
+								</button> */}
+
+								<button
+									type="button"
+									onClick={() => void onQuickAddQuestion('ESSAY')}
+									disabled={createQuestion.isPending}
+									className="flex w-full items-center gap-3 rounded-3xl border border-[#D8D2CA] bg-[#F7F6F4] px-4 py-2 text-left text-sm font-medium text-[#3E3A36] transition-all hover:border-[#D7CCE8] hover:bg-[#F7F3FC] disabled:cursor-not-allowed disabled:opacity-60"
+								>
+									<FileText className="h-5 w-5 text-[#A58BC9]" />
+									<span>Essay</span>
+								</button>
 							</div>
 						</section>
 
-						<section className="rounded-2xl border border-[#E0DCD5] bg-white p-4 shadow-sm">
+						<section className="sticky top-83 rounded-2xl border border-[#E0DCD5] bg-white p-4 shadow-sm">
 							<h2 className="mb-3 text-base font-bold text-[#333]">Quiz Settings</h2>
 							<div className="space-y-3">
-								<select
-									value={documentType}
-									onChange={(e) => setDocumentType(e.target.value as QuizDocumentType)}
-									className="w-full rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-2.5 text-sm text-[#333]"
-								>
-									<option value="ASSIGNMENT">ASSIGNMENT</option>
-									<option value="EXAM">EXAM</option>
-								</select>
-								<select
-									value={classroomId ?? ''}
-									onChange={(e) => {
-										const value = e.target.value ? Number(e.target.value) : NaN;
-										setClassroomId(Number.isNaN(value) ? undefined : value);
-									}}
-									className="w-full rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-2.5 text-sm text-[#333]"
-								>
-									<option value="">No classroom</option>
-									{classOptions.map((item) => (
-										<option key={item.classId} value={item.classId}>
-											{item.className}
-										</option>
-									))}
-								</select>
-								<Input
-									type="number"
-									min={0}
-									value={timeLimitMinutes ?? ''}
-									onChange={(e) =>
-										setTimeLimitMinutes(e.target.value ? Number(e.target.value) : undefined)
-									}
-									placeholder="Time limit (minutes)"
-								/>
-								<Input
-									type="number"
-									min={0}
-									value={totalPoints ?? ''}
-									onChange={(e) =>
-										setTotalPoints(e.target.value ? Number(e.target.value) : undefined)
-									}
-									placeholder="Total points"
-								/>
-								<Input
-									type="datetime-local"
-									value={dueDate}
-									onChange={(e) => setDueDate(e.target.value)}
-								/>
-								<Textarea
-									value={description}
-									onChange={(e) => setDescription(e.target.value)}
-									placeholder="Description"
-								/>
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold tracking-wide text-[#666] uppercase">
+										Quiz Type
+									</p>
+									<select
+										value={documentType}
+										onChange={(e) => setDocumentType(e.target.value as QuizDocumentType)}
+										className="w-full rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-2.5 text-sm text-[#333]"
+									>
+										<option value="ASSIGNMENT">Assignment</option>
+										<option value="EXAM">Exam</option>
+									</select>
+								</div>
+
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold tracking-wide text-[#666] uppercase">
+										Classroom
+									</p>
+									<select
+										value={classroomId ?? ''}
+										onChange={(e) => {
+											const value = e.target.value ? Number(e.target.value) : NaN;
+											setClassroomId(Number.isNaN(value) ? undefined : value);
+										}}
+										className="w-full rounded-xl border border-[#E0DCD5] bg-[#F9F8F6] p-2.5 text-sm text-[#333]"
+									>
+										<option value="">No classroom (draft only)</option>
+										{classOptions.map((item) => (
+											<option key={item.classId} value={item.classId}>
+												{item.className}
+											</option>
+										))}
+									</select>
+								</div>
+
+								<div className="space-y-1.5 flex justify-between gap-8">
+									<p className="text-xs font-semibold tracking-wide text-[#666] uppercase">
+										Time Limit (minutes)
+									</p>
+									<Input
+										type="number"
+										min={0}
+										value={timeLimitMinutes ?? ''}
+										onChange={(e) =>
+											setTimeLimitMinutes(e.target.value ? Number(e.target.value) : undefined)
+										}
+										placeholder="Example: 45"
+									/>
+								</div>
+
+								<div className="space-y-1.5 flex justify-between gap-15">
+									<p className="text-xs font-semibold tracking-wide text-[#666] uppercase">
+										Total Points
+									</p>
+									<Input
+										type="number"
+										min={0}
+										value={totalPoints ?? ''}
+										onChange={(e) =>
+											setTotalPoints(e.target.value ? Number(e.target.value) : undefined)
+										}
+										placeholder="Example: 100"
+									/>
+								</div>
+
+								<div className="space-y-1.5">
+									<div className="flex gap-2">
+										<p className="text-xs font-semibold tracking-wide text-[#666] uppercase">
+											Due Date
+										</p>
+										<p className="text-xs font-semibold text-[#8A867F]">-</p>
+										<p className="text-xs text-[#8A867F]">Leave empty for no deadline.</p>
+									</div>
+									<Input
+										type="datetime-local"
+										value={dueDate}
+										onChange={(e) => setDueDate(e.target.value)}
+									/>
+								</div>
+
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold tracking-wide text-[#666] uppercase">
+										Description
+									</p>
+									<Textarea
+										value={description}
+										onChange={(e) => setDescription(e.target.value)}
+										placeholder="Write instructions for students..."
+									/>
+								</div>
 							</div>
 						</section>
 
