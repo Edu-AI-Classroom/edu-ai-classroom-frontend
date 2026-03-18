@@ -5,7 +5,9 @@ import { useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
 import { useClassGradebook } from '@/hooks/queries/gradebook/use-gradebook-query';
+import type { GradebookRow } from '@/types/gradebook';
 import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassGradesProps {
@@ -15,13 +17,52 @@ interface ClassGradesProps {
 type StudentStatus = 'on-track' | 'excellent' | 'needs-attention';
 
 export default function ClassGrades({ classData }: ClassGradesProps) {
-	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
+	const rawClassId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
+	const classId = Number.isFinite(rawClassId) ? rawClassId : 0;
 	const { data: gradebook, isLoading, isError } = useClassGradebook(classId);
+	const { data: studentsResponse } = useClassStudents(classId);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [sortBy, setSortBy] = useState<'none' | 'highest' | 'lowest'>('none');
 
 	const quizzes = gradebook?.quizzes ?? [];
-	const rows = gradebook?.rows ?? [];
+	const students = useMemo(() => {
+		return (studentsResponse?.data ?? [])
+			.filter((user: any) => user.role === 'STUDENT')
+			.map((student: any) => ({
+				id: student.studentId ?? student.userId ?? 0,
+				name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown Student',
+				email: student.email ?? null,
+			}))
+			.filter((student) => student.id > 0);
+	}, [studentsResponse]);
+
+	const rows = useMemo<GradebookRow[]>(() => {
+		const gradebookRows = gradebook?.rows ?? [];
+		if (students.length === 0) return gradebookRows;
+
+		const rowByStudentId = new Map<number, GradebookRow>();
+		for (const row of gradebookRows) {
+			if (row.student?.id != null) {
+				rowByStudentId.set(row.student.id, row);
+			}
+		}
+
+		for (const student of students) {
+			if (!rowByStudentId.has(student.id)) {
+				rowByStudentId.set(student.id, {
+					student: {
+						id: student.id,
+						name: student.name,
+						email: student.email,
+					},
+					averageScore: null,
+					grades: {},
+				});
+			}
+		}
+
+		return Array.from(rowByStudentId.values());
+	}, [gradebook, students]);
 
 	const filteredRows = useMemo(() => {
 		const filtered = rows.filter((r) =>
@@ -63,7 +104,12 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 				const status = String(cell?.status ?? '').toUpperCase();
 				const isLate = status.includes('LATE');
 
-				row[q.title] = score != null ? `${score}${isLate ? ' (Late)' : ''}` : cell?.submittedAt ? 'Submitted' : '';
+				row[q.title] =
+					score != null
+						? `${score}${isLate ? ' (Late)' : ''}`
+						: cell?.submittedAt
+							? 'Submitted'
+							: '';
 			}
 
 			row.Average = r.averageScore ?? '';
@@ -96,11 +142,10 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 				<div>
 					<h1 className="font-sans font-bold text-2xl text-[#333]">Gradebook</h1>
 					<p className="font-serif text-lg text-[#666]">
-						{rows.length} students, {quizzes.length} assignments
+						{students.length || rows.length} students, {quizzes.length} assignments
 					</p>
 				</div>
 				<div className="flex gap-2">
-
 					<Button
 						variant="outline"
 						className="rounded-xl bg-transparent"
@@ -143,7 +188,9 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 			</div>
 
 			{isLoading && <div className="text-sm text-[#666]">Loading gradebook...</div>}
-			{isError && <div className="text-sm text-red-600">Failed to load gradebook.</div>}
+			{isError && rows.length === 0 && quizzes.length === 0 && (
+				<div className="text-sm text-[#666]">No gradebook data available yet.</div>
+			)}
 
 			{/* Grade Table */}
 			<div className="bg-white rounded-2xl shadow-sm border border-[#E0DCD5] overflow-hidden">
@@ -163,9 +210,7 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 											<span className="text-sm truncate max-w-25" title={quiz.title}>
 												{quiz.title}
 											</span>
-											<span className="text-xs text-[#999] font-normal">
-												{quiz.documentType}
-											</span>
+											<span className="text-xs text-[#999] font-normal">{quiz.documentType}</span>
 										</div>
 									</th>
 								))}
@@ -177,16 +222,18 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 						<tbody>
 							{filteredRows.map((row, index) => {
 								const student = row.student;
+								const studentName = student?.name ?? 'Unknown Student';
 								const average = row.averageScore;
 								const status = getStudentStatus(average);
-								const initials = (student.name ?? '')
-									.split(' ')
-									.map((n) => n[0])
-									.join('');
+								const initials =
+									studentName
+										.split(' ')
+										.map((n) => n[0])
+										.join('') || 'U';
 
 								return (
 									<tr
-										key={student.id}
+										key={student?.id ?? `row-${index}`}
 										className={`border-b border-[#E0DCD5] ${index % 2 === 0 ? 'bg-white' : 'bg-[#FAF9F6]/50'}`}
 									>
 										<td className="p-4 sticky left-0 bg-inherit">
@@ -195,14 +242,15 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 													{initials}
 												</div>
 												<div>
-													<p className="font-semibold text-sm text-[#333]">{student.name}</p>
+													<p className="font-semibold text-sm text-[#333]">{studentName}</p>
 													<span
-														className={`text-xs ${status === 'excellent'
-															? 'text-[#2E7D32]'
-															: status === 'needs-attention'
-																? 'text-[#C62828]'
-																: 'text-[#666]'
-															}`}
+														className={`text-xs ${
+															status === 'excellent'
+																? 'text-[#2E7D32]'
+																: status === 'needs-attention'
+																	? 'text-[#C62828]'
+																	: 'text-[#666]'
+														}`}
 													>
 														{status === 'excellent'
 															? 'Excellent'

@@ -3,6 +3,7 @@
 import { ArrowLeft, Bell, BookOpen, Clock, FileWarning, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import WorkspaceHeader from '@/components/common/workspace-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
@@ -28,41 +29,12 @@ export default function StudentClassListView({
 	);
 
 	return (
-		<div className="min-h-screen bg-[#FAF9F6] grid-paper">
+		<div className=" bg-[#FAF9F6] grid-paper">
 			{/* Header */}
-			<header className="sticky top-0 z-50 bg-[#FAF9F6]/95 backdrop-blur-sm border-b border-[#E0DCD5]">
-				<div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-					<div className="flex items-center gap-4">
-						<Link href="/student" className="flex items-center gap-2">
-							<div className="w-10 h-10 rounded-xl bg-[#F5B041] flex items-center justify-center">
-								<BookOpen className="w-5 h-5 text-[#333]" />
-							</div>
-							<span className="font-sans font-bold text-xl text-[#333]">Teachify</span>
-						</Link>
-					</div>
-
-					<div className="flex items-center gap-4">
-						<Button variant="ghost" size="icon" className="relative">
-							<Bell className="w-5 h-5 text-[#666]" />
-							<span className="absolute -top-1 -right-1 w-5 h-5 bg-[#E57373] text-white text-xs rounded-full flex items-center justify-center">
-								2
-							</span>
-						</Button>
-
-						<div className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5]">
-							<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-								{studentName
-									.split(' ')
-									.map((n) => n[0])
-									.join('')}
-							</div>
-						</div>
-					</div>
-				</div>
-			</header>
+			<WorkspaceHeader userName={studentName} userRole="STUDENT" />
 
 			{/* Main Content */}
-			<main className="max-w-6xl mx-auto px-6 py-10">
+			<main className="flex-1 min-h-[80vh] max-w-6xl mx-auto px-6 py-10">
 				{/* Back Link & Title */}
 				<div className="mb-8">
 					<Link
@@ -166,6 +138,24 @@ export default function StudentClassListView({
 					</div>
 				)}
 			</main>
+
+			{/* Footer */}
+			<footer className="border-t border-[#E0DCD5]">
+				<div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+					<p className="text-sm text-[#666]">© 2026 Teachify. All rights reserved.</p>
+					<div className="flex items-center gap-6">
+						<Link href="#" className="text-sm text-[#666] hover:text-[#333]">
+							Help
+						</Link>
+						<Link href="#" className="text-sm text-[#666] hover:text-[#333]">
+							Privacy
+						</Link>
+						<Link href="#" className="text-sm text-[#666] hover:text-[#333]">
+							Terms
+						</Link>
+					</div>
+				</div>
+			</footer>
 		</div>
 	);
 }
