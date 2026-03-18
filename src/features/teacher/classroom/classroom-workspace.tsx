@@ -261,9 +261,9 @@ export default function ClassroomWorkspace({
 
 							<div className="hidden sm:flex items-center gap-3 pl-3 border-l border-[#E0DCD5]">
 								<div className="w-9 h-9 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold text-sm">
-									{teacherName
+									{(teacherName || 'T')
 										.split(' ')
-										.map((n) => n[0])
+										.map((n) => (n ? n[0] : ''))
 										.join('')}
 								</div>
 							</div>

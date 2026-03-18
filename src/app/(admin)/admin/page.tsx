@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminGuard } from '@/components/auth/admin-guard';
 import { useAdminDashboard } from '@/hooks/queries/admin/use-admin-dashboard';
 import { cn } from '@/lib/utils/utils';
+import { SubscriptionPlanManagement } from '@/features/admin/subscription/subscription-plan-management';
 
 type DateFilterMode = 'range' | 'month' | 'year' | 'quarter' | 'day';
 type CompareMode = 'none' | 'month' | 'year' | 'quarter' | 'day';
@@ -282,6 +283,12 @@ export default function AdminDashboardPage() {
 								>
 									Revenue &amp; Transactions
 								</TabsTrigger>
+								<TabsTrigger
+									value="subscriptions"
+									className="justify-start rounded-xl px-3 py-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+								>
+									Subscription Plans
+								</TabsTrigger>
 							</TabsList>
 						</div>
 
@@ -400,7 +407,7 @@ export default function AdminDashboardPage() {
 												config={{
 													users: { label: 'Users', color: '#F5B041' },
 												}}
-												className="aspect-[16/7]"
+												className="aspect-[16/9]"
 											>
 												<LineChart data={userGrowth ?? []}>
 													<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -433,7 +440,7 @@ export default function AdminDashboardPage() {
 											config={{
 												users: { label: 'New users', color: '#C5B4E3' },
 											}}
-											className="aspect-[16/6]"
+											className="aspect-[16/9]"
 										>
 											<BarChart data={newUsersPerMonth ?? []}>
 												<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -469,7 +476,7 @@ export default function AdminDashboardPage() {
 												config={{
 													classrooms: { label: 'Classrooms', color: '#F5B041' },
 												}}
-												className="aspect-[16/6]"
+												className="aspect-[16/9]"
 											>
 												<BarChart data={classroomMonthly ?? []}>
 													<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -576,7 +583,7 @@ export default function AdminDashboardPage() {
 												config={{
 													revenue: { label: 'Revenue', color: '#4CAF50' },
 												}}
-												className="aspect-[16/6]"
+												className="aspect-[4/3]"
 											>
 												<LineChart data={revenue ?? []}>
 													<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -606,7 +613,7 @@ export default function AdminDashboardPage() {
 													config={{
 														transactions: { label: 'Transactions', color: '#C5B4E3' },
 													}}
-													className="aspect-[4/3]"
+													className="aspect-[16/9]"
 												>
 													<BarChart data={transactionsMonthly ?? []}>
 														<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -637,7 +644,7 @@ export default function AdminDashboardPage() {
 														PENDING: { label: 'Pending', color: '#F5B041' },
 														FAILED: { label: 'Failed', color: '#E57373' },
 													}}
-													className="aspect-[4/3]"
+													className="aspect-[16/9]"
 												>
 													<PieChart>
 														<ChartTooltip content={<ChartTooltipContent />} />
@@ -702,7 +709,7 @@ export default function AdminDashboardPage() {
 															<td className="px-4 py-3 text-right text-[13px] font-mono">
 																{new Intl.NumberFormat('en-US', {
 																	style: 'currency',
-																	currency: 'USD',
+																	currency: 'VND',
 																}).format(tx.amount)}
 															</td>
 															<td className="px-4 py-3 text-[13px] text-[#555]">
@@ -742,6 +749,10 @@ export default function AdminDashboardPage() {
 								</Card>
 							</section>
 						</TabsContent>
+
+						<TabsContent value="subscriptions" className="space-y-8">
+							<SubscriptionPlanManagement />
+						</TabsContent>
 					</Tabs>
 				</main>
 			</div>
@@ -763,7 +774,7 @@ function SummaryCard({ label, value, delta, icon: Icon, isCurrency }: SummaryCar
 	const formatted = isCurrency
 		? new Intl.NumberFormat('en-US', {
 			style: 'currency',
-			currency: 'USD',
+			currency: 'VND',
 			maximumFractionDigits: 0,
 		}).format(value)
 		: value.toLocaleString();

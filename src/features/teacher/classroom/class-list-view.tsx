@@ -49,9 +49,9 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 
 						<div className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5]">
 							<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-								{teacherName
+								{(teacherName || 'T')
 									.split(' ')
-									.map((n) => n[0])
+									.map((n) => (n ? n[0] : ''))
 									.join('')}
 							</div>
 						</div>

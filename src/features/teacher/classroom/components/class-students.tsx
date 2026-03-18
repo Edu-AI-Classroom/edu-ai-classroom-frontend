@@ -17,6 +17,7 @@ import type { AddStudentPayload } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddStudentDialog } from './add-student-dialog';
 import { StudentProfileModal } from './student-profile-modal';
+import { ConfirmActionModal } from './confirm-action-modal';
 
 interface ClassStudentsProps {
 	classData: ClassroomUiData;
@@ -28,7 +29,6 @@ type UiStudent = {
 	id: number;
 	name: string;
 	email: string;
-	attendance?: number;
 	averageGrade?: number;
 	submissionRate?: number;
 	submittedCount?: number;
@@ -40,7 +40,7 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
 	const { data: studentsResponse, isLoading } = useClassStudents(classId);
 	const { data: studentStats } = useClassStudentStats(classId);
-	const { addStudentToClassMutation } = useClassMutations();
+	const { addStudentToClassMutation, removeStudentFromClassMutation } = useClassMutations();
 	const { toast } = useToast();
 
 	const [searchQuery, setSearchQuery] = useState('');
@@ -65,7 +65,6 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 				id,
 				name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
 				email: student.email ?? '',
-				attendance: 0,
 				averageGrade: avg,
 				submissionRate: statsByStudentId.get(id)?.submittedPct ?? 0,
 				submittedCount: statsByStudentId.get(id)?.submittedCount ?? 0,
@@ -112,11 +111,13 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 	};
 
 	const handleRemoveStudent = async (studentId: number, studentName: string) => {
-		if (!confirm(`Remove ${studentName} from this class?`)) return;
 
 		setRemovingStudentId(studentId);
 		try {
-			// TODO: Implement remove student API call using ClassService
+			await removeStudentFromClassMutation.mutateAsync({
+				classId,
+				studentId,
+			});
 			toast({
 				title: 'Success',
 				description: `${studentName} removed from class`,
@@ -174,14 +175,14 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 							key={status}
 							onClick={() => setFilterStatus(status)}
 							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterStatus === status
-									? status === 'excellent'
-										? 'bg-[#A8D5BA] text-[#333]'
-										: status === 'on-track'
-											? 'bg-[#A8D4E6] text-[#333]'
-											: status === 'needs-attention'
-												? 'bg-[#E57373] text-white'
-												: 'bg-[#F5B041] text-[#333]'
-									: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
+								? status === 'excellent'
+									? 'bg-[#A8D5BA] text-[#333]'
+									: status === 'on-track'
+										? 'bg-[#A8D4E6] text-[#333]'
+										: status === 'needs-attention'
+											? 'bg-[#E57373] text-white'
+											: 'bg-[#F5B041] text-[#333]'
+								: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
 								}`}
 						>
 							{status === 'all'
@@ -236,33 +237,29 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 										<User className="w-4 h-4 mr-2" />
 										View Profile
 									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => handleRemoveStudent(student.id, student.name)}
-										disabled={removingStudentId === student.id}
-										className="text-red-600"
-									>
-										{removingStudentId === student.id ? (
-											<>
-												<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-												Removing...
-											</>
-										) : (
-											<>
+									<ConfirmActionModal
+										title="Remove Student?"
+										description={`Are you sure you want to remove ${student.name} from this class? This action cannot be undone.`}
+										confirmLabel="Remove"
+										isPending={removeStudentFromClassMutation.isPending && removingStudentId === student.id}
+										onConfirm={() => handleRemoveStudent(student.id, student.name)}
+										trigger={
+											<DropdownMenuItem
+												onSelect={(e) => e.preventDefault()}
+												disabled={removingStudentId === student.id}
+												className="text-red-600 focus:text-red-600 focus:bg-red-50"
+											>
 												<AlertTriangle className="w-4 h-4 mr-2" />
 												Remove from Class
-											</>
-										)}
-									</DropdownMenuItem>
+											</DropdownMenuItem>
+										}
+									/>
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</div>
 
 						{/* Stats */}
-						<div className="grid grid-cols-3 gap-2 text-center">
-							<div className="p-2 rounded-xl bg-[#FAF9F6]">
-								<p className="font-sans font-bold text-lg text-[#333]">{student.attendance}%</p>
-								<p className="text-xs text-[#666]">Attendance</p>
-							</div>
+						<div className="grid grid-cols-2 gap-2 text-center">
 							<div className="p-2 rounded-xl bg-[#FAF9F6]">
 								<p className="font-sans font-bold text-lg text-[#333]">{student.averageGrade}%</p>
 								<p className="text-xs text-[#666]">Avg Grade</p>
