@@ -1,22 +1,19 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
 import {
 	AlertCircle,
 	Award,
 	Calendar,
 	CheckCircle2,
 	Clock,
-	Edit,
 	Eye,
-	FileText,
-	FolderOpen,
-	HelpCircle,
+	Loader2,
 	MoreHorizontal,
-	Plus,
 	Search,
-	Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -25,56 +22,130 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { type ClassData, getAssignmentsForClass } from '@/lib/mock-data';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
+import { QuizService } from '@/services/quiz/quiz.service';
+import type { ClassroomUiData } from '../classroom.mapper';
 
 interface ClassAssignmentsProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
 const typeIcons = {
-	homework: FileText,
-	quiz: HelpCircle,
-	project: FolderOpen,
+	quiz: Eye,
 	exam: Award,
 };
 
 const typeColors = {
-	homework: '#A8D5BA',
 	quiz: '#F5B041',
-	project: '#C5B4E3',
 	exam: '#E57373',
 };
 
-export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
-	const assignments = getAssignmentsForClass(classData.id);
-	const [searchQuery, setSearchQuery] = useState('');
-	const [filterType, setFilterType] = useState<'all' | 'homework' | 'quiz' | 'project' | 'exam'>(
-		'all',
-	);
-	const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'past-due' | 'graded'>('all');
+type AssignmentStatus = 'PUBLISHED' | 'OVERDUE' | 'GRADED';
 
-	const filteredAssignments = assignments.filter((assignment) => {
+function getUiStatus(status: string | undefined): AssignmentStatus {
+	if (!status) return 'PUBLISHED';
+	if (status.toUpperCase() === 'ARCHIVED') return 'GRADED';
+	return 'PUBLISHED';
+}
+
+export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
+	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
+	const { data: quizList, isLoading, error: queryError } = useQuizList({ classId });
+	const { data: studentResponse } = useClassStudents(classId);
+	const totalStudents =
+		classData.studentCount ??
+		(studentResponse as any)?.data?.total ??
+		(studentResponse as any)?.data?.data?.length ??
+		0;
+
+	const [searchQuery, setSearchQuery] = useState('');
+	const [filterType, setFilterType] = useState<'all' | 'quiz' | 'exam'>('all');
+	const [filterStatus, setFilterStatus] = useState<AssignmentStatus | 'ALL'>('ALL');
+
+	const quizzes = Array.isArray(quizList) ? quizList : [];
+
+	const submissionQueries = useQueries({
+		queries: quizzes.map((q) => ({
+			queryKey: ['teacherQuiz', 'submissions', q.id] as const,
+			queryFn: () => QuizService.getSubmissionsOverview(q.id),
+			enabled: !!q.id,
+		})),
+	});
+
+	const mappedAssignments = useMemo(() => {
+		return quizzes.map((q, idx) => {
+			const uiStatus = getUiStatus(q.status);
+			const submissions = submissionQueries[idx]?.data;
+			const submissionCount = submissions?.totalStudentsAttempted ?? 0;
+
+			return {
+				raw: q,
+				id: q.id,
+				title: q.title,
+				description: q.description || 'No description',
+				dueDate: q.createdAt,
+				totalPoints: q.questionCount,
+				submissionCount,
+				totalStudents,
+				type: q.documentType === 'EXAM' ? ('exam' as const) : ('quiz' as const),
+				status: uiStatus,
+			};
+		});
+	}, [quizzes, submissionQueries, totalStudents]);
+
+	const filteredAssignments = mappedAssignments.filter((assignment) => {
 		const matchesSearch = assignment.title.toLowerCase().includes(searchQuery.toLowerCase());
 		const matchesType = filterType === 'all' || assignment.type === filterType;
-		const matchesStatus = filterStatus === 'all' || assignment.status === filterStatus;
+		const matchesStatus = filterStatus === 'ALL' || assignment.status === filterStatus;
 		return matchesSearch && matchesType && matchesStatus;
 	});
 
-	const activeAssignments = filteredAssignments.filter((a) => a.status === 'active');
-	const pastAssignments = filteredAssignments.filter((a) => a.status !== 'active');
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center py-12">
+				<div className="text-center">
+					<Loader2 className="w-8 h-8 animate-spin text-[#F5B041] mx-auto mb-3" />
+					<p className="text-gray-600">Loading assignments...</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (queryError) {
+		return (
+			<div className="space-y-6">
+				<div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3">
+					<AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+					<div>
+						<h3 className="font-semibold mb-1">Failed to load assignments</h3>
+						<p className="text-sm">{String(queryError)}</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6">
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
-					<h1 className="font-sans font-bold text-2xl text-[#333]">Assignments</h1>
-					<p className="font-serif text-lg text-[#666]">{assignments.length} total assignments</p>
+					<h1 className="font-sans font-bold text-2xl text-[#333]">Quizzes</h1>
+					<p className="font-serif text-lg text-[#666]">{mappedAssignments.length} total quizzes</p>
 				</div>
-				<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-					<Plus className="w-4 h-4 mr-2" />
-					Create Assignment
-				</Button>
+				<div className="flex items-center gap-2">
+					<Button asChild className="rounded-xl bg-[#333] text-white hover:bg-[#111]">
+						<Link href="/quizzes">Open Quiz Dashboard</Link>
+					</Button>
+					<Button
+						asChild
+						variant="outline"
+						className="rounded-xl border-[#E0DCD5] bg-white text-[#333] hover:bg-[#F0EDE8]"
+					>
+						<Link href="/quizzes">Create Quiz</Link>
+					</Button>
+				</div>
 			</div>
 
 			{/* Filters */}
@@ -90,8 +161,8 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 				</div>
 
 				<div className="flex flex-wrap gap-2">
-					{(['all', 'homework', 'quiz', 'project', 'exam'] as const).map((type) => {
-						const Icon = type === 'all' ? FileText : typeIcons[type];
+					{(['all', 'quiz', 'exam'] as const).map((type) => {
+						const Icon = type === 'all' ? Eye : typeIcons[type];
 						return (
 							<button
 								type="button"
@@ -118,59 +189,48 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 				</div>
 
 				<div className="flex gap-2">
-					{(['all', 'active', 'graded'] as const).map((status) => (
+					{(['ALL', 'PUBLISHED', 'OVERDUE', 'GRADED'] as const).map((status) => (
 						<button
 							type="button"
 							key={status}
 							onClick={() => setFilterStatus(status)}
 							className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
 								filterStatus === status
-									? 'bg-[#A8D4E6] text-[#333]'
+									? status === 'PUBLISHED'
+										? 'bg-[#A8D4E6] text-[#1565C0]'
+										: status === 'OVERDUE'
+											? 'bg-[#FEE2E2] text-[#B91C1C]'
+											: status === 'GRADED'
+												? 'bg-[#DCFCE7] text-[#166534]'
+												: 'bg-[#333] text-white'
 									: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
 							}`}
 						>
-							{status.charAt(0).toUpperCase() + status.slice(1)}
+							{status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
 						</button>
 					))}
 				</div>
 			</div>
 
-			{/* Active Assignments */}
-			{activeAssignments.length > 0 && (
-				<div className="space-y-4">
-					<h2 className="font-sans font-semibold text-sm text-[#666] uppercase tracking-wide flex items-center gap-2">
-						<Clock className="w-4 h-4" />
-						Active Assignments
-					</h2>
-					<div className="grid lg:grid-cols-2 gap-4">
-						{activeAssignments.map((assignment, index) => (
-							<AssignmentCard key={assignment.id} assignment={assignment} index={index} />
-						))}
-					</div>
+			<div className="space-y-4">
+				<div className="grid lg:grid-cols-2 gap-4">
+					{filteredAssignments.map((assignment, index) => (
+						<AssignmentCard
+							key={assignment.id}
+							assignment={assignment}
+							index={index}
+							classId={classId}
+						/>
+					))}
 				</div>
-			)}
-
-			{/* Past Assignments */}
-			{pastAssignments.length > 0 && (
-				<div className="space-y-4">
-					<h2 className="font-sans font-semibold text-sm text-[#666] uppercase tracking-wide flex items-center gap-2">
-						<CheckCircle2 className="w-4 h-4" />
-						Completed & Graded
-					</h2>
-					<div className="grid lg:grid-cols-2 gap-4">
-						{pastAssignments.map((assignment, index) => (
-							<AssignmentCard key={assignment.id} assignment={assignment} index={index} />
-						))}
-					</div>
-				</div>
-			)}
+			</div>
 
 			{filteredAssignments.length === 0 && (
 				<div className="text-center py-16">
-					<FileText className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
-					<p className="text-[#666] font-serif text-lg">No assignments found.</p>
+					<Eye className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
+					<p className="text-[#666] font-serif text-lg">No quizzes found.</p>
 					<p className="text-sm text-[#999]">
-						Try adjusting your filters or create a new assignment.
+						Try adjusting your filters or create a new quiz in the dashboard.
 					</p>
 				</div>
 			)}
@@ -187,17 +247,21 @@ interface AssignmentCardProps {
 		totalPoints: number;
 		submissionCount: number;
 		totalStudents: number;
-		type: 'homework' | 'quiz' | 'project' | 'exam';
-		status: 'active' | 'past-due' | 'graded';
+		type: 'quiz' | 'exam';
+		status: AssignmentStatus;
 	};
 	index: number;
+	classId: number;
 }
 
-function AssignmentCard({ assignment, index }: AssignmentCardProps) {
+function AssignmentCard({ assignment, index, classId }: AssignmentCardProps) {
 	const Icon = typeIcons[assignment.type];
 	const color = typeColors[assignment.type];
-	const submissionRate = Math.round((assignment.submissionCount / assignment.totalStudents) * 100);
-	const isOverdue = new Date(assignment.dueDate) < new Date() && assignment.status === 'active';
+	const submissionRate =
+		assignment.totalStudents > 0
+			? Math.round((assignment.submissionCount / assignment.totalStudents) * 100)
+			: 0;
+	const _isOverdue = assignment.status === 'OVERDUE';
 
 	return (
 		<div
@@ -225,17 +289,23 @@ function AssignmentCard({ assignment, index }: AssignmentCardProps) {
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="rounded-xl">
-						<DropdownMenuItem>
-							<Eye className="w-4 h-4 mr-2" />
-							View Details
+						<DropdownMenuItem asChild>
+							<Link href="/quizzes">
+								<Eye className="w-4 h-4 mr-2" />
+								Open in Quiz Dashboard
+							</Link>
 						</DropdownMenuItem>
-						<DropdownMenuItem>
-							<Edit className="w-4 h-4 mr-2" />
-							Edit
+						<DropdownMenuItem asChild>
+							<Link href={`/quizzes/${assignment.id}`}>
+								<Eye className="w-4 h-4 mr-2" />
+								View Quiz Detail
+							</Link>
 						</DropdownMenuItem>
-						<DropdownMenuItem className="text-[#E57373]">
-							<Trash2 className="w-4 h-4 mr-2" />
-							Delete
+						<DropdownMenuItem asChild>
+							<Link href={`/quizzes/${assignment.id}/edit`}>
+								<Eye className="w-4 h-4 mr-2" />
+								Edit Quiz
+							</Link>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -246,9 +316,9 @@ function AssignmentCard({ assignment, index }: AssignmentCardProps) {
 			<div className="flex items-center justify-between text-sm mb-4">
 				<div className="flex items-center gap-1.5 text-[#666]">
 					<Calendar className="w-4 h-4" />
-					<span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+					<span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
 				</div>
-				<span className="font-semibold text-[#333]">{assignment.totalPoints} pts</span>
+				<span className="font-semibold text-[#333]">{assignment.totalPoints} questions</span>
 			</div>
 
 			{/* Submission Progress */}
@@ -274,24 +344,22 @@ function AssignmentCard({ assignment, index }: AssignmentCardProps) {
 			<div className="mt-4 flex items-center justify-between">
 				<span
 					className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-						assignment.status === 'graded'
-							? 'bg-[#A8D5BA]/20 text-[#2E7D32]'
-							: isOverdue
-								? 'bg-[#E57373]/20 text-[#C62828]'
-								: 'bg-[#A8D4E6]/20 text-[#1565C0]'
+						assignment.status === 'GRADED'
+							? 'bg-[#DCFCE7] text-[#166534]'
+							: assignment.status === 'OVERDUE'
+								? 'bg-[#FEE2E2] text-[#B91C1C]'
+								: 'bg-[#DBEAFE] text-[#1D4ED8]'
 					}`}
 				>
-					{assignment.status === 'graded' && <CheckCircle2 className="w-3 h-3" />}
-					{isOverdue && <AlertCircle className="w-3 h-3" />}
-					{assignment.status === 'active' && !isOverdue && <Clock className="w-3 h-3" />}
-					{assignment.status === 'graded' ? 'Graded' : isOverdue ? 'Overdue' : 'Active'}
+					{assignment.status === 'GRADED' && <CheckCircle2 className="w-3 h-3" />}
+					{assignment.status === 'OVERDUE' && <AlertCircle className="w-3 h-3" />}
+					{assignment.status === 'PUBLISHED' && <Clock className="w-3 h-3" />}
+					{assignment.status}
 				</span>
 
-				{assignment.status === 'active' && (
-					<Button variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
-						View Submissions
-					</Button>
-				)}
+				<Button asChild variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
+					<Link href={`/quizzes/${assignment.id}`}>View</Link>
+				</Button>
 			</div>
 		</div>
 	);

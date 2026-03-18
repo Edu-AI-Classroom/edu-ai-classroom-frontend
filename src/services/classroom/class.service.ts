@@ -14,10 +14,12 @@ import type {
 	GroupListResponse,
 	Student,
 	Teacher,
+	TeacherApiResponse,
 	UpdateClassroomPayload,
 	UpdateStudentGroupPayload,
 	UsersInClassResponse,
 } from '@/types/class';
+import type { ClassStudentQuizStat } from '@/types/class-stats';
 
 export const ClassService = {
 	createClass: (payload: CreateClassroomPayload) =>
@@ -37,7 +39,7 @@ export const ClassService = {
 		httpPost<Teacher>(API_ENDPOINTS.CLASS.ADD_TEACHER_TO_CLASS(classId), payload),
 
 	getTeachers: (classId: number, params?: PaginationParams) =>
-		httpGet<UsersInClassResponse>(
+		httpGet<TeacherApiResponse[]>(
 			`${API_ENDPOINTS.CLASS.GET_TEACHERS(classId)}${buildQueryString(params)}`,
 		),
 
@@ -51,6 +53,9 @@ export const ClassService = {
 		httpGet<UsersInClassResponse>(
 			`${API_ENDPOINTS.CLASS.GET_STUDENTS(classId)}${buildQueryString(params)}`,
 		),
+
+	getStudentStats: (classId: number) =>
+		httpGet<ClassStudentQuizStat[]>(API_ENDPOINTS.CLASS.GET_STUDENT_STATS(classId)),
 
 	removeStudentFromClass: (classId: number, studentId: number) =>
 		httpDelete<void>(API_ENDPOINTS.CLASS.REMOVE_STUDENT_FROM_CLASS(classId, studentId)),

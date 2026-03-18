@@ -6,72 +6,118 @@ import type { ApiError } from '@/types/api';
 let isRefreshing = false;
 let queue: Array<(token: string | null) => void> = [];
 
+const AUTH_ERROR_CODES = new Set([
+	'TOKEN_EXPIRED',
+	'INVALID_TOKEN',
+	'MISSING_TOKEN',
+	'UNAUTHORIZED',
+]);
+
+function isAuthRelatedError(error: ApiError) {
+	const normalizedCode = error.code?.toUpperCase();
+	const normalizedMessage = error.message?.toLowerCase() ?? '';
+
+	return (
+		error.status === 401 ||
+		(error.status === 403 &&
+			!!normalizedCode &&
+			(AUTH_ERROR_CODES.has(normalizedCode) ||
+				normalizedCode.includes('TOKEN') ||
+				normalizedCode.includes('AUTH'))) ||
+		normalizedMessage.includes('token') ||
+		normalizedMessage.includes('auth')
+	);
+}
+
+function isTokenIssueError(error: ApiError) {
+	const normalizedCode = error.code?.toUpperCase() ?? '';
+	const normalizedMessage = error.message?.toLowerCase() ?? '';
+
+	return (
+		normalizedCode.includes('TOKEN') ||
+		normalizedCode === 'UNAUTHORIZED' ||
+		normalizedCode === 'FORBIDDEN' ||
+		normalizedMessage.includes('token') ||
+		normalizedMessage.includes('expired')
+	);
+}
+
+function clearAuthState() {
+	const { logout } = useAuthStore.getState();
+	logout();
+
+	useAuthStore.persist.clearStorage();
+	if (typeof window !== 'undefined') {
+		localStorage.removeItem('auth-store');
+	}
+}
+
+function goToForbiddenPage() {
+	if (typeof window !== 'undefined') {
+		window.location.assign('/403');
+		return;
+	}
+
+	redirect('/403');
+}
+
 export async function handleAuthError(error?: ApiError) {
 	if (!error) return;
 
-	const { token, setToken, logout } = useAuthStore.getState();
+	const { token, setToken } = useAuthStore.getState();
 
-	// 403: không có quyền → redirect riêng
-	if (error.status === 403) {
-		redirect('/403');
-	}
-
-	// Không phải lỗi auth → throw tiếp
-	if (error.status !== 401) {
+	if (!isAuthRelatedError(error)) {
 		throw error;
 	}
 
-	/**
-	 * ===== CASE 1: LOGIN SAI / PUBLIC ROUTE 401 =====
-	 * Không có token → không refresh, không logout
-	 */
-	if (!token) {
-		throw error; // để hook tự show toast
+	if (!token) throw error;
+
+	// 403 is a real permission issue in this app (not refreshable)
+	if (error.status === 403) {
+		goToForbiddenPage();
+		throw error;
 	}
 
-	/**
-	 * ===== CASE 2: TOKEN EXPIRED =====
-	 * Có token + hết hạn → refresh
-	 */
-	if (error.code === 'TOKEN_EXPIRED') {
-		if (isRefreshing) {
-			return new Promise<string>((resolve, reject) => {
-				queue.push((newToken) => {
-					if (newToken) resolve(newToken);
-					else reject(error);
-				});
-			});
-		}
-
-		isRefreshing = true;
-
-		try {
-			const res = await AuthService.refreshToken();
-			const newToken = getTokenFromAuthResponse(res);
-
-			if (!newToken) throw error;
-
-			setToken(newToken);
-
-			queue.forEach((cb) => {
-				cb(newToken);
-			});
-			queue = [];
-
-			return newToken;
-		} catch {
-			queue = [];
-			logout();
-			redirect('/login');
-		} finally {
-			isRefreshing = false;
-		}
+	// Only attempt refresh flow on 401 token issues
+	if (error.status !== 401 || !isTokenIssueError(error)) {
+		throw error;
 	}
 
-	/**
-	 * ===== CASE 3: INVALID TOKEN / MISSING TOKEN / UNAUTHORIZED =====
-	 * Có token nhưng token không hợp lệ
-	 */
-	logout();
-	redirect('/login');
+	if (isRefreshing) {
+		return new Promise<string>((resolve, reject) => {
+			queue.push((newToken) => {
+				if (newToken) resolve(newToken);
+				else reject(error);
+			});
+		});
+	}
+
+	isRefreshing = true;
+
+	try {
+		const res = await AuthService.refreshToken();
+		const newToken = getTokenFromAuthResponse(res);
+
+		if (!newToken) {
+			throw error;
+		}
+
+		setToken(newToken);
+		queue.forEach((cb) => {
+			cb(newToken);
+		});
+		queue = [];
+
+		return newToken;
+	} catch {
+		queue.forEach((cb) => {
+			cb(null);
+		});
+		queue = [];
+		clearAuthState();
+		goToForbiddenPage();
+		throw error;
+	} finally {
+		isRefreshing = false;
+	}
 }

@@ -14,6 +14,7 @@ import {
 	Newspaper,
 	PlayCircle,
 	Plus,
+	Presentation,
 	Settings,
 	Users,
 	X,
@@ -27,11 +28,14 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { type ClassData, classes, currentTeacher } from '@/lib/mock-data';
+import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import type { ClassroomUiData } from './classroom.mapper';
 import ClassAssignments from './components/class-assignments';
 import ClassFeed from './components/class-feed';
 import ClassGrades from './components/class-grades';
+import ClassLessons from './components/class-lessons';
 import ClassOverview from './components/class-overview';
+import { ClassroomSettings } from './components/class-setting';
 import ClassStudents from './components/class-students';
 
 type TabType =
@@ -41,16 +45,19 @@ type TabType =
 	| 'assignments'
 	| 'grades'
 	| 'conversation'
-	| 'settings';
+	| 'settings'
+	| 'lessons';
 
 interface ClassroomWorkspaceProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
+	classOptions: ClassroomUiData[];
 	onBack: () => void;
-	onSwitchClass: (classId: string) => void;
+	onSwitchClass: (classId: number) => void;
 }
 
 const tabs = [
 	{ id: 'overview' as TabType, label: 'Overview', icon: Home },
+	{ id: 'lessons' as TabType, label: 'Lessons', icon: Presentation },
 	{ id: 'feed' as TabType, label: 'Feed', icon: Newspaper },
 	{ id: 'students' as TabType, label: 'Students', icon: Users },
 	{ id: 'assignments' as TabType, label: 'Assignments', icon: FileText },
@@ -61,9 +68,12 @@ const tabs = [
 
 export default function ClassroomWorkspace({
 	classData,
+	classOptions,
 	onBack,
 	onSwitchClass,
 }: ClassroomWorkspaceProps) {
+	const authUser = useAuthUser();
+	const teacherName = authUser?.userName ?? 'Teacher';
 	const [activeTab, setActiveTab] = useState<TabType>('overview');
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -72,6 +82,8 @@ export default function ClassroomWorkspace({
 		switch (activeTab) {
 			case 'overview':
 				return <ClassOverview classData={classData} />;
+			case 'lessons':
+				return <ClassLessons classData={classData} />;
 			case 'feed':
 				return <ClassFeed classData={classData} />;
 			case 'students':
@@ -90,14 +102,7 @@ export default function ClassroomWorkspace({
 					</div>
 				);
 			case 'settings':
-				return (
-					<div className="flex items-center justify-center h-64 text-[#666]">
-						<div className="text-center">
-							<Settings className="w-12 h-12 mx-auto mb-4 text-[#A8D4E6]" />
-							<p className="font-serif text-lg">Settings feature coming soon!</p>
-						</div>
-					</div>
-				);
+				return <ClassroomSettings classData={classData} onDeleted={onBack} />;
 			default:
 				return <ClassOverview classData={classData} />;
 		}
@@ -157,7 +162,7 @@ export default function ClassroomWorkspace({
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="start" className="w-56 rounded-xl">
-								{classes.map((c) => (
+								{classOptions.map((c) => (
 									<DropdownMenuItem
 										key={c.id}
 										onClick={() => onSwitchClass(c.id)}
@@ -249,32 +254,6 @@ export default function ClassroomWorkspace({
 							</div>
 						</div>
 
-						{/* Quick Actions */}
-						<div className="hidden sm:flex items-center gap-2">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-										<Plus className="w-4 h-4 mr-2" />
-										Quick Action
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="w-48 rounded-xl">
-									<DropdownMenuItem className="cursor-pointer">
-										<Megaphone className="w-4 h-4 mr-2" />
-										Create Announcement
-									</DropdownMenuItem>
-									<DropdownMenuItem className="cursor-pointer">
-										<FileText className="w-4 h-4 mr-2" />
-										Assign Content
-									</DropdownMenuItem>
-									<DropdownMenuItem className="cursor-pointer">
-										<PlayCircle className="w-4 h-4 mr-2" />
-										Start Live Class
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-
 						{/* Notifications & Profile */}
 						<div className="flex items-center gap-3">
 							<Button variant="ghost" size="icon" className="relative">
@@ -286,7 +265,7 @@ export default function ClassroomWorkspace({
 
 							<div className="hidden sm:flex items-center gap-3 pl-3 border-l border-[#E0DCD5]">
 								<div className="w-9 h-9 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold text-sm">
-									{currentTeacher.name
+									{teacherName
 										.split(' ')
 										.map((n) => n[0])
 										.join('')}

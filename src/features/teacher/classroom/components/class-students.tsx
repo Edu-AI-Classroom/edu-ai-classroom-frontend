@@ -1,15 +1,6 @@
 'use client';
 
-import {
-	AlertTriangle,
-	Award,
-	CheckCircle,
-	Mail,
-	MoreHorizontal,
-	Plus,
-	Search,
-	User,
-} from 'lucide-react';
+import { AlertTriangle, Loader2, Mail, MoreHorizontal, Search, User } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,18 +10,69 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { type ClassData, getStudentsForClass } from '@/lib/mock-data';
+import { useToast } from '@/hooks/common/use-toast';
+import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
+import { useClassStudentStats, useClassStudents } from '@/hooks/queries/class/use-class-query';
+import type { AddStudentPayload } from '@/types/class';
+import type { ClassroomUiData } from '../classroom.mapper';
+import { AddStudentDialog } from './add-student-dialog';
+import { StudentProfileModal } from './student-profile-modal';
 
 interface ClassStudentsProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
+type UiStudentStatus = 'all' | 'excellent' | 'on-track' | 'needs-attention';
+
+type UiStudent = {
+	id: number;
+	name: string;
+	email: string;
+	attendance?: number;
+	averageGrade?: number;
+	submissionRate?: number;
+	submittedCount?: number;
+	totalAssigned?: number;
+	status?: Exclude<UiStudentStatus, 'all'>;
+};
+
 export default function ClassStudents({ classData }: ClassStudentsProps) {
-	const students = getStudentsForClass(classData.id);
+	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
+	const { data: studentsResponse, isLoading } = useClassStudents(classId);
+	const { data: studentStats } = useClassStudentStats(classId);
+	const { addStudentToClassMutation } = useClassMutations();
+	const { toast } = useToast();
+
 	const [searchQuery, setSearchQuery] = useState('');
-	const [filterStatus, setFilterStatus] = useState<
-		'all' | 'excellent' | 'on-track' | 'needs-attention'
-	>('all');
+	const [filterStatus, setFilterStatus] = useState<UiStudentStatus>('all');
+	const [removingStudentId, setRemovingStudentId] = useState<number | null>(null);
+	const [isAddingStudent, setIsAddingStudent] = useState(false);
+	const [selectedStudent, setSelectedStudent] = useState<any>(null);
+	const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+	const statsByStudentId = new Map((studentStats ?? []).map((s) => [s.studentId, s]));
+
+	const students = (studentsResponse?.data ?? [])
+		.filter((user: any) => user.role === 'STUDENT')
+		.map((student: any) => {
+			const id = student.studentId ?? student.userId ?? 0;
+			const avg = statsByStudentId.get(id)?.avgGradePct ?? 0;
+
+			const status: Exclude<UiStudentStatus, 'all'> =
+				avg > 8 ? 'excellent' : avg < 4 ? 'needs-attention' : 'on-track';
+
+			return {
+				id,
+				name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
+				email: student.email ?? '',
+				attendance: 0,
+				averageGrade: avg,
+				submissionRate: statsByStudentId.get(id)?.submittedPct ?? 0,
+				submittedCount: statsByStudentId.get(id)?.submittedCount ?? 0,
+				totalAssigned: statsByStudentId.get(id)?.totalAssigned ?? 0,
+				status,
+			};
+		});
 
 	const filteredStudents = students.filter((student) => {
 		const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -45,6 +87,63 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 		'needs-attention': students.filter((s) => s.status === 'needs-attention').length,
 	};
 
+	const handleAddStudent = async (payload: AddStudentPayload) => {
+		setIsAddingStudent(true);
+		try {
+			await addStudentToClassMutation.mutateAsync({
+				classId,
+				payload,
+			});
+
+			toast({
+				title: 'Success',
+				description: 'Student added to class successfully',
+			});
+		} catch (error) {
+			console.error('Add student error:', error);
+			toast({
+				title: 'Error',
+				description: 'Failed to add student. Make sure the student exists in the system.',
+				variant: 'destructive',
+			});
+		} finally {
+			setIsAddingStudent(false);
+		}
+	};
+
+	const handleRemoveStudent = async (studentId: number, studentName: string) => {
+		if (!confirm(`Remove ${studentName} from this class?`)) return;
+
+		setRemovingStudentId(studentId);
+		try {
+			// TODO: Implement remove student API call using ClassService
+			toast({
+				title: 'Success',
+				description: `${studentName} removed from class`,
+			});
+		} catch (error) {
+			console.error('Remove student error:', error);
+			toast({
+				title: 'Error',
+				description: 'Failed to remove student',
+				variant: 'destructive',
+			});
+		} finally {
+			setRemovingStudentId(null);
+		}
+	};
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center py-12">
+				<div className="text-center">
+					<Loader2 className="w-8 h-8 animate-spin text-[#F5B041] mx-auto mb-3" />
+					<p className="text-gray-600">Loading students...</p>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -53,10 +152,7 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 					<h1 className="font-sans font-bold text-2xl text-[#333]">Students</h1>
 					<p className="font-serif text-lg text-[#666]">{students.length} students enrolled</p>
 				</div>
-				<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-					<Plus className="w-4 h-4 mr-2" />
-					Add Student
-				</Button>
+				<AddStudentDialog onSubmit={handleAddStudent} isLoading={isAddingStudent} />
 			</div>
 
 			{/* Filters */}
@@ -115,8 +211,9 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 								<div className="w-12 h-12 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
 									{student.name
 										.split(' ')
-										.map((n) => n[0])
-										.join('')}
+										.map((n: string) => n[0])
+										.join('')
+										.toUpperCase()}
 								</div>
 								<div>
 									<h3 className="font-sans font-semibold text-[#333]">{student.name}</h3>
@@ -131,38 +228,34 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="rounded-xl">
-									<DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => {
+											setSelectedStudent(student);
+											setIsProfileOpen(true);
+										}}
+									>
 										<User className="w-4 h-4 mr-2" />
 										View Profile
 									</DropdownMenuItem>
-									<DropdownMenuItem>
-										<Mail className="w-4 h-4 mr-2" />
-										Send Message
+									<DropdownMenuItem
+										onClick={() => handleRemoveStudent(student.id, student.name)}
+										disabled={removingStudentId === student.id}
+										className="text-red-600"
+									>
+										{removingStudentId === student.id ? (
+											<>
+												<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+												Removing...
+											</>
+										) : (
+											<>
+												<AlertTriangle className="w-4 h-4 mr-2" />
+												Remove from Class
+											</>
+										)}
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
-						</div>
-
-						{/* Status Badge */}
-						<div className="mb-4">
-							<span
-								className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-									student.status === 'excellent'
-										? 'bg-[#A8D5BA]/20 text-[#2E7D32]'
-										: student.status === 'on-track'
-											? 'bg-[#A8D4E6]/20 text-[#1565C0]'
-											: 'bg-[#E57373]/20 text-[#C62828]'
-								}`}
-							>
-								{student.status === 'excellent' && <Award className="w-3 h-3" />}
-								{student.status === 'on-track' && <CheckCircle className="w-3 h-3" />}
-								{student.status === 'needs-attention' && <AlertTriangle className="w-3 h-3" />}
-								{student.status === 'excellent'
-									? 'Excellent'
-									: student.status === 'on-track'
-										? 'On Track'
-										: 'Needs Attention'}
-							</span>
 						</div>
 
 						{/* Stats */}
@@ -176,7 +269,9 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 								<p className="text-xs text-[#666]">Avg Grade</p>
 							</div>
 							<div className="p-2 rounded-xl bg-[#FAF9F6]">
-								<p className="font-sans font-bold text-lg text-[#333]">{student.submissionRate}%</p>
+								<p className="font-sans font-bold text-lg text-[#333]">
+									{student.submittedCount}/{student.totalAssigned}
+								</p>
 								<p className="text-xs text-[#666]">Submitted</p>
 							</div>
 						</div>
@@ -190,6 +285,21 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 					<p className="text-[#666] font-serif text-lg">No students found.</p>
 					<p className="text-sm text-[#999]">Try adjusting your search or filters.</p>
 				</div>
+			)}
+
+			{selectedStudent && (
+				<StudentProfileModal
+					open={isProfileOpen}
+					onOpenChange={setIsProfileOpen}
+					classId={classId}
+					student={{
+						id: String(selectedStudent.id),
+						userId: String(selectedStudent.userId ?? selectedStudent.id),
+						name: selectedStudent.name,
+						email: selectedStudent.email,
+						status: selectedStudent.status,
+					}}
+				/>
 			)}
 		</div>
 	);

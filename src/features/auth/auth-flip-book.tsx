@@ -2,26 +2,48 @@
 
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, BookOpen, Sparkles, Star, Sun, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { TeachifyIcon } from '@/components/common/Teachify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { clearRegisterDraft } from '@/features/auth/register/register-draft';
 import { useAuthMutations } from '@/hooks/queries/auth/use-auth-mutation';
+
+type RegisterBasicInfo = {
+	name: string;
+	email: string;
+	password: string;
+};
 
 interface AuthFlipBookProps {
 	initialMode: 'login' | 'register';
+	registerFormData?: RegisterBasicInfo;
+	onRegisterFormDataChange?: (data: RegisterBasicInfo) => void;
+	onRegisterNextStep?: (data: RegisterBasicInfo) => void;
+	registerSubmitLabel?: string;
+	disableModeSwitch?: boolean;
 }
 
 const spiralDots = Array.from({ length: 12 }, (_, index) => `spiral-dot-${index}`);
 
-export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
+export function AuthFlipBook({
+	initialMode,
+	registerFormData,
+	onRegisterFormDataChange,
+	onRegisterNextStep,
+	registerSubmitLabel,
+	disableModeSwitch = false,
+}: AuthFlipBookProps) {
+	const router = useRouter();
 	const [isSignup, setIsSignup] = useState(initialMode === 'register');
 	const [loginEmail, setLoginEmail] = useState('');
 	const [loginPassword, setLoginPassword] = useState('');
 	const [registerName, setRegisterName] = useState('');
 	const [registerEmail, setRegisterEmail] = useState('');
 	const [registerPassword, setRegisterPassword] = useState('');
-	const { clearAuthError, loginMutation, registerMutation } = useAuthMutations();
+	const { clearAuthError, loginMutation } = useAuthMutations();
 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const isLoginValid =
@@ -31,28 +53,48 @@ export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
 	const isRegisterValid =
 		registerName.trim().length > 0 &&
 		emailRegex.test(registerEmail.trim()) &&
-		registerPassword.trim().length >= 6 &&
-		registerPassword.trim().length <= 12;
+		registerPassword.trim().length >= 6;
+
+	const syncRegisterForm = (patch: Partial<RegisterBasicInfo>) => {
+		const nextData = {
+			name: patch.name ?? registerName,
+			email: patch.email ?? registerEmail,
+			password: patch.password ?? registerPassword,
+		};
+		onRegisterFormDataChange?.(nextData);
+	};
 
 	// Sync state if initialMode prop changes (though usually component remounts on route change)
 	useEffect(() => {
 		setIsSignup(initialMode === 'register');
 		clearAuthError();
+		if (initialMode === 'login') {
+			clearRegisterDraft();
+		}
 	}, [initialMode, clearAuthError]);
 
+	useEffect(() => {
+		if (!registerFormData) return;
+		setRegisterName(registerFormData.name);
+		setRegisterEmail(registerFormData.email);
+		setRegisterPassword(registerFormData.password);
+	}, [registerFormData]);
+
 	const toggleMode = () => {
+		if (disableModeSwitch) return;
 		const newMode = !isSignup;
 		setIsSignup(newMode);
 		clearAuthError();
 
-		// Use window.history to update URL without triggering a full page reload/remount
-		// This maintains the animation state
 		const path = newMode ? '/register' : '/login';
-		window.history.pushState({}, '', path);
+		router.push(path);
 	};
 
 	return (
 		<div className="min-h-screen w-full bg-[#FAF9F6] grid-paper overflow-hidden flex items-center justify-center p-4 perspective-[2000px]">
+			<div className="absolute top-10 left-10">
+				<TeachifyIcon />
+			</div>
 			{/* 3D Container - The "Book" */}
 			<motion.div
 				className="relative w-full max-w-5xl aspect-video min-h-150 flex items-center justify-center preserve-3d"
@@ -175,16 +217,18 @@ export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
 									</div>
 								</div>
 
-								<div className="mt-4 text-center">
-									<button
-										type="button"
-										onClick={toggleMode}
-										className="group flex items-center justify-center gap-2 mx-auto font-serif text-xl text-[#F4D06F] font-bold hover:underline decoration-wavy"
-									>
-										<span>You're new here? Sign up</span>
-										<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-									</button>
-								</div>
+								{!disableModeSwitch && (
+									<div className="mt-4 text-center">
+										<button
+											type="button"
+											onClick={toggleMode}
+											className="group flex items-center justify-center gap-2 mx-auto font-serif text-xl text-[#F4D06F] font-bold hover:underline decoration-wavy"
+										>
+											<span>You're new here? Sign up</span>
+											<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+										</button>
+									</div>
+								)}
 							</div>
 						</div>
 					</div>
@@ -230,9 +274,11 @@ export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
 										event.preventDefault();
 										clearAuthError();
 										if (!isRegisterValid) return;
-										registerMutation.mutate({
-											name: registerName,
-											email: registerEmail,
+										if (!onRegisterNextStep) return;
+
+										onRegisterNextStep({
+											name: registerName.trim(),
+											email: registerEmail.trim(),
 											password: registerPassword,
 										});
 									}}
@@ -243,7 +289,10 @@ export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
 											id="name"
 											placeholder="Your Name"
 											value={registerName}
-											onChange={(event) => setRegisterName(event.target.value)}
+											onChange={(event) => {
+												setRegisterName(event.target.value);
+												syncRegisterForm({ name: event.target.value });
+											}}
 											className="bg-gray-50 border-b-2 border-t-0 border-x-0 border-dashed border-gray-300 rounded-none focus-visible:ring-0 focus-visible:border-[#F4D06F] px-3 py-6"
 										/>
 									</div>
@@ -254,7 +303,10 @@ export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
 											type="email"
 											placeholder="student@school.edu"
 											value={registerEmail}
-											onChange={(event) => setRegisterEmail(event.target.value)}
+											onChange={(event) => {
+												setRegisterEmail(event.target.value);
+												syncRegisterForm({ email: event.target.value });
+											}}
 											className="bg-gray-50 border-b-2 border-t-0 border-x-0 border-dashed border-gray-300 rounded-none focus-visible:ring-0 focus-visible:border-[#F4D06F] px-3 py-6"
 										/>
 									</div>
@@ -265,30 +317,34 @@ export function AuthFlipBook({ initialMode }: AuthFlipBookProps) {
 											type="password"
 											placeholder="••••••••"
 											value={registerPassword}
-											onChange={(event) => setRegisterPassword(event.target.value)}
+											onChange={(event) => {
+												setRegisterPassword(event.target.value);
+												syncRegisterForm({ password: event.target.value });
+											}}
 											className="bg-gray-50 border-b-2 border-t-0 border-x-0 border-dashed border-gray-300 rounded-none focus-visible:ring-0 focus-visible:border-[#F4D06F] px-3 py-6"
 										/>
 									</div>
 									<Button
 										type="submit"
-										disabled={registerMutation.isPending || !isRegisterValid}
 										className="w-full bg-[#8fb3FF] text-[#333333] font-bold text-lg rounded-xl shadow-[4px_4px_0px_#5b8bd9] hover:shadow-[2px_2px_0px_#5b8bd9] hover:-translate-y-0.5 transition-all border-2 border-[#333] mt-2 disabled:opacity-70 disabled:shadow-none disabled:hover:translate-y-0"
 									>
-										{registerMutation.isPending ? 'Creating account...' : 'Create Account'}
+										{registerSubmitLabel ?? 'Next Step'}
 									</Button>
 								</form>
 
-								<div className="mt-8 text-center text-sm text-gray-500">
-									<p className="mb-2">Already on the roll call?</p>
-									<button
-										type="button"
-										onClick={toggleMode}
-										className="group flex items-center justify-center gap-2 mx-auto font-serif text-xl text-[#8fb3FF] font-bold hover:underline decoration-wavy"
-									>
-										<ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-										<span>Back to Login</span>
-									</button>
-								</div>
+								{!disableModeSwitch && (
+									<div className="mt-8 text-center text-sm text-gray-500">
+										<p className="mb-2">Already on the roll call?</p>
+										<button
+											type="button"
+											onClick={toggleMode}
+											className="group flex items-center justify-center gap-2 mx-auto font-serif text-xl text-[#8fb3FF] font-bold hover:underline decoration-wavy"
+										>
+											<ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+											<span>Back to Login</span>
+										</button>
+									</div>
+								)}
 							</div>
 						</div>
 

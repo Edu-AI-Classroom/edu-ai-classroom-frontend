@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
 import {
 	AlertTriangle,
 	BarChart3,
@@ -8,28 +9,191 @@ import {
 	Clock,
 	FileText,
 	MessageSquare,
+	Plus,
+	Trash2,
 	TrendingUp,
 	Users,
 } from 'lucide-react';
 import type React from 'react';
+import { useState } from 'react';
 import {
-	type ClassData,
-	getActivityForClass,
-	getAttentionItemsForClass,
-	getClassStats,
-} from '@/lib/mock-data';
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/common/use-toast';
+import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
+import { useClassStudents, useClassTeachers } from '@/hooks/queries/class/use-class-query';
+import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
+import { QuizService } from '@/services/quiz/quiz.service';
+import { useAuthStore } from '@/stores/auth-store';
+import type { Teacher } from '@/types/class';
+import type { ClassroomUiData } from '../classroom.mapper';
+import { AddTeacherModal } from './AddTeacherModal';
 
 interface ClassOverviewProps {
-	classData: ClassData;
+	classData: ClassroomUiData;
 }
 
 export default function ClassOverview({ classData }: ClassOverviewProps) {
-	const stats = getClassStats(classData.id);
-	const attentionItems = getAttentionItemsForClass(classData.id);
-	const recentActivity = getActivityForClass(classData.id);
+	const { data: studentResponse } = useClassStudents(classData.id);
+	const { data: teacherResponse } = useClassTeachers(classData.id);
+	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
+	const { data: quizList } = useQuizList({ classId });
+	const { addTeacherToClassMutation, removeTeacherFromClassMutation } = useClassMutations();
+	const { user } = useAuthStore();
+	const { toast } = useToast();
+
+	const [isAddTeacherModalOpen, setIsAddTeacherModalOpen] = useState(false);
+	const [removeTeacherDialogOpen, setRemoveTeacherDialogOpen] = useState(false);
+	const [teacherToRemove, setTeacherToRemove] = useState<{
+		teacherId: number;
+		teacherName: string;
+	} | null>(null);
+
+	const students = studentResponse?.data ?? [];
+	const teachers = teacherResponse ?? [];
+	const quizzes = Array.isArray(quizList) ? quizList : [];
+
+	const submissionQueries = useQueries({
+		queries: quizzes.map((q) => ({
+			queryKey: ['teacherQuiz', 'submissions', q.id] as const,
+			queryFn: () => QuizService.getSubmissionsOverview(q.id),
+			enabled: !!q.id,
+		})),
+	});
+
+	const totalAttempts = submissionQueries.reduce(
+		(sum, q) => sum + (q.data?.totalStudentsAttempted ?? 0),
+		0,
+	);
+	const totalStudentsCount =
+		classData.studentCount ?? (studentResponse as any)?.data?.total ?? students.length;
+	const possibleSubmissions = totalStudentsCount > 0 ? totalStudentsCount * quizzes.length : 0;
+	const submissionRatePct =
+		possibleSubmissions > 0 ? Math.round((totalAttempts / possibleSubmissions) * 100) : 0;
+
+	const avgScorePct = (() => {
+		let weightedPctSum = 0;
+		let weightedCount = 0;
+
+		submissionQueries.forEach((q, idx) => {
+			const attempted = q.data?.totalStudentsAttempted ?? 0;
+			const avgScore = q.data?.averageScore ?? 0;
+			const totalPoints = (quizzes[idx] as any)?.totalPoints ?? 100;
+			if (attempted <= 0 || totalPoints <= 0) return;
+			weightedPctSum += (avgScore / totalPoints) * 100 * attempted;
+			weightedCount += attempted;
+		});
+
+		return weightedCount > 0 ? Math.round(weightedPctSum / weightedCount) : 0;
+	})();
+
+	// Check if current user is the class owner
+	const isOwner = classData.isOwner || user?.userId === classData.createdBy;
+
+	// Type guard to check if user is a Teacher
+	const _isTeacher = (user: any): user is Teacher => {
+		return user && user.role === 'TEACHER';
+	};
+
+	const handleRemoveTeacher = (teacherId: number, teacherName: string) => {
+		setTeacherToRemove({ teacherId, teacherName });
+		setRemoveTeacherDialogOpen(true);
+	};
+
+	const confirmRemoveTeacher = async () => {
+		if (!teacherToRemove) return;
+		try {
+			await removeTeacherFromClassMutation.mutateAsync({
+				classId: classData.id,
+				teacherId: teacherToRemove.teacherId,
+			});
+			toast({
+				title: 'Success',
+				description: 'Teacher removed successfully',
+			});
+			setRemoveTeacherDialogOpen(false);
+			setTeacherToRemove(null);
+		} catch (_error) {
+			toast({
+				title: 'Error',
+				description: 'Failed to remove teacher',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	const stats = {
+		totalStudents: totalStudentsCount,
+		submissionRate: submissionRatePct,
+		needsAttention: 0,
+		avgGrade: avgScorePct,
+		avgAttendance: 0,
+	};
+
+	const attentionItems: Array<{
+		id: string;
+		type: 'meeting' | 'grading' | 'deadline';
+		title: string;
+		description: string;
+		dueDate?: string;
+		priority: 'high' | 'medium' | 'low';
+	}> = [];
+
+	const recentActivity: Array<{
+		id: string;
+		studentName: string;
+		description: string;
+		timestamp: string;
+	}> = [];
 
 	return (
 		<div className="space-y-6">
+			<AlertDialog
+				open={removeTeacherDialogOpen}
+				onOpenChange={(open) => {
+					setRemoveTeacherDialogOpen(open);
+					if (!open) setTeacherToRemove(null);
+				}}
+			>
+				<AlertDialogContent className="rounded-3xl bg-white shadow-xl max-w-md border border-[#E0DCD5]">
+					<AlertDialogHeader>
+						<AlertDialogTitle className="text-xl font-bold text-[#333]">
+							Remove teacher?
+						</AlertDialogTitle>
+						<AlertDialogDescription className="text-sm text-[#666]">
+							This will remove{' '}
+							<span className="font-semibold text-[#333]">{teacherToRemove?.teacherName}</span> from
+							this class.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel
+							className="rounded-xl border-[#E0DCD5] bg-white text-[#333] hover:bg-[#F0EDE8]"
+							disabled={removeTeacherFromClassMutation.isPending}
+						>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={(e) => {
+								e.preventDefault();
+								confirmRemoveTeacher();
+							}}
+							className="rounded-xl bg-[#E57373] text-white hover:bg-[#C62828]"
+							disabled={removeTeacherFromClassMutation.isPending}
+						>
+							Remove
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
@@ -41,7 +205,7 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 			</div>
 
 			{/* Stats Cards */}
-			<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+			<div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
 				<StatCard
 					icon={Users}
 					label="Total Students"
@@ -193,6 +357,19 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 					)}
 				</div>
 			</div>
+
+			{/* Add Teacher Modal */}
+			<AddTeacherModal
+				open={isAddTeacherModalOpen}
+				onOpenChange={setIsAddTeacherModalOpen}
+				classId={classData.id}
+				onSuccess={() => {
+					toast({
+						title: 'Success',
+						description: 'Teacher added successfully',
+					});
+				}}
+			/>
 		</div>
 	);
 }

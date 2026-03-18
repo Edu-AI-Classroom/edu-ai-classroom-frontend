@@ -38,48 +38,56 @@ export function useClassList(params?: PaginationParams) {
 	});
 }
 
-export function useClassDetail(classId: ClassId) {
+export function useClassDetail(classId?: ClassId) {
 	return useQuery({
-		queryKey: queryKeys.class.detail(classId),
-		queryFn: () => ClassService.getClassDetail(classId),
+		queryKey: queryKeys.class.detail(classId ?? 0),
+		queryFn: () => ClassService.getClassDetail(classId as ClassId),
 		enabled: classId !== null && classId !== undefined,
 	});
 }
 
-export function useClassStudents(classId: ClassId, params?: PaginationParams) {
+export function useClassStudents(classId?: ClassId, params?: PaginationParams) {
 	const storeParams = useStudentListParams();
 	const mergedParams = { ...storeParams, ...params };
 
 	return useQuery({
-		queryKey: queryKeys.class.students.list(classId, mergedParams),
+		queryKey: queryKeys.class.students.list(classId ?? 0, mergedParams),
 		queryFn: () => ClassService.getStudents(classId as number, mergedParams),
 		enabled: classId !== null && classId !== undefined,
 	});
 }
 
-export function useClassTeachers(classId: ClassId, params?: PaginationParams) {
+export function useClassStudentStats(classId?: ClassId) {
 	return useQuery({
-		queryKey: queryKeys.class.teachers.list(classId),
+		queryKey: ['class', 'students', 'stats', classId ?? 0] as const,
+		queryFn: () => ClassService.getStudentStats(classId as number),
+		enabled: classId !== null && classId !== undefined,
+	});
+}
+
+export function useClassTeachers(classId?: ClassId, params?: PaginationParams) {
+	return useQuery({
+		queryKey: queryKeys.class.teachers.list(classId ?? 0),
 		queryFn: () => ClassService.getTeachers(classId as number, params),
 		enabled: classId !== null && classId !== undefined,
 	});
 }
 
-export function useClassGroups(classId: ClassId, params?: PaginationParams) {
+export function useClassGroups(classId?: ClassId, params?: PaginationParams) {
 	const storeParams = useGroupListParams();
 	const mergedParams = { ...storeParams, ...params };
 
 	return useQuery({
-		queryKey: queryKeys.class.groups.list(classId, mergedParams),
-		queryFn: () => ClassService.getStudentGroupList(classId, mergedParams),
+		queryKey: queryKeys.class.groups.list(classId ?? 0, mergedParams),
+		queryFn: () => ClassService.getStudentGroupList(classId as number, mergedParams),
 		enabled: classId !== null && classId !== undefined,
 	});
 }
 
-export function useClassGroupDetail(classId: ClassId, groupId: GroupId) {
+export function useClassGroupDetail(classId?: ClassId, groupId?: GroupId) {
 	return useQuery({
-		queryKey: queryKeys.class.groups.detail(classId, groupId),
-		queryFn: () => ClassService.getStudentGroupDetail(classId, groupId),
+		queryKey: queryKeys.class.groups.detail(classId ?? 0, groupId ?? 0),
+		queryFn: () => ClassService.getStudentGroupDetail(classId as number, groupId as number),
 		enabled: classId !== null && classId !== undefined && groupId !== null && groupId !== undefined,
 	});
 }

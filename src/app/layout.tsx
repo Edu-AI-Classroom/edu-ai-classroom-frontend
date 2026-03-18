@@ -46,7 +46,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<body
 				className={`${_fredoka.variable} ${_caveat.variable} font-sans antialiased text-[#333333]`}
 			>

@@ -1,30 +1,23 @@
 'use client';
 
-import { ArrowLeft, Bell, BookOpen, Clock, FileWarning, Plus, Search, Users } from 'lucide-react';
+import { ArrowLeft, Bell, BookOpen, Clock, FileWarning, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { type ClassData, currentTeacher } from '@/lib/mock-data';
+import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import type { ClassroomUiData } from './classroom.mapper';
+import { CreateClassModal } from './components/create-class-modal';
 
 interface ClassListViewProps {
-	classes: ClassData[];
-	onSelectClass: (classId: string) => void;
+	classes: ClassroomUiData[];
+	onSelectClass: (classId: number) => void;
 }
 
 export default function ClassListView({ classes, onSelectClass }: ClassListViewProps) {
+	const authUser = useAuthUser();
 	const [searchQuery, setSearchQuery] = useState('');
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const teacherName = authUser?.userName ?? 'Teacher';
 
 	const filteredClasses = classes.filter(
 		(c) =>
@@ -56,7 +49,7 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 
 						<div className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5]">
 							<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-								{currentTeacher.name
+								{teacherName
 									.split(' ')
 									.map((n) => n[0])
 									.join('')}
@@ -83,55 +76,7 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 							<p className="font-serif text-lg text-[#666]">Select a class to manage</p>
 						</div>
 
-						<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-							<DialogTrigger asChild>
-								<Button className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] font-semibold rounded-xl">
-									<Plus className="w-4 h-4 mr-2" />
-									Create New Class
-								</Button>
-							</DialogTrigger>
-							<DialogContent className="sm:max-w-md bg-white rounded-2xl">
-								<DialogHeader>
-									<DialogTitle className="font-sans font-bold text-xl">
-										Create New Class
-									</DialogTitle>
-									<DialogDescription className="text-[#666]">
-										Add a new class to your roster.
-									</DialogDescription>
-								</DialogHeader>
-								<div className="space-y-4 py-4">
-									<div className="space-y-2">
-										<Label htmlFor="className">Class Name</Label>
-										<Input id="className" placeholder="e.g., Class 7A" className="rounded-xl" />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="subject">Subject</Label>
-										<Input id="subject" placeholder="e.g., Mathematics" className="rounded-xl" />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="grade">Grade Level</Label>
-										<Input id="grade" placeholder="e.g., Grade 7" className="rounded-xl" />
-									</div>
-								</div>
-								<DialogFooter>
-									<Button
-										type="button"
-										variant="outline"
-										onClick={() => setIsDialogOpen(false)}
-										className="rounded-xl"
-									>
-										Cancel
-									</Button>
-									<Button
-										type="submit"
-										className="bg-[#F5B041] hover:bg-[#E5A030] text-[#333] rounded-xl"
-										onClick={() => setIsDialogOpen(false)}
-									>
-										Create Class
-									</Button>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+						<CreateClassModal />
 					</div>
 				</div>
 
@@ -209,7 +154,11 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 						<div className="w-16 h-16 rounded-full bg-[#F0EDE8] flex items-center justify-center mx-auto mb-4">
 							<Search className="w-8 h-8 text-[#999]" />
 						</div>
-						<p className="text-[#666]">No classes found matching your search.</p>
+						<p className="text-[#666]">
+							{classes.length === 0
+								? 'No classes available yet. Create your first class.'
+								: 'No classes found matching your search.'}
+						</p>
 					</div>
 				)}
 			</main>
