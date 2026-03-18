@@ -15,7 +15,7 @@ export default function StudentClassLessons({ classData }: StudentClassLessonsPr
 
 	const handleViewDocument = (url: string, title: string) => {
 		// Trỏ URL về trang viewer của student
-		const viewerPath = `/student/lesson-viewer?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+		const viewerPath = `/student/classroom/lesson-viewer?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
 		router.push(viewerPath);
 	};
 
