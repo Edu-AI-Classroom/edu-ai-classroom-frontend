@@ -54,6 +54,10 @@ export interface UpdateClassroomPayload {
 	subjectId?: number;
 }
 
+export interface JoinClassPayload {
+	classCode: string;
+}
+
 export interface ClassListResponse extends PaginatedResponse<Classroom> {
 	data: Classroom[];
 }
