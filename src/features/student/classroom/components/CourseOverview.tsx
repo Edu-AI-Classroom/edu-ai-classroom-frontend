@@ -39,17 +39,21 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 
 	const list = Array.isArray(quizzes) ? quizzes : [];
 	const total = list.length;
-	const completed = list.filter((q) => String(q.lastAttempt?.status ?? '').toUpperCase().includes('SUBMITTED')).length;
+	const completed = list.filter((q) =>
+		String(q.lastAttempt?.status ?? '')
+			.toUpperCase()
+			.includes('SUBMITTED'),
+	).length;
 	const graded = list.filter((q) => q.lastAttempt?.totalScore != null).length;
 	const completedOrGraded = Math.max(completed, graded);
 	const progressPct = total > 0 ? Math.round((completedOrGraded / total) * 100) : 0;
 	const avgScore =
 		graded > 0
 			? (
-				list
-					.filter((q) => q.lastAttempt?.totalScore != null)
-					.reduce((s, q) => s + Number(q.lastAttempt?.totalScore ?? 0), 0) / graded
-			).toFixed(1)
+					list
+						.filter((q) => q.lastAttempt?.totalScore != null)
+						.reduce((s, q) => s + Number(q.lastAttempt?.totalScore ?? 0), 0) / graded
+				).toFixed(1)
 			: '0.0';
 
 	const avgNum = Number.parseFloat(avgScore);
@@ -213,9 +217,7 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 								style={{ width: `${avgPct}%` }}
 							/>
 						</div>
-						<p className="text-sm font-semibold text-foreground mt-1">
-							{safeAvgNum.toFixed(1)}/10
-						</p>
+						<p className="text-sm font-semibold text-foreground mt-1">{safeAvgNum.toFixed(1)}/10</p>
 					</div>
 				</div>
 			</div>
@@ -233,7 +235,11 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 							.filter((q) => {
 								const a = q.lastAttempt;
 								const status = String(a?.status ?? '').toUpperCase();
-								const isDone = !!a?.submittedAt || a?.totalScore != null || status.includes('SUBMITTED') || status.includes('GRADED');
+								const isDone =
+									!!a?.submittedAt ||
+									a?.totalScore != null ||
+									status.includes('SUBMITTED') ||
+									status.includes('GRADED');
 								return !isDone;
 							})
 							.sort((a, b) => {
@@ -255,7 +261,9 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 										) : (
 											<Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
 										)}
-										<p className={`text-sm ${isPastDue ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+										<p
+											className={`text-sm ${isPastDue ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
+										>
 											{q.title}
 											{dueLabel ? ` – Due: ${dueLabel}` : ''}
 										</p>
@@ -266,11 +274,15 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 						{list.filter((q) => {
 							const a = q.lastAttempt;
 							const status = String(a?.status ?? '').toUpperCase();
-							const isDone = !!a?.submittedAt || a?.totalScore != null || status.includes('SUBMITTED') || status.includes('GRADED');
+							const isDone =
+								!!a?.submittedAt ||
+								a?.totalScore != null ||
+								status.includes('SUBMITTED') ||
+								status.includes('GRADED');
 							return !isDone;
 						}).length === 0 && (
-								<p className="text-sm text-muted-foreground">No pending assignments.</p>
-							)}
+							<p className="text-sm text-muted-foreground">No pending assignments.</p>
+						)}
 					</div>
 				</div>
 
@@ -284,8 +296,12 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 						{list
 							.filter((q) => q.lastAttempt?.totalScore != null)
 							.sort((a, b) => {
-								const at = a.lastAttempt?.submittedAt ? new Date(a.lastAttempt.submittedAt).getTime() : 0;
-								const bt = b.lastAttempt?.submittedAt ? new Date(b.lastAttempt.submittedAt).getTime() : 0;
+								const at = a.lastAttempt?.submittedAt
+									? new Date(a.lastAttempt.submittedAt).getTime()
+									: 0;
+								const bt = b.lastAttempt?.submittedAt
+									? new Date(b.lastAttempt.submittedAt).getTime()
+									: 0;
 								return bt - at;
 							})
 							.slice(0, 3)
@@ -300,7 +316,9 @@ const CourseOverview = ({ classData }: CourseOverviewProps) => {
 									<div key={q.id} className="flex items-center justify-between">
 										<p className="text-sm text-foreground">
 											{q.title}
-											{isLate ? <span className="ml-2 text-xs text-warning font-semibold">(Late)</span> : null}
+											{isLate ? (
+												<span className="ml-2 text-xs text-warning font-semibold">(Late)</span>
+											) : null}
 										</p>
 										<span className={`text-sm font-bold ${color}`}>{score}</span>
 									</div>

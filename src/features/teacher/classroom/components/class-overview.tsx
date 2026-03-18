@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
 import {
 	AlertTriangle,
 	BarChart3,
@@ -35,7 +36,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { Teacher } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddTeacherModal } from './AddTeacherModal';
-import { useQueries } from '@tanstack/react-query';
 
 interface ClassOverviewProps {
 	classData: ClassroomUiData;
@@ -73,7 +73,8 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 		(sum, q) => sum + (q.data?.totalStudentsAttempted ?? 0),
 		0,
 	);
-	const totalStudentsCount = classData.studentCount ?? (studentResponse as any)?.data?.total ?? students.length;
+	const totalStudentsCount =
+		classData.studentCount ?? (studentResponse as any)?.data?.total ?? students.length;
 	const possibleSubmissions = totalStudentsCount > 0 ? totalStudentsCount * quizzes.length : 0;
 	const submissionRatePct =
 		possibleSubmissions > 0 ? Math.round((totalAttempts / possibleSubmissions) * 100) : 0;

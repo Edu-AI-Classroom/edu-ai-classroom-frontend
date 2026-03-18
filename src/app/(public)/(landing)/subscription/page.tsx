@@ -229,10 +229,11 @@ export default function SubscriptionPage() {
 								return (
 									<Card
 										key={plan.subId}
-										className={`relative flex flex-col p-8 transition-all duration-300 hover:shadow-xl ${isPopular
+										className={`relative flex flex-col p-8 transition-all duration-300 hover:shadow-xl ${
+											isPopular
 												? 'md:scale-105 border-2 bg-white border-[#f5b041] shadow-xl'
 												: 'border border-[#e0dcd5] bg-white hover:border-[#f5b041]'
-											}`}
+										}`}
 									>
 										{/* Badge for popular */}
 										{isPopular && (
@@ -285,12 +286,13 @@ export default function SubscriptionPage() {
 												paymentLoading !== null ||
 												userSubscription?.subId === plan.subId
 											}
-											className={`w-full mb-8 font-semibold ${userSubscription?.subId === plan.subId
+											className={`w-full mb-8 font-semibold ${
+												userSubscription?.subId === plan.subId
 													? 'bg-[#a8d5ba] hover:bg-[#9dcaa9] text-[#333333]'
 													: isPopular
 														? 'bg-[#f5b041] hover:bg-[#e5a030] text-[#333333] disabled:bg-[#d4a037]'
 														: 'bg-[#e8e4df] hover:bg-[#d8d4cf] text-[#333333] disabled:bg-[#d0ccc7]'
-												}`}
+											}`}
 										>
 											{paymentLoading === plan.subId ? (
 												<>

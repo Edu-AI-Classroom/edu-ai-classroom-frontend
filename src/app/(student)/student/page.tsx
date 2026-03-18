@@ -29,7 +29,7 @@ export default function StudentHome() {
 			href: '/student/classroom',
 			color: '#F5B041',
 			stats: `${courseCount} Courses`,
-		}
+		},
 	];
 
 	const quickInsights: any[] = [];
@@ -122,7 +122,6 @@ export default function StudentHome() {
 						))}
 					</div>
 				</section>
-
 			</main>
 
 			{/* Footer */}

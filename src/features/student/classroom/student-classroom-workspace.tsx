@@ -11,6 +11,7 @@ import {
 	Menu,
 	MessageCircle,
 	Newspaper,
+	Presentation,
 	X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -24,14 +25,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
-// Note: We use the existing imported student components, but pointing to the components folder.
-// Since student CourseDetail exists, these components might already exist or need refinement.
 import CourseAssignments from './components/CourseAssignments';
 import CourseFeed from './components/CourseFeed';
 import CourseGrades from './components/CourseGrades';
 import CourseOverview from './components/CourseOverview';
+import StudentClassLessons from './components/student-class-lessons';
 
-type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation';
+type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation' | 'lessons';
 
 interface StudentClassroomWorkspaceProps {
 	classData: ClassroomUiData;
@@ -43,6 +43,7 @@ interface StudentClassroomWorkspaceProps {
 const tabs = [
 	{ id: 'overview' as TabType, label: 'Overview', icon: Home },
 	{ id: 'feed' as TabType, label: 'Feed', icon: Newspaper },
+	{ id: 'lessons' as TabType, label: 'Lessons', icon: Presentation },
 	{ id: 'assignments' as TabType, label: 'Assignments', icon: FileText },
 	{ id: 'grades' as TabType, label: 'Grades', icon: BarChart3 },
 	{ id: 'conversation' as TabType, label: 'Conversation', icon: MessageCircle },
@@ -64,6 +65,8 @@ export default function StudentClassroomWorkspace({
 		switch (activeTab) {
 			case 'overview':
 				return <CourseOverview classData={classData} />;
+			case 'lessons':
+				return <StudentClassLessons classData={classData} />;
 			case 'feed':
 				return <CourseFeed classData={classData} />;
 			case 'assignments':
@@ -98,8 +101,9 @@ export default function StudentClassroomWorkspace({
 
 			{/* Sidebar */}
 			<aside
-				className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r-4 border-double border-[#E8B4B8] transform transition-transform duration-300 lg:transform-none ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-					} ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}
+				className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r-4 border-double border-[#E8B4B8] transform transition-transform duration-300 lg:transform-none ${
+					mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+				} ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}
 			>
 				<div className="flex flex-col h-full">
 					{/* Logo */}
@@ -120,8 +124,9 @@ export default function StudentClassroomWorkspace({
 							<DropdownMenuTrigger asChild>
 								<Button
 									variant="outline"
-									className={`w-full justify-between rounded-xl bg-[#F5B041]/10 border-[#F5B041]/30 hover:bg-[#F5B041]/20 ${sidebarOpen ? '' : 'px-2'
-										}`}
+									className={`w-full justify-between rounded-xl bg-[#F5B041]/10 border-[#F5B041]/30 hover:bg-[#F5B041]/20 ${
+										sidebarOpen ? '' : 'px-2'
+									}`}
 								>
 									<div className="flex items-center gap-2 truncate">
 										<div
@@ -161,10 +166,11 @@ export default function StudentClassroomWorkspace({
 									setActiveTab(tab.id);
 									setMobileSidebarOpen(false);
 								}}
-								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${activeTab === tab.id
+								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+									activeTab === tab.id
 										? 'bg-[#F5B041]/20 text-[#333] font-semibold'
 										: 'text-[#666] hover:bg-[#F0EDE8] hover:text-[#333]'
-									} ${sidebarOpen ? '' : 'justify-center'}`}
+								} ${sidebarOpen ? '' : 'justify-center'}`}
 							>
 								<tab.icon className="w-5 h-5 shrink-0" />
 								{sidebarOpen && <span>{tab.label}</span>}
@@ -180,8 +186,9 @@ export default function StudentClassroomWorkspace({
 						<button
 							type="button"
 							onClick={onBack}
-							className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#666] hover:bg-[#F0EDE8] hover:text-[#333] transition-all ${sidebarOpen ? '' : 'justify-center'
-								}`}
+							className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#666] hover:bg-[#F0EDE8] hover:text-[#333] transition-all ${
+								sidebarOpen ? '' : 'justify-center'
+							}`}
 						>
 							<ArrowLeft className="w-5 h-5 shrink-0" />
 							{sidebarOpen && <span>Back to Classes</span>}
