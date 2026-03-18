@@ -16,6 +16,7 @@ import {
   useUpdateQuiz,
   useUpdateQuizQuestion,
 } from '@/hooks/queries/quiz/use-quiz-mutation';
+import { Spinner } from '@/components/ui/spinner';
 import { ConfirmActionModal } from '@/features/teacher/classroom/components/confirm-action-modal';
 import type {
   AiGeneratedQuizQuestion,
@@ -336,8 +337,17 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                 disabled={aiGenerate.isPending || !aiPrompt.trim()}
                 className="rounded-xl bg-gradient-to-r from-[#C5B4E3] to-[#A8D4E6] text-[#113] border-0 shadow-md hover:shadow-lg transition-all"
               >
-                <Sparkles className="w-4 h-4 mr-2" />
-                {aiGenerate.isPending ? 'Generating...' : 'Generate'}
+                {aiGenerate.isPending ? (
+                  <>
+                    <Spinner className="mr-2" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate
+                  </>
+                )}
               </Button>
 
               <Button
@@ -387,6 +397,14 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
                 ))}
               </div>
             ) : null}
+
+            {aiGenerate.isPending && (
+              <div className="mt-4 flex flex-col items-center justify-center p-8 border border-dashed border-[#E0DCD5] rounded-xl bg-[#FAF9F6]">
+                <Spinner className="w-8 h-8 text-[#5a3ea6] mb-3" />
+                <p className="text-sm font-medium text-[#333]">AI đang soạn câu hỏi, vui lòng đợi...</p>
+                <p className="text-xs text-[#666] mt-1">Quá trình này có thể mất 10-20 giây</p>
+              </div>
+            )}
           </div>
         </section>
 

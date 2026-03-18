@@ -25,7 +25,7 @@ export const QuizService = {
   getDetail: (quizId: string) => httpGet<QuizDetail>(API_ENDPOINTS.QUIZ.DETAIL(quizId)),
 
   aiGenerate: (quizId: string, payload: GenerateQuizWithAiPayload) =>
-    httpPost<GenerateQuizWithAiResponse>(API_ENDPOINTS.QUIZ.AI_GENERATE(quizId), payload),
+    httpPost<GenerateQuizWithAiResponse>(API_ENDPOINTS.QUIZ.AI_GENERATE(quizId), payload, { timeout: 60_000 }),
 
   create: (payload: CreateQuizPayload) => httpPost<QuizDetail>(API_ENDPOINTS.QUIZ.LIST, payload),
 
