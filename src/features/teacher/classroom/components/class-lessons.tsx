@@ -1,10 +1,20 @@
 'use client';
 
-import { Edit, Eye, FileText, Plus, Trash2 } from 'lucide-react';
+import { Edit, Eye, FileText, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { useDeleteLesson, useLessonList } from '@/hooks/queries/lesson/use-lesson';
+import { useDeleteLesson, useLessonList, useUpdateLesson } from '@/hooks/queries/lesson/use-lesson';
 import type { LessonUiData } from '@/services/lesson/lesson.service';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { CreateLessonModal } from './create-lesson-modal';
@@ -18,9 +28,23 @@ export default function ClassLessons({ classData }: ClassLessonsProps) {
 	const router = useRouter();
 	const { data: lessons, isLoading } = useLessonList(classData.id);
 	const deleteLessonMutation = useDeleteLesson();
+	const updateLessonMutation = useUpdateLesson();
 
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState<LessonUiData | null>(null);
+	const [revertLesson, setRevertLesson] = useState<LessonUiData | null>(null);
+
+	const handleConfirmRevert = () => {
+		if (!revertLesson) return;
+
+		const formData = new FormData();
+		formData.append('title', revertLesson.title);
+		formData.append('content', revertLesson.content);
+		formData.append('status', 'DRAFT');
+
+		updateLessonMutation.mutate({ id: revertLesson.id, formData });
+		setRevertLesson(null);
+	};
 
 	const handleDelete = (id: string) => {
 		if (window.confirm('Are you sure you want to delete this lesson?')) {
@@ -89,13 +113,28 @@ export default function ClassLessons({ classData }: ClassLessonsProps) {
 							</div>
 
 							<div className="flex gap-1">
-								{/* Ẩn nút Edit nếu đã PUBLISHED */}
+								{/* Nút Revert if PUBLISHED */}
+								{lesson.status === 'PUBLISHED' && (
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8 text-[#F5B041] hover:bg-[#F5B041]/10"
+										onClick={() => setRevertLesson(lesson)}
+										title="Revert to Draft"
+										disabled={updateLessonMutation.isPending}
+									>
+										<RotateCcw className="w-4 h-4" />
+									</Button>
+								)}
+
+								{/* Hiện nút Edit nếu không phải PUBLISHED */}
 								{lesson.status !== 'PUBLISHED' && (
 									<Button
 										variant="ghost"
 										size="icon"
 										className="h-8 w-8 text-[#666] hover:text-[#333]"
 										onClick={() => handleEditClick(lesson)}
+										title="Edit Lesson"
 									>
 										<Edit className="w-4 h-4" />
 									</Button>
@@ -108,6 +147,7 @@ export default function ClassLessons({ classData }: ClassLessonsProps) {
 									className="h-8 w-8 text-[#E57373] hover:bg-[#E57373]/10"
 									onClick={() => handleDelete(lesson.id)}
 									disabled={deleteLessonMutation.isPending}
+									title="Delete Lesson"
 								>
 									<Trash2 className="w-4 h-4" />
 								</Button>
@@ -152,6 +192,28 @@ export default function ClassLessons({ classData }: ClassLessonsProps) {
 				onClose={() => setSelectedLesson(null)}
 				lesson={selectedLesson}
 			/>
+
+			{/* Revert Confirmation Modal */}
+			<AlertDialog open={!!revertLesson} onOpenChange={(open) => !open && setRevertLesson(null)}>
+				<AlertDialogContent className="bg-[#FAF9F6] border-[#E0DCD5]">
+					<AlertDialogHeader>
+						<AlertDialogTitle className="text-[#333]">Revert to Draft?</AlertDialogTitle>
+						<AlertDialogDescription className="text-[#666]">
+							Are you sure you want to revert this lesson to DRAFT? Students will no longer be able to
+							see it until you publish it again.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel className="border-[#E0DCD5] text-[#666]">Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-[#F5B041] hover:bg-[#F5B041]/90 text-[#333] font-bold"
+							onClick={handleConfirmRevert}
+						>
+							Yes, revert to draft
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

@@ -121,7 +121,7 @@ export function UpdateLessonModal({ isOpen, onClose, lesson }: UpdateLessonModal
 							className="w-full p-2.5 rounded-md border border-[#E0DCD5] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#F5B041]/50"
 						>
 							<option value="DRAFT">Draft (Hidden from students)</option>
-							<option value="PUBLISHED">Published (Visible to students, CANNOT EDIT LATER)</option>
+							<option value="PUBLISHED">Published (Visible to students)</option>
 						</select>
 					</div>
 
