@@ -1,6 +1,9 @@
 import { useQueries } from '@tanstack/react-query';
 
-import { AdminDashboardService, type AdminDateFilters } from '@/services/admin/admin-dashboard.service';
+import {
+	AdminDashboardService,
+	type AdminDateFilters,
+} from '@/services/admin/admin-dashboard.service';
 import { queryKeys } from '@/services/api/query-keys';
 
 export function useAdminDashboard(filters: AdminDateFilters) {
@@ -73,4 +76,3 @@ export function useAdminDashboard(filters: AdminDateFilters) {
 			transactions.isLoading,
 	};
 }
-

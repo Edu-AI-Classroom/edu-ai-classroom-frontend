@@ -1,14 +1,14 @@
 'use client';
 
-import { Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 
 function LessonViewerContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	
+
 	const fileUrl = searchParams.get('url');
 	const title = searchParams.get('title') || 'Document Viewer';
 
@@ -16,7 +16,10 @@ function LessonViewerContent() {
 		return (
 			<div className="flex flex-col items-center justify-center h-screen bg-[#FAF9F6]">
 				<p className="text-[#666] mb-4">No document URL provided.</p>
-				<Button onClick={() => router.back()} className="bg-[#F5B041] hover:bg-[#F5B041]/90 text-[#333]">
+				<Button
+					onClick={() => router.back()}
+					className="bg-[#F5B041] hover:bg-[#F5B041]/90 text-[#333]"
+				>
 					<ArrowLeft className="w-4 h-4 mr-2" />
 					Go Back
 				</Button>
@@ -32,17 +35,15 @@ function LessonViewerContent() {
 	return (
 		<div className="flex flex-col h-screen bg-[#FAF9F6]">
 			<header className="flex items-center gap-4 px-6 py-4 bg-white border-b border-[#E0DCD5] shrink-0 shadow-sm">
-				<Button 
-					variant="ghost" 
-					size="icon" 
-					onClick={() => router.back()} 
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={() => router.back()}
 					className="text-[#666] hover:bg-[#F0EDE8] hover:text-[#333]"
 				>
 					<ArrowLeft className="w-5 h-5" />
 				</Button>
-				<h1 className="font-sans font-bold text-xl text-[#333] truncate">
-					{title}
-				</h1>
+				<h1 className="font-sans font-bold text-xl text-[#333] truncate">{title}</h1>
 			</header>
 
 			<main className="flex-1 bg-[#F0EDE8] relative">
@@ -62,11 +63,13 @@ function LessonViewerContent() {
 
 export default function LessonViewerPage() {
 	return (
-		<Suspense fallback={
-			<div className="flex h-screen items-center justify-center bg-[#FAF9F6]">
-				<span className="text-[#666] animate-pulse">Loading viewer...</span>
-			</div>
-		}>
+		<Suspense
+			fallback={
+				<div className="flex h-screen items-center justify-center bg-[#FAF9F6]">
+					<span className="text-[#666] animate-pulse">Loading viewer...</span>
+				</div>
+			}
+		>
 			<LessonViewerContent />
 		</Suspense>
 	);

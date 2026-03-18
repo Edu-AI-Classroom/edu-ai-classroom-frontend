@@ -12,7 +12,7 @@ export const useLessonList = (classId: number) => {
 
 export const useCreateLesson = () => {
 	const queryClient = useQueryClient();
-	
+
 	return useMutation({
 		mutationFn: (formData: FormData) => LessonService.create(formData),
 		onSuccess: () => {
@@ -24,7 +24,7 @@ export const useCreateLesson = () => {
 
 export const useDeleteLesson = () => {
 	const queryClient = useQueryClient();
-	
+
 	return useMutation({
 		mutationFn: (id: string) => LessonService.delete(id),
 		onSuccess: () => {
@@ -35,10 +35,10 @@ export const useDeleteLesson = () => {
 
 export const useUpdateLesson = () => {
 	const queryClient = useQueryClient();
-	
+
 	return useMutation({
 		// Vì hàm update cần cả id và payload, ta bọc nó vào một object
-		mutationFn: ({ id, formData }: { id: string; formData: FormData }) => 
+		mutationFn: ({ id, formData }: { id: string; formData: FormData }) =>
 			LessonService.update(id, formData),
 		onSuccess: () => {
 			// Refetch lại danh sách lesson sau khi cập nhật thành công

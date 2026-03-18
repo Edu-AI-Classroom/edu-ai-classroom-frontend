@@ -69,7 +69,6 @@ const features = {
 			color: 'bg-[#A8D4E6]',
 		},
 	],
-
 };
 
 const roleIcons = {

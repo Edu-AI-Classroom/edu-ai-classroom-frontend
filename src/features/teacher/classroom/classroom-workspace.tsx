@@ -14,10 +14,10 @@ import {
 	Newspaper,
 	PlayCircle,
 	Plus,
+	Presentation,
 	Settings,
 	Users,
 	X,
-	Presentation,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -33,10 +33,10 @@ import type { ClassroomUiData } from './classroom.mapper';
 import ClassAssignments from './components/class-assignments';
 import ClassFeed from './components/class-feed';
 import ClassGrades from './components/class-grades';
+import ClassLessons from './components/class-lessons';
 import ClassOverview from './components/class-overview';
 import { ClassroomSettings } from './components/class-setting';
 import ClassStudents from './components/class-students';
-import ClassLessons from './components/class-lessons';
 
 type TabType =
 	| 'overview'
@@ -122,8 +122,9 @@ export default function ClassroomWorkspace({
 
 			{/* Sidebar */}
 			<aside
-				className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r-4 border-double border-[#E8B4B8] transform transition-transform duration-300 lg:transform-none ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-					} ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}
+				className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r-4 border-double border-[#E8B4B8] transform transition-transform duration-300 lg:transform-none ${
+					mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+				} ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}
 			>
 				<div className="flex flex-col h-full">
 					{/* Logo */}
@@ -144,8 +145,9 @@ export default function ClassroomWorkspace({
 							<DropdownMenuTrigger asChild>
 								<Button
 									variant="outline"
-									className={`w-full justify-between rounded-xl bg-[#F5B041]/10 border-[#F5B041]/30 hover:bg-[#F5B041]/20 ${sidebarOpen ? '' : 'px-2'
-										}`}
+									className={`w-full justify-between rounded-xl bg-[#F5B041]/10 border-[#F5B041]/30 hover:bg-[#F5B041]/20 ${
+										sidebarOpen ? '' : 'px-2'
+									}`}
 								>
 									<div className="flex items-center gap-2 truncate">
 										<div
@@ -185,10 +187,11 @@ export default function ClassroomWorkspace({
 									setActiveTab(tab.id);
 									setMobileSidebarOpen(false);
 								}}
-								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${activeTab === tab.id
-									? 'bg-[#F5B041]/20 text-[#333] font-semibold'
-									: 'text-[#666] hover:bg-[#F0EDE8] hover:text-[#333]'
-									} ${sidebarOpen ? '' : 'justify-center'}`}
+								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+									activeTab === tab.id
+										? 'bg-[#F5B041]/20 text-[#333] font-semibold'
+										: 'text-[#666] hover:bg-[#F0EDE8] hover:text-[#333]'
+								} ${sidebarOpen ? '' : 'justify-center'}`}
 							>
 								<tab.icon className="w-5 h-5 shrink-0" />
 								{sidebarOpen && <span>{tab.label}</span>}
@@ -204,8 +207,9 @@ export default function ClassroomWorkspace({
 						<button
 							type="button"
 							onClick={onBack}
-							className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#666] hover:bg-[#F0EDE8] hover:text-[#333] transition-all ${sidebarOpen ? '' : 'justify-center'
-								}`}
+							className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#666] hover:bg-[#F0EDE8] hover:text-[#333] transition-all ${
+								sidebarOpen ? '' : 'justify-center'
+							}`}
 						>
 							<ArrowLeft className="w-5 h-5 shrink-0" />
 							{sidebarOpen && <span>Back to Classes</span>}

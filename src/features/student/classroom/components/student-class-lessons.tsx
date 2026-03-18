@@ -1,7 +1,7 @@
 'use client';
 
+import { Eye, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { FileText, Eye } from 'lucide-react';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
 import { useLessonList } from '@/hooks/queries/lesson/use-lesson';
 
@@ -44,24 +44,27 @@ export default function StudentClassLessons({ classData }: StudentClassLessonsPr
 
 				{/* Render List */}
 				{lessons?.map((lesson) => (
-					<div key={lesson.id} className="bg-white p-5 rounded-2xl shadow-sm border border-[#E0DCD5] hover:shadow-md transition-shadow flex flex-col">
+					<div
+						key={lesson.id}
+						className="bg-white p-5 rounded-2xl shadow-sm border border-[#E0DCD5] hover:shadow-md transition-shadow flex flex-col"
+					>
 						<div className="flex items-start mb-4">
 							<div className="p-3 bg-[#F0EDE8] rounded-xl">
 								<FileText className="w-6 h-6 text-[#F5B041]" />
 							</div>
 						</div>
-						
+
 						<h3 className="font-bold text-lg text-[#333] mb-1 truncate" title={lesson.title}>
 							{lesson.title}
 						</h3>
-						<div 
+						<div
 							className="text-sm text-[#666] mb-4 line-clamp-2"
 							dangerouslySetInnerHTML={{ __html: lesson.content || 'No description provided.' }}
 						/>
-						
+
 						<div className="mt-auto pt-4 border-t border-[#E0DCD5]">
 							{lesson.fileUrl ? (
-								<button 
+								<button
 									onClick={() => handleViewDocument(lesson.fileUrl, lesson.title)}
 									className="flex items-center gap-1 text-sm font-semibold text-[#F5B041] hover:underline focus:outline-none"
 								>

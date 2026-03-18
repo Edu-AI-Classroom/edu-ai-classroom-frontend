@@ -114,7 +114,7 @@ export const API_ENDPOINTS = {
 		AI_USAGE: '/api/admin/dashboard/ai-usage',
 		CLASSROOMS: '/api/admin/dashboard/classrooms',
 	},
-	
+
 	LESSON: {
 		CREATE: '/api/lessons',
 		GET_BY_CLASS: (classId: number) => `/api/lessons/class/${classId}`,

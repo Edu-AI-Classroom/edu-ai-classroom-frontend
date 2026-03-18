@@ -12,8 +12,8 @@ const CourseGrades = ({ classData }: { classData: ClassroomUiData }) => {
 	const avg =
 		graded.length > 0
 			? (
-				graded.reduce((s, q) => s + Number(q.lastAttempt?.totalScore ?? 0), 0) / graded.length
-			).toFixed(2)
+					graded.reduce((s, q) => s + Number(q.lastAttempt?.totalScore ?? 0), 0) / graded.length
+				).toFixed(2)
 			: '0.00';
 
 	return (
@@ -85,9 +85,7 @@ const CourseGrades = ({ classData }: { classData: ClassroomUiData }) => {
 						})}
 
 					{!isLoading && list.length === 0 && (
-						<div className="p-6 text-sm text-muted-foreground italic">
-							No graded items yet.
-						</div>
+						<div className="p-6 text-sm text-muted-foreground italic">No graded items yet.</div>
 					)}
 				</div>
 			</div>

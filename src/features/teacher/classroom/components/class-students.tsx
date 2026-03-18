@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents, useClassStudentStats } from '@/hooks/queries/class/use-class-query';
+import { useClassStudentStats, useClassStudents } from '@/hooks/queries/class/use-class-query';
 import type { AddStudentPayload } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddStudentDialog } from './add-student-dialog';
@@ -173,7 +173,8 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 							type="button"
 							key={status}
 							onClick={() => setFilterStatus(status)}
-							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterStatus === status
+							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+								filterStatus === status
 									? status === 'excellent'
 										? 'bg-[#A8D5BA] text-[#333]'
 										: status === 'on-track'
@@ -182,7 +183,7 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 												? 'bg-[#E57373] text-white'
 												: 'bg-[#F5B041] text-[#333]'
 									: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
-								}`}
+							}`}
 						>
 							{status === 'all'
 								? 'All'

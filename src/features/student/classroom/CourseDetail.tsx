@@ -100,8 +100,9 @@ const CourseDetail = () => {
 
 			{/* Sidebar */}
 			<aside
-				className={`fixed lg:static inset-y-0 left-0 z-50 bg-sidebar border-r-4 border-double border-border transform transition-all duration-300 lg:transform-none ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-					} ${sidebarOpen ? 'w-64 lg:w-64' : 'w-64 lg:w-20'}`}
+				className={`fixed lg:static inset-y-0 left-0 z-50 bg-sidebar border-r-4 border-double border-border transform transition-all duration-300 lg:transform-none ${
+					mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+				} ${sidebarOpen ? 'w-64 lg:w-64' : 'w-64 lg:w-20'}`}
 			>
 				<div className="flex flex-col h-full">
 					{/* Logo */}
@@ -120,8 +121,9 @@ const CourseDetail = () => {
 							<DropdownMenuTrigger asChild>
 								<Button
 									variant="outline"
-									className={`w-full justify-between rounded-xl bg-accent/20 border-accent/30 hover:bg-accent/30 ${sidebarOpen ? '' : 'px-2'
-										}`}
+									className={`w-full justify-between rounded-xl bg-accent/20 border-accent/30 hover:bg-accent/30 ${
+										sidebarOpen ? '' : 'px-2'
+									}`}
 								>
 									<div className="flex items-center gap-2 truncate">
 										<div
@@ -165,10 +167,11 @@ const CourseDetail = () => {
 									setActiveTab(tab.id);
 									setMobileSidebarOpen(false);
 								}}
-								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${activeTab === tab.id
-									? 'bg-accent/20 text-foreground font-semibold'
-									: 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-									} ${sidebarOpen ? '' : 'justify-center'}`}
+								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+									activeTab === tab.id
+										? 'bg-accent/20 text-foreground font-semibold'
+										: 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+								} ${sidebarOpen ? '' : 'justify-center'}`}
 							>
 								<tab.icon className="w-5 h-5 shrink-0" />
 								{sidebarOpen && <span>{tab.label}</span>}
@@ -184,8 +187,9 @@ const CourseDetail = () => {
 						<button
 							type="button"
 							onClick={() => router.push('/')}
-							className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground transition-all ${sidebarOpen ? '' : 'justify-center'
-								}`}
+							className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground transition-all ${
+								sidebarOpen ? '' : 'justify-center'
+							}`}
 						>
 							<ArrowLeft className="w-5 h-5 shrink-0" />
 							{sidebarOpen && <span>Back to Dashboard</span>}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
 import {
 	AlertCircle,
 	Award,
@@ -13,7 +14,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -55,7 +55,9 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 	const { data: studentResponse } = useClassStudents(classId);
 	const totalStudents =
 		classData.studentCount ??
-		((studentResponse as any)?.data?.total ?? (studentResponse as any)?.data?.data?.length ?? 0);
+		(studentResponse as any)?.data?.total ??
+		(studentResponse as any)?.data?.data?.length ??
+		0;
 
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterType, setFilterType] = useState<'all' | 'quiz' | 'exam'>('all');
@@ -130,9 +132,7 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
 					<h1 className="font-sans font-bold text-2xl text-[#333]">Quizzes</h1>
-					<p className="font-serif text-lg text-[#666]">
-						{mappedAssignments.length} total quizzes
-					</p>
+					<p className="font-serif text-lg text-[#666]">{mappedAssignments.length} total quizzes</p>
 				</div>
 				<div className="flex items-center gap-2">
 					<Button asChild className="rounded-xl bg-[#333] text-white hover:bg-[#111]">
@@ -254,11 +254,7 @@ interface AssignmentCardProps {
 	classId: number;
 }
 
-function AssignmentCard({
-	assignment,
-	index,
-	classId,
-}: AssignmentCardProps) {
+function AssignmentCard({ assignment, index, classId }: AssignmentCardProps) {
 	const Icon = typeIcons[assignment.type];
 	const color = typeColors[assignment.type];
 	const submissionRate =
@@ -361,12 +357,7 @@ function AssignmentCard({
 					{assignment.status}
 				</span>
 
-				<Button
-					asChild
-					variant="outline"
-					size="sm"
-					className="rounded-xl text-xs bg-transparent"
-				>
+				<Button asChild variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
 					<Link href={`/quizzes/${assignment.id}`}>View</Link>
 				</Button>
 			</div>

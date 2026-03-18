@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { format } from 'date-fns';
+import { Activity, CreditCard, GraduationCap, LayoutGrid, TrendingUp, Users } from 'lucide-react';
+import { useState } from 'react';
 import {
 	Bar,
 	BarChart,
@@ -13,17 +14,10 @@ import {
 	XAxis,
 	YAxis,
 } from 'recharts';
-import { Activity, CreditCard, GraduationCap, LayoutGrid, TrendingUp, Users } from 'lucide-react';
-
+import { AdminGuard } from '@/components/auth/admin-guard';
 import { TeachifyIcon } from '@/components/common/Teachify';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
 	ChartContainer,
 	ChartLegend,
@@ -31,7 +25,6 @@ import {
 	ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdminGuard } from '@/components/auth/admin-guard';
 import { useAdminDashboard } from '@/hooks/queries/admin/use-admin-dashboard';
 import { cn } from '@/lib/utils/utils';
 
@@ -115,9 +108,7 @@ export default function AdminDashboardPage() {
 								<button
 									className={cn(
 										'rounded-full px-3 py-1 text-xs font-medium',
-										dateMode === 'year'
-											? 'bg-[#333] text-white'
-											: 'text-[#666] hover:bg-[#F0EDE8]',
+										dateMode === 'year' ? 'bg-[#333] text-white' : 'text-[#666] hover:bg-[#F0EDE8]',
 									)}
 									onClick={() => setDateMode('year')}
 								>
@@ -137,9 +128,7 @@ export default function AdminDashboardPage() {
 							</div>
 
 							<div className="flex items-center gap-2 rounded-full border border-[#E0DCD5] bg-white/90 px-3 py-1.5 shadow-sm">
-								<span className="text-[11px] uppercase tracking-[0.16em] text-[#999]">
-									Compare
-								</span>
+								<span className="text-[11px] uppercase tracking-[0.16em] text-[#999]">Compare</span>
 								<button
 									className={cn(
 										'rounded-full px-2.5 py-1 text-xs',
@@ -206,9 +195,7 @@ export default function AdminDashboardPage() {
 								<p className="font-sans text-xs uppercase tracking-[0.18em] text-[#999]">
 									Analytics
 								</p>
-								<h2 className="mt-1 font-sans text-lg font-semibold text-[#333]">
-									Admin insights
-								</h2>
+								<h2 className="mt-1 font-sans text-lg font-semibold text-[#333]">Admin insights</h2>
 							</div>
 							<TabsList className="flex h-auto flex-col items-stretch gap-1 bg-transparent p-0">
 								<TabsTrigger
@@ -371,7 +358,6 @@ export default function AdminDashboardPage() {
 											</ChartContainer>
 										</CardContent>
 									</Card>
-
 								</div>
 
 								<Card>
@@ -466,11 +452,7 @@ export default function AdminDashboardPage() {
 														width={120}
 													/>
 													<ChartTooltip content={<ChartTooltipContent />} />
-													<Bar
-														dataKey="score"
-														fill="var(--color-activity)"
-														radius={[0, 8, 8, 0]}
-													/>
+													<Bar dataKey="score" fill="var(--color-activity)" radius={[0, 8, 8, 0]} />
 												</BarChart>
 											</ChartContainer>
 										</CardContent>
@@ -643,15 +625,11 @@ export default function AdminDashboardPage() {
 																		<div className="text-[13px] font-medium text-[#333]">
 																			{tx.userName}
 																		</div>
-																		<div className="text-[11px] text-[#999]">
-																			{tx.email}
-																		</div>
+																		<div className="text-[11px] text-[#999]">{tx.email}</div>
 																	</div>
 																</div>
 															</td>
-															<td className="px-4 py-3 text-[13px] text-[#333]">
-																{tx.planName}
-															</td>
+															<td className="px-4 py-3 text-[13px] text-[#333]">{tx.planName}</td>
 															<td className="px-4 py-3 text-right text-[13px] font-mono">
 																{new Intl.NumberFormat('en-US', {
 																	style: 'currency',
@@ -666,11 +644,11 @@ export default function AdminDashboardPage() {
 																	className={cn(
 																		'inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold',
 																		tx.status === 'SUCCESS' &&
-																		'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]',
+																			'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]',
 																		tx.status === 'PENDING' &&
-																		'bg-[#FFF8E1] text-[#FF8F00] border border-[#FFECB3]',
+																			'bg-[#FFF8E1] text-[#FF8F00] border border-[#FFECB3]',
 																		tx.status === 'FAILED' &&
-																		'bg-[#FEECEC] text-[#C62828] border border-[#FFCDD2]',
+																			'bg-[#FEECEC] text-[#C62828] border border-[#FFCDD2]',
 																	)}
 																>
 																	{tx.status}
@@ -715,10 +693,10 @@ function SummaryCard({ label, value, delta, icon: Icon, isCurrency }: SummaryCar
 
 	const formatted = isCurrency
 		? new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			maximumFractionDigits: 0,
-		}).format(value)
+				style: 'currency',
+				currency: 'USD',
+				maximumFractionDigits: 0,
+			}).format(value)
 		: value.toLocaleString();
 
 	return (
@@ -745,4 +723,3 @@ function SummaryCard({ label, value, delta, icon: Icon, isCurrency }: SummaryCar
 		</Card>
 	);
 }
-

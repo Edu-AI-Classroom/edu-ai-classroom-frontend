@@ -63,7 +63,12 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 				const status = String(cell?.status ?? '').toUpperCase();
 				const isLate = status.includes('LATE');
 
-				row[q.title] = score != null ? `${score}${isLate ? ' (Late)' : ''}` : cell?.submittedAt ? 'Submitted' : '';
+				row[q.title] =
+					score != null
+						? `${score}${isLate ? ' (Late)' : ''}`
+						: cell?.submittedAt
+							? 'Submitted'
+							: '';
 			}
 
 			row.Average = r.averageScore ?? '';
@@ -100,7 +105,6 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 					</p>
 				</div>
 				<div className="flex gap-2">
-
 					<Button
 						variant="outline"
 						className="rounded-xl bg-transparent"
@@ -163,9 +167,7 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 											<span className="text-sm truncate max-w-25" title={quiz.title}>
 												{quiz.title}
 											</span>
-											<span className="text-xs text-[#999] font-normal">
-												{quiz.documentType}
-											</span>
+											<span className="text-xs text-[#999] font-normal">{quiz.documentType}</span>
 										</div>
 									</th>
 								))}
@@ -197,12 +199,13 @@ export default function ClassGrades({ classData }: ClassGradesProps) {
 												<div>
 													<p className="font-semibold text-sm text-[#333]">{student.name}</p>
 													<span
-														className={`text-xs ${status === 'excellent'
-															? 'text-[#2E7D32]'
-															: status === 'needs-attention'
-																? 'text-[#C62828]'
-																: 'text-[#666]'
-															}`}
+														className={`text-xs ${
+															status === 'excellent'
+																? 'text-[#2E7D32]'
+																: status === 'needs-attention'
+																	? 'text-[#C62828]'
+																	: 'text-[#666]'
+														}`}
 													>
 														{status === 'excellent'
 															? 'Excellent'
