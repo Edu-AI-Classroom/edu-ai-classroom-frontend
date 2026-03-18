@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Loader2, Mail, MoreHorizontal, Search, User } from 'lucide-react';
+import { AlertTriangle, Loader2, MoreHorizontal, Search, User } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,12 +12,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents, useClassStudentStats } from '@/hooks/queries/class/use-class-query';
+import { useClassStudentStats, useClassStudents } from '@/hooks/queries/class/use-class-query';
 import type { AddStudentPayload } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddStudentDialog } from './add-student-dialog';
-import { StudentProfileModal } from './student-profile-modal';
 import { ConfirmActionModal } from './confirm-action-modal';
+import { StudentProfileModal } from './student-profile-modal';
 
 interface ClassStudentsProps {
 	classData: ClassroomUiData;
@@ -111,7 +111,6 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 	};
 
 	const handleRemoveStudent = async (studentId: number, studentName: string) => {
-
 		setRemovingStudentId(studentId);
 		try {
 			await removeStudentFromClassMutation.mutateAsync({
@@ -174,16 +173,17 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 							type="button"
 							key={status}
 							onClick={() => setFilterStatus(status)}
-							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterStatus === status
-								? status === 'excellent'
-									? 'bg-[#A8D5BA] text-[#333]'
-									: status === 'on-track'
-										? 'bg-[#A8D4E6] text-[#333]'
-										: status === 'needs-attention'
-											? 'bg-[#E57373] text-white'
-											: 'bg-[#F5B041] text-[#333]'
-								: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
-								}`}
+							className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+								filterStatus === status
+									? status === 'excellent'
+										? 'bg-[#A8D5BA] text-[#333]'
+										: status === 'on-track'
+											? 'bg-[#A8D4E6] text-[#333]'
+											: status === 'needs-attention'
+												? 'bg-[#E57373] text-white'
+												: 'bg-[#F5B041] text-[#333]'
+									: 'bg-white text-[#666] border border-[#E0DCD5] hover:bg-[#F0EDE8]'
+							}`}
 						>
 							{status === 'all'
 								? 'All'
@@ -241,7 +241,9 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 										title="Remove Student?"
 										description={`Are you sure you want to remove ${student.name} from this class? This action cannot be undone.`}
 										confirmLabel="Remove"
-										isPending={removeStudentFromClassMutation.isPending && removingStudentId === student.id}
+										isPending={
+											removeStudentFromClassMutation.isPending && removingStudentId === student.id
+										}
 										onConfirm={() => handleRemoveStudent(student.id, student.name)}
 										trigger={
 											<DropdownMenuItem

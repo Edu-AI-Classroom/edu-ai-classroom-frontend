@@ -2,7 +2,6 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-	ChevronDown,
 	Image as ImageIcon,
 	MessageCircle,
 	MoreHorizontal,
@@ -103,7 +102,9 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 	});
 
 	const announcements: PostData[] =
-		(newsResponse?.pages as any[])?.flatMap((page) => (Array.isArray(page?.data) ? page.data : [])) || [];
+		(newsResponse?.pages as any[])?.flatMap((page) =>
+			Array.isArray(page?.data) ? page.data : [],
+		) || [];
 
 	const createNewsMutation = useMutation({
 		mutationFn: NewsService.createNews,
@@ -497,7 +498,6 @@ function PostCard({
 
 					{post.mediaUrl && !isEditingPost && (
 						<div className="mt-4 rounded-xl overflow-hidden border border-[#E0DCD5]">
-							{/* biome-ignore lint/performance/noImgElement: allow img for dynamic external media from S3/R2 */}
 							<img
 								src={post.mediaUrl}
 								alt="Post media"

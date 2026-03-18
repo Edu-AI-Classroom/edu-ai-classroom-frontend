@@ -2,9 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/types/auth';
-import { Button } from '@/components/ui/button';
 
 interface AdminGuardProps {
 	children: React.ReactNode;
@@ -81,4 +81,3 @@ export function AdminGuard({ children, allowedRoles = ['ADMIN'], redirectTo }: A
 
 	return <>{children}</>;
 }
-

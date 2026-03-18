@@ -46,7 +46,6 @@ function clearAuthState() {
 	const { logout } = useAuthStore.getState();
 	logout();
 
-	useAuthStore.persist.clearStorage();
 	if (typeof window !== 'undefined') {
 		localStorage.removeItem('auth-store');
 	}

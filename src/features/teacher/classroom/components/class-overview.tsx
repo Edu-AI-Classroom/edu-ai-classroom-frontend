@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries, useQuery } from '@tanstack/react-query';
 import {
 	AlertTriangle,
 	BarChart3,
@@ -8,8 +9,6 @@ import {
 	Clock,
 	FileText,
 	MessageSquare,
-	Plus,
-	Trash2,
 	TrendingUp,
 	Users,
 } from 'lucide-react';
@@ -25,20 +24,21 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/common/use-toast';
-import { queryKeys } from '@/services/api/query-keys';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents, useClassTeachers, useClassStudentStats } from '@/hooks/queries/class/use-class-query';
+import {
+	useClassStudentStats,
+	useClassStudents,
+	useClassTeachers,
+} from '@/hooks/queries/class/use-class-query';
 import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
-import { QuizService } from '@/services/quiz/quiz.service';
+import { queryKeys } from '@/services/api/query-keys';
 import { NewsService } from '@/services/classroom/news.service';
-import { useQuery } from '@tanstack/react-query';
+import { QuizService } from '@/services/quiz/quiz.service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Teacher } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddTeacherModal } from './AddTeacherModal';
-import { useQueries } from '@tanstack/react-query';
 
 interface ClassOverviewProps {
 	classData: ClassroomUiData;
@@ -68,7 +68,7 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	} | null>(null);
 
 	const students = studentResponse?.data ?? [];
-	const teachers = teacherResponse ?? [];
+	const _teachers = teacherResponse ?? [];
 	const quizzes = Array.isArray(quizList) ? quizList : [];
 
 	const submissionQueries = useQueries({
@@ -83,7 +83,10 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 		(sum, q) => sum + (q.data?.totalStudentsAttempted ?? 0),
 		0,
 	);
-	const totalStudentsCount = classData.studentCount ?? (studentResponse as any)?.data?.total ?? (Array.isArray(students) ? students.length : 0);
+	const totalStudentsCount =
+		classData.studentCount ??
+		(studentResponse as any)?.data?.total ??
+		(Array.isArray(students) ? students.length : 0);
 	const possibleSubmissions = totalStudentsCount > 0 ? totalStudentsCount * quizzes.length : 0;
 	const submissionRatePct =
 		possibleSubmissions > 0 ? Math.round((totalAttempts / possibleSubmissions) * 100) : 0;
@@ -105,14 +108,14 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	})();
 
 	// Check if current user is the class owner
-	const isOwner = classData.isOwner || user?.userId === classData.createdBy;
+	const _isOwner = classData.isOwner || user?.userId === classData.createdBy;
 
 	// Type guard to check if user is a Teacher
 	const _isTeacher = (user: any): user is Teacher => {
 		return user && user.role === 'TEACHER';
 	};
 
-	const handleRemoveTeacher = (teacherId: number, teacherName: string) => {
+	const _handleRemoveTeacher = (teacherId: number, teacherName: string) => {
 		setTeacherToRemove({ teacherId, teacherName });
 		setRemoveTeacherDialogOpen(true);
 	};
@@ -329,12 +332,13 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 									className="flex items-start gap-3 p-3 rounded-xl bg-[#FAF9F6] border border-[#E0DCD5]"
 								>
 									<div
-										className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.type === 'meeting'
-											? 'bg-[#C5B4E3]/20'
-											: item.type === 'grading'
-												? 'bg-[#F5B041]/20'
-												: 'bg-[#E57373]/20'
-											}`}
+										className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+											item.type === 'meeting'
+												? 'bg-[#C5B4E3]/20'
+												: item.type === 'grading'
+													? 'bg-[#F5B041]/20'
+													: 'bg-[#E57373]/20'
+										}`}
 									>
 										{item.type === 'meeting' && <Calendar className="w-4 h-4 text-[#C5B4E3]" />}
 										{item.type === 'grading' && <FileText className="w-4 h-4 text-[#F5B041]" />}
@@ -348,12 +352,13 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 										)}
 									</div>
 									<span
-										className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.priority === 'high'
-											? 'bg-[#E57373]/20 text-[#C62828]'
-											: item.priority === 'medium'
-												? 'bg-[#F5B041]/20 text-[#B8860B]'
-												: 'bg-[#A8D5BA]/20 text-[#2E7D32]'
-											}`}
+										className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+											item.priority === 'high'
+												? 'bg-[#E57373]/20 text-[#C62828]'
+												: item.priority === 'medium'
+													? 'bg-[#F5B041]/20 text-[#B8860B]'
+													: 'bg-[#A8D5BA]/20 text-[#2E7D32]'
+										}`}
 									>
 										{item.priority}
 									</span>

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { TeachifyIcon } from '@/components/common/Teachify';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { getAvatarColor } from '@/lib/user/avatar';
 import { getRoleRedirectPath } from '@/lib/user/routes-by-role';
@@ -73,18 +72,22 @@ export function Header() {
 								href={getRoleRedirectPath(user.role)}
 								className="flex items-center gap-3 rounded-full border border-border/60 bg-white/70 px-3 py-1.5 shadow-sm transition hover:shadow-md"
 							>
-								<Avatar className="size-8">
+								<div className="size-8 overflow-hidden rounded-full">
 									{user.profilePicture ? (
-										<AvatarImage src={user.profilePicture} alt={displayName} />
+										<img
+											src={user.profilePicture}
+											alt={displayName}
+											className="h-full w-full object-cover"
+										/>
 									) : (
-										<AvatarFallback
+										<div
 											style={{ backgroundColor: avatarColor }}
-											className="text-sm font-semibold text-[#333]"
+											className="flex h-full w-full items-center justify-center text-sm font-semibold text-[#333]"
 										>
 											{initials || 'U'}
-										</AvatarFallback>
+										</div>
 									)}
-								</Avatar>
+								</div>
 								<span className="text-sm font-semibold text-charcoal">{displayName || 'User'}</span>
 							</Link>
 							<Button
@@ -151,18 +154,22 @@ export function Header() {
 									href={getRoleRedirectPath(user.role)}
 									className="flex items-center gap-3 rounded-xl border border-border/60 bg-white/70 px-3 py-2 shadow-sm"
 								>
-									<Avatar className="size-9">
+									<div className="size-9 overflow-hidden rounded-full">
 										{user.profilePicture ? (
-											<AvatarImage src={user.profilePicture} alt={displayName} />
+											<img
+												src={user.profilePicture}
+												alt={displayName}
+												className="h-full w-full object-cover"
+											/>
 										) : (
-											<AvatarFallback
+											<div
 												style={{ backgroundColor: avatarColor }}
-												className="text-sm font-semibold text-[#333]"
+												className="flex h-full w-full items-center justify-center text-sm font-semibold text-[#333]"
 											>
 												{initials || 'U'}
-											</AvatarFallback>
+											</div>
 										)}
-									</Avatar>
+									</div>
 									<div className="flex flex-col">
 										<span className="text-sm font-semibold text-charcoal">
 											{displayName || 'User'}

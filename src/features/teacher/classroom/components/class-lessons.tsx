@@ -157,14 +157,14 @@ export default function ClassLessons({ classData }: ClassLessonsProps) {
 						<h3 className="font-bold text-lg text-[#333] mb-1 truncate" title={lesson.title}>
 							{lesson.title}
 						</h3>
-						<div
-							className="text-sm text-[#666] mb-4 line-clamp-2"
-							dangerouslySetInnerHTML={{ __html: lesson.content || 'No description provided.' }}
-						/>
+						<p className="text-sm text-[#666] mb-4 line-clamp-2">
+							{(lesson.content ?? '').replace(/<[^>]+>/g, '').trim() || 'No description provided.'}
+						</p>
 
 						<div className="mt-auto pt-4 border-t border-[#E0DCD5]">
 							{lesson.fileUrl ? (
 								<button
+									type="button"
 									onClick={() => handleViewDocument(lesson.fileUrl, lesson.title)}
 									className="flex items-center gap-1 text-sm font-semibold text-[#F5B041] hover:underline focus:outline-none"
 								>
@@ -199,8 +199,8 @@ export default function ClassLessons({ classData }: ClassLessonsProps) {
 					<AlertDialogHeader>
 						<AlertDialogTitle className="text-[#333]">Revert to Draft?</AlertDialogTitle>
 						<AlertDialogDescription className="text-[#666]">
-							Are you sure you want to revert this lesson to DRAFT? Students will no longer be able to
-							see it until you publish it again.
+							Are you sure you want to revert this lesson to DRAFT? Students will no longer be able
+							to see it until you publish it again.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

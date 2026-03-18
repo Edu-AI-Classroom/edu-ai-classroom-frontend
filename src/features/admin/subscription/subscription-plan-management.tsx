@@ -1,17 +1,9 @@
 'use client';
 
+import { Activity, Brain, FileText, Layout, Pencil, Plus, Shield, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X, Shield, Clock, Brain, Layout, FileText, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
 	Dialog,
 	DialogContent,
@@ -20,15 +12,17 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
-import {
-	useSubscriptionPlans,
-	useCreateSubscriptionPlan,
-	useUpdateSubscriptionPlan,
-	useDeleteSubscriptionPlan,
-} from '@/hooks/queries/admin/use-subscription-plan';
-import type { SubscriptionPlan } from '@/types/subscription';
-import { cn } from '@/lib/utils/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ConfirmActionModal } from '@/features/teacher/classroom/components/confirm-action-modal';
+import {
+	useCreateSubscriptionPlan,
+	useDeleteSubscriptionPlan,
+	useSubscriptionPlans,
+	useUpdateSubscriptionPlan,
+} from '@/hooks/queries/admin/use-subscription-plan';
+import { cn } from '@/lib/utils/utils';
+import type { SubscriptionPlan } from '@/types/subscription';
 
 export function SubscriptionPlanManagement() {
 	const { data: plans, isLoading } = useSubscriptionPlans();
@@ -112,15 +106,20 @@ export function SubscriptionPlanManagement() {
 
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 				{plans?.map((plan) => (
-					<Card key={plan.subId} className={cn(
-						"relative overflow-hidden border-[#E0DCD5] transition-all hover:shadow-md",
-						!plan.isActive && "opacity-60"
-					)}>
+					<Card
+						key={plan.subId}
+						className={cn(
+							'relative overflow-hidden border-[#E0DCD5] transition-all hover:shadow-md',
+							!plan.isActive && 'opacity-60',
+						)}
+					>
 						<CardHeader className="pb-4">
 							<div className="flex items-start justify-between">
 								<div>
 									<CardTitle className="text-lg font-bold text-[#333]">{plan.subName}</CardTitle>
-									<CardDescription className="font-mono text-xs uppercase text-[#999]">{plan.subCode}</CardDescription>
+									<CardDescription className="font-mono text-xs uppercase text-[#999]">
+										{plan.subCode}
+									</CardDescription>
 								</div>
 								<div className="flex items-center gap-1">
 									<Button
@@ -164,10 +163,22 @@ export function SubscriptionPlanManagement() {
 							</div>
 
 							<div className="space-y-2 border-t border-[#F0EDE8] pt-4">
-								<FeatureItem icon={Brain} label="AI Tokens" value={plan.aiTokenLimit.toLocaleString()} />
-								<FeatureItem icon={Activity} label="AI Requests" value={plan.aiRequestLimit ?? 'Unlimited'} />
+								<FeatureItem
+									icon={Brain}
+									label="AI Tokens"
+									value={plan.aiTokenLimit.toLocaleString()}
+								/>
+								<FeatureItem
+									icon={Activity}
+									label="AI Requests"
+									value={plan.aiRequestLimit ?? 'Unlimited'}
+								/>
 								<FeatureItem icon={Layout} label="Max Classes" value={plan.maxClasses} />
-								<FeatureItem icon={FileText} label="Max Documents" value={plan.maxDocuments ?? 'Unlimited'} />
+								<FeatureItem
+									icon={FileText}
+									label="Max Documents"
+									value={plan.maxDocuments ?? 'Unlimited'}
+								/>
 								<FeatureItem
 									icon={Shield}
 									label="Status"
@@ -184,7 +195,9 @@ export function SubscriptionPlanManagement() {
 				<DialogContent className="max-w-md rounded-2xl sm:max-w-lg">
 					<form onSubmit={handleSubmit}>
 						<DialogHeader>
-							<DialogTitle>{editingPlan ? 'Edit Subscription Plan' : 'Create New Plan'}</DialogTitle>
+							<DialogTitle>
+								{editingPlan ? 'Edit Subscription Plan' : 'Create New Plan'}
+							</DialogTitle>
 							<DialogDescription>
 								Set the details and limits for this subscription plan.
 							</DialogDescription>
@@ -208,7 +221,9 @@ export function SubscriptionPlanManagement() {
 									id="subCode"
 									placeholder="e.g. PRO_MONTHLY"
 									value={formData.subCode}
-									onChange={(e) => setFormData({ ...formData, subCode: e.target.value.toUpperCase() })}
+									onChange={(e) =>
+										setFormData({ ...formData, subCode: e.target.value.toUpperCase() })
+									}
 									className="rounded-xl font-mono"
 									disabled={!!editingPlan}
 									required
@@ -234,7 +249,9 @@ export function SubscriptionPlanManagement() {
 									type="number"
 									min="1"
 									value={formData.durationDays}
-									onChange={(e) => setFormData({ ...formData, durationDays: Number(e.target.value) })}
+									onChange={(e) =>
+										setFormData({ ...formData, durationDays: Number(e.target.value) })
+									}
 									className="rounded-xl"
 									required
 								/>
@@ -246,7 +263,9 @@ export function SubscriptionPlanManagement() {
 									type="number"
 									min="0"
 									value={formData.aiTokenLimit}
-									onChange={(e) => setFormData({ ...formData, aiTokenLimit: Number(e.target.value) })}
+									onChange={(e) =>
+										setFormData({ ...formData, aiTokenLimit: Number(e.target.value) })
+									}
 									className="rounded-xl"
 									required
 								/>
@@ -258,7 +277,12 @@ export function SubscriptionPlanManagement() {
 									type="number"
 									placeholder="Unlimited"
 									value={formData.aiRequestLimit ?? ''}
-									onChange={(e) => setFormData({ ...formData, aiRequestLimit: e.target.value ? Number(e.target.value) : null })}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											aiRequestLimit: e.target.value ? Number(e.target.value) : null,
+										})
+									}
 									className="rounded-xl"
 								/>
 							</div>
@@ -281,7 +305,12 @@ export function SubscriptionPlanManagement() {
 									type="number"
 									placeholder="Unlimited"
 									value={formData.maxDocuments ?? ''}
-									onChange={(e) => setFormData({ ...formData, maxDocuments: e.target.value ? Number(e.target.value) : null })}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											maxDocuments: e.target.value ? Number(e.target.value) : null,
+										})
+									}
 									className="rounded-xl"
 								/>
 							</div>
@@ -293,7 +322,9 @@ export function SubscriptionPlanManagement() {
 									onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
 									className="h-4 w-4 rounded border-gray-300 text-[#F5B041] focus:ring-[#F5B041]"
 								/>
-								<Label htmlFor="isActive" className="text-sm font-medium">This plan is active and available for users</Label>
+								<Label htmlFor="isActive" className="text-sm font-medium">
+									This plan is active and available for users
+								</Label>
 							</div>
 						</div>
 
@@ -321,14 +352,24 @@ export function SubscriptionPlanManagement() {
 	);
 }
 
-function FeatureItem({ icon: Icon, label, value, statusColor }: { icon: any, label: string, value: string | number, statusColor?: string }) {
+function FeatureItem({
+	icon: Icon,
+	label,
+	value,
+	statusColor,
+}: {
+	icon: any;
+	label: string;
+	value: string | number;
+	statusColor?: string;
+}) {
 	return (
 		<div className="flex items-center justify-between text-sm">
 			<div className="flex items-center gap-2 text-[#666]">
 				<Icon className="h-3.5 w-3.5" />
 				<span>{label}</span>
 			</div>
-			<span className={cn("font-medium text-[#333]", statusColor)}>{value}</span>
+			<span className={cn('font-medium text-[#333]', statusColor)}>{value}</span>
 		</div>
 	);
 }

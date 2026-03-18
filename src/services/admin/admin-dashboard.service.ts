@@ -1,5 +1,5 @@
-import { http } from '@/services/http';
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
+import { http } from '@/services/http';
 
 export type AdminDateFilters = {
 	mode: 'range' | 'month' | 'year' | 'quarter' | 'day';
@@ -41,14 +41,14 @@ export const AdminDashboardService = {
 			Array<{ role: 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN' | string; value: number }>
 		>(
 			API_ENDPOINTS.ADMIN_DASHBOARD.USER_GROWTH +
-			buildQuery({ ...filters, aggregate: 'roles' } as any),
+				buildQuery({ ...filters, aggregate: 'roles' } as any),
 		);
 	},
 
 	getNewUsersPerMonth(filters: AdminDateFilters) {
 		return http<Array<{ month: string; value: number }>>(
 			API_ENDPOINTS.ADMIN_DASHBOARD.USER_GROWTH +
-			buildQuery({ ...filters, aggregate: 'monthly' } as any),
+				buildQuery({ ...filters, aggregate: 'monthly' } as any),
 		);
 	},
 
@@ -101,4 +101,3 @@ function buildQuery(filters: Record<string, any>): string {
 	const qs = params.toString();
 	return qs ? `?${qs}` : '';
 }
-

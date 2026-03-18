@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
 import {
 	AlertCircle,
 	Award,
@@ -13,7 +14,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -50,12 +50,15 @@ function getUiStatus(status: string | undefined): AssignmentStatus {
 }
 
 export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
-	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
-	const { data: quizList, isLoading, error: queryError } = useQuizList({ classId });
+	const rawClassId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
+	const classId = Number.isFinite(rawClassId) ? rawClassId : 0;
+	const { data: quizList, isLoading } = useQuizList({ classId });
 	const { data: studentResponse } = useClassStudents(classId);
 	const totalStudents =
 		classData.studentCount ??
-		((studentResponse as any)?.data?.total ?? (studentResponse as any)?.data?.data?.length ?? 0);
+		(studentResponse as any)?.data?.total ??
+		(studentResponse as any)?.data?.data?.length ??
+		0;
 
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterType, setFilterType] = useState<'all' | 'quiz' | 'exam'>('all');
@@ -110,29 +113,13 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 		);
 	}
 
-	if (queryError) {
-		return (
-			<div className="space-y-6">
-				<div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3">
-					<AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-					<div>
-						<h3 className="font-semibold mb-1">Failed to load assignments</h3>
-						<p className="text-sm">{String(queryError)}</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-6">
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
 					<h1 className="font-sans font-bold text-2xl text-[#333]">Quizzes</h1>
-					<p className="font-serif text-lg text-[#666]">
-						{mappedAssignments.length} total quizzes
-					</p>
+					<p className="font-serif text-lg text-[#666]">{mappedAssignments.length} total quizzes</p>
 				</div>
 				<div className="flex items-center gap-2">
 					<Button asChild className="rounded-xl bg-[#333] text-white hover:bg-[#111]">
@@ -254,11 +241,7 @@ interface AssignmentCardProps {
 	classId: number;
 }
 
-function AssignmentCard({
-	assignment,
-	index,
-	classId,
-}: AssignmentCardProps) {
+function AssignmentCard({ assignment, index, classId }: AssignmentCardProps) {
 	const Icon = typeIcons[assignment.type];
 	const color = typeColors[assignment.type];
 	const submissionRate =
@@ -266,6 +249,10 @@ function AssignmentCard({
 			? Math.round((assignment.submissionCount / assignment.totalStudents) * 100)
 			: 0;
 	const _isOverdue = assignment.status === 'OVERDUE';
+	const parsedDueDate = new Date(assignment.dueDate);
+	const dueDateLabel = Number.isNaN(parsedDueDate.getTime())
+		? 'No date'
+		: parsedDueDate.toLocaleDateString();
 
 	return (
 		<div
@@ -320,7 +307,7 @@ function AssignmentCard({
 			<div className="flex items-center justify-between text-sm mb-4">
 				<div className="flex items-center gap-1.5 text-[#666]">
 					<Calendar className="w-4 h-4" />
-					<span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
+					<span>{dueDateLabel}</span>
 				</div>
 				<span className="font-semibold text-[#333]">{assignment.totalPoints} questions</span>
 			</div>
@@ -361,12 +348,7 @@ function AssignmentCard({
 					{assignment.status}
 				</span>
 
-				<Button
-					asChild
-					variant="outline"
-					size="sm"
-					className="rounded-xl text-xs bg-transparent"
-				>
+				<Button asChild variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
 					<Link href={`/quizzes/${assignment.id}`}>View</Link>
 				</Button>
 			</div>

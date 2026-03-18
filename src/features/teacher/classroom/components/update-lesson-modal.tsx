@@ -32,7 +32,7 @@ export function UpdateLessonModal({ isOpen, onClose, lesson }: UpdateLessonModal
 	}, [lesson, isOpen]);
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
+		if (e.target.files?.[0]) {
 			const selectedFile = e.target.files[0];
 			const allowedTypes = [
 				'application/pdf',
@@ -114,8 +114,11 @@ export function UpdateLessonModal({ isOpen, onClose, lesson }: UpdateLessonModal
 					</div>
 
 					<div className="space-y-2">
-						<label className="text-sm font-semibold text-[#666]">Status</label>
+						<label htmlFor="update-status" className="text-sm font-semibold text-[#666]">
+							Status
+						</label>
 						<select
+							id="update-status"
 							value={status}
 							onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
 							className="w-full p-2.5 rounded-md border border-[#E0DCD5] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#F5B041]/50"
@@ -126,7 +129,7 @@ export function UpdateLessonModal({ isOpen, onClose, lesson }: UpdateLessonModal
 					</div>
 
 					<div className="space-y-2">
-						<label className="text-sm font-semibold text-[#666]">
+						<label htmlFor="update-material-file" className="text-sm font-semibold text-[#666]">
 							Replace Material (PDF, PPTX)
 						</label>
 						{!file && lesson.fileUrl && (
@@ -144,6 +147,7 @@ export function UpdateLessonModal({ isOpen, onClose, lesson }: UpdateLessonModal
 						)}
 						<div className="relative border-2 border-dashed border-[#E0DCD5] rounded-xl p-6 text-center hover:bg-white transition-colors bg-[#F0EDE8]/50">
 							<input
+								id="update-material-file"
 								type="file"
 								accept=".pdf,.ppt,.pptx"
 								onChange={handleFileChange}
