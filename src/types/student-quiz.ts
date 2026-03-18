@@ -1,5 +1,12 @@
 import type { QuizDocumentType, QuizStatus } from './quiz';
 
+export type StudentQuizAttemptSummary = {
+	attemptId: number;
+	status?: string | null;
+	totalScore?: number | null;
+	submittedAt?: string | null;
+};
+
 export type StudentQuizListItem = {
 	id: string;
 	title: string;
@@ -8,12 +15,7 @@ export type StudentQuizListItem = {
 	status: QuizStatus;
 	createdAt: string;
 	dueDate?: string | null;
-	lastAttempt?: {
-		attemptId: number;
-		status?: string | null;
-		totalScore?: number | null;
-		submittedAt?: string | null;
-	} | null;
+	lastAttempt?: StudentQuizAttemptSummary | null;
 };
 
 export type StudentQuizDetail = {
@@ -23,6 +25,8 @@ export type StudentQuizDetail = {
 	documentType: QuizDocumentType;
 	timeLimitMinutes?: number | null;
 	totalPoints?: number | null;
+	attempts?: StudentQuizAttemptSummary[] | null;
+	attemptHistory?: StudentQuizAttemptSummary[] | null;
 	status: QuizStatus;
 	createdAt: string;
 	dueDate?: string | null;
