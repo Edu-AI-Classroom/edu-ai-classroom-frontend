@@ -2,10 +2,12 @@ import { http } from '@/services/http';
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
 
 export type AdminDateFilters = {
-	mode: 'range' | 'month' | 'year';
+	mode: 'range' | 'month' | 'year' | 'quarter' | 'day';
 	month?: number;
 	year?: number;
-	compareMode?: 'none' | 'month' | 'year';
+	quarter?: number;
+	day?: string;
+	compareMode?: 'none' | 'month' | 'year' | 'quarter' | 'day';
 	from?: string;
 	to?: string;
 };
@@ -39,14 +41,14 @@ export const AdminDashboardService = {
 			Array<{ role: 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN' | string; value: number }>
 		>(
 			API_ENDPOINTS.ADMIN_DASHBOARD.USER_GROWTH +
-				buildQuery({ ...filters, aggregate: 'roles' } as any),
+			buildQuery({ ...filters, aggregate: 'roles' } as any),
 		);
 	},
 
 	getNewUsersPerMonth(filters: AdminDateFilters) {
 		return http<Array<{ month: string; value: number }>>(
 			API_ENDPOINTS.ADMIN_DASHBOARD.USER_GROWTH +
-				buildQuery({ ...filters, aggregate: 'monthly' } as any),
+			buildQuery({ ...filters, aggregate: 'monthly' } as any),
 		);
 	},
 

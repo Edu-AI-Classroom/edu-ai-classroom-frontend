@@ -35,14 +35,15 @@ import { AdminGuard } from '@/components/auth/admin-guard';
 import { useAdminDashboard } from '@/hooks/queries/admin/use-admin-dashboard';
 import { cn } from '@/lib/utils/utils';
 
-type DateFilterMode = 'range' | 'month' | 'year';
-type CompareMode = 'none' | 'month' | 'year';
+type DateFilterMode = 'range' | 'month' | 'year' | 'quarter' | 'day';
+type CompareMode = 'none' | 'month' | 'year' | 'quarter' | 'day';
 
 export default function AdminDashboardPage() {
 	const [dateMode, setDateMode] = useState<DateFilterMode>('month');
 	const [compareMode, setCompareMode] = useState<CompareMode>('none');
 	const [selectedMonth] = useState<number>(new Date().getMonth() + 1);
 	const [selectedYear] = useState<number>(new Date().getFullYear());
+	const [selectedQuarter] = useState<number>(Math.floor(new Date().getMonth() / 3) + 1);
 	const [rangeFrom, setRangeFrom] = useState<string | undefined>();
 	const [rangeTo, setRangeTo] = useState<string | undefined>();
 
@@ -50,9 +51,11 @@ export default function AdminDashboardPage() {
 		dateMode === 'range' && rangeFrom && rangeTo ? 'range' : 'month';
 
 	const filters = {
-		mode: effectiveMode,
+		mode: effectiveMode === 'range' ? 'range' : dateMode,
 		month: selectedMonth,
 		year: selectedYear,
+		quarter: selectedQuarter,
+		day: new Date().toISOString().split('T')[0],
 		compareMode,
 		from: effectiveMode === 'range' ? rangeFrom : undefined,
 		to: effectiveMode === 'range' ? rangeTo : undefined,
@@ -104,6 +107,17 @@ export default function AdminDashboardPage() {
 								<button
 									className={cn(
 										'rounded-full px-3 py-1 text-xs font-medium',
+										dateMode === 'day'
+											? 'bg-[#333] text-white'
+											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setDateMode('day')}
+								>
+									Day
+								</button>
+								<button
+									className={cn(
+										'rounded-full px-3 py-1 text-xs font-medium',
 										dateMode === 'month'
 											? 'bg-[#333] text-white'
 											: 'text-[#666] hover:bg-[#F0EDE8]',
@@ -111,6 +125,17 @@ export default function AdminDashboardPage() {
 									onClick={() => setDateMode('month')}
 								>
 									Month
+								</button>
+								<button
+									className={cn(
+										'rounded-full px-3 py-1 text-xs font-medium',
+										dateMode === 'quarter'
+											? 'bg-[#333] text-white'
+											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setDateMode('quarter')}
+								>
+									Quarter
 								</button>
 								<button
 									className={cn(
@@ -154,6 +179,17 @@ export default function AdminDashboardPage() {
 								<button
 									className={cn(
 										'rounded-full px-2.5 py-1 text-xs',
+										compareMode === 'day'
+											? 'bg-[#333] text-white'
+											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setCompareMode('day')}
+								>
+									vs yesterday
+								</button>
+								<button
+									className={cn(
+										'rounded-full px-2.5 py-1 text-xs',
 										compareMode === 'month'
 											? 'bg-[#333] text-white'
 											: 'text-[#666] hover:bg-[#F0EDE8]',
@@ -161,6 +197,17 @@ export default function AdminDashboardPage() {
 									onClick={() => setCompareMode('month')}
 								>
 									vs last month
+								</button>
+								<button
+									className={cn(
+										'rounded-full px-2.5 py-1 text-xs',
+										compareMode === 'quarter'
+											? 'bg-[#333] text-white'
+											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setCompareMode('quarter')}
+								>
+									vs last quarter
 								</button>
 								<button
 									className={cn(
@@ -249,7 +296,7 @@ export default function AdminDashboardPage() {
 									</p>
 								</div>
 
-								<div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+								<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 									<SummaryCard
 										label="Total Users"
 										value={overview?.totalUsers ?? 0}
@@ -722,19 +769,19 @@ function SummaryCard({ label, value, delta, icon: Icon, isCurrency }: SummaryCar
 		: value.toLocaleString();
 
 	return (
-		<Card className="relative border-[#E0DCD5] bg-white/90 shadow-sm">
+		<Card className="relative overflow-hidden border-[#E0DCD5] bg-white/90 shadow-sm">
 			<CardContent className="flex flex-col gap-3 px-4 py-3.5">
 				<div className="flex items-center justify-between">
-					<span className="text-[11px] uppercase tracking-[0.18em] text-[#999]">{label}</span>
-					<span className="rounded-full bg-[#F0EDE8] p-1.5">
+					<span className="truncate text-[11px] uppercase tracking-[0.18em] text-[#999]" title={label}>{label}</span>
+					<span className="shrink-0 rounded-full bg-[#F0EDE8] p-1.5">
 						<Icon className="h-3.5 w-3.5 text-[#333]" />
 					</span>
 				</div>
-				<div className="flex items-baseline justify-between gap-2">
-					<span className="font-sans text-xl font-semibold text-[#333]">{formatted}</span>
+				<div className="flex items-baseline justify-between gap-2 overflow-hidden">
+					<span className="truncate font-sans text-xl font-semibold text-[#333]">{formatted}</span>
 					<span
 						className={cn(
-							'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
+							'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
 							positive ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-[#FEECEC] text-[#C62828]',
 						)}
 					>
