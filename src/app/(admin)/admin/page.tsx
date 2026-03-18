@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { format } from 'date-fns';
+import { Activity, CreditCard, GraduationCap, LayoutGrid, TrendingUp, Users } from 'lucide-react';
+import { useState } from 'react';
 import {
 	Bar,
 	BarChart,
@@ -13,17 +14,10 @@ import {
 	XAxis,
 	YAxis,
 } from 'recharts';
-import { Activity, CreditCard, GraduationCap, LayoutGrid, TrendingUp, Users } from 'lucide-react';
-
+import { AdminGuard } from '@/components/auth/admin-guard';
 import { TeachifyIcon } from '@/components/common/Teachify';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
 	ChartContainer,
 	ChartLegend,
@@ -31,18 +25,19 @@ import {
 	ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdminGuard } from '@/components/auth/admin-guard';
+import { SubscriptionPlanManagement } from '@/features/admin/subscription/subscription-plan-management';
 import { useAdminDashboard } from '@/hooks/queries/admin/use-admin-dashboard';
 import { cn } from '@/lib/utils/utils';
 
-type DateFilterMode = 'range' | 'month' | 'year';
-type CompareMode = 'none' | 'month' | 'year';
+type DateFilterMode = 'range' | 'month' | 'year' | 'quarter' | 'day';
+type CompareMode = 'none' | 'month' | 'year' | 'quarter' | 'day';
 
 export default function AdminDashboardPage() {
 	const [dateMode, setDateMode] = useState<DateFilterMode>('month');
 	const [compareMode, setCompareMode] = useState<CompareMode>('none');
 	const [selectedMonth] = useState<number>(new Date().getMonth() + 1);
 	const [selectedYear] = useState<number>(new Date().getFullYear());
+	const [selectedQuarter] = useState<number>(Math.floor(new Date().getMonth() / 3) + 1);
 	const [rangeFrom, setRangeFrom] = useState<string | undefined>();
 	const [rangeTo, setRangeTo] = useState<string | undefined>();
 
@@ -50,9 +45,11 @@ export default function AdminDashboardPage() {
 		dateMode === 'range' && rangeFrom && rangeTo ? 'range' : 'month';
 
 	const filters = {
-		mode: effectiveMode,
+		mode: effectiveMode === 'range' ? 'range' : dateMode,
 		month: selectedMonth,
 		year: selectedYear,
+		quarter: selectedQuarter,
+		day: new Date().toISOString().split('T')[0],
 		compareMode,
 		from: effectiveMode === 'range' ? rangeFrom : undefined,
 		to: effectiveMode === 'range' ? rangeTo : undefined,
@@ -102,6 +99,17 @@ export default function AdminDashboardPage() {
 						<div className="flex items-center gap-3">
 							<div className="flex items-center gap-2 rounded-full border border-[#E0DCD5] bg-white/90 px-3 py-1.5 shadow-sm">
 								<button
+									type="button"
+									className={cn(
+										'rounded-full px-3 py-1 text-xs font-medium',
+										dateMode === 'day' ? 'bg-[#333] text-white' : 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setDateMode('day')}
+								>
+									Day
+								</button>
+								<button
+									type="button"
 									className={cn(
 										'rounded-full px-3 py-1 text-xs font-medium',
 										dateMode === 'month'
@@ -113,11 +121,22 @@ export default function AdminDashboardPage() {
 									Month
 								</button>
 								<button
+									type="button"
 									className={cn(
 										'rounded-full px-3 py-1 text-xs font-medium',
-										dateMode === 'year'
+										dateMode === 'quarter'
 											? 'bg-[#333] text-white'
 											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setDateMode('quarter')}
+								>
+									Quarter
+								</button>
+								<button
+									type="button"
+									className={cn(
+										'rounded-full px-3 py-1 text-xs font-medium',
+										dateMode === 'year' ? 'bg-[#333] text-white' : 'text-[#666] hover:bg-[#F0EDE8]',
 									)}
 									onClick={() => setDateMode('year')}
 								>
@@ -137,10 +156,9 @@ export default function AdminDashboardPage() {
 							</div>
 
 							<div className="flex items-center gap-2 rounded-full border border-[#E0DCD5] bg-white/90 px-3 py-1.5 shadow-sm">
-								<span className="text-[11px] uppercase tracking-[0.16em] text-[#999]">
-									Compare
-								</span>
+								<span className="text-[11px] uppercase tracking-[0.16em] text-[#999]">Compare</span>
 								<button
+									type="button"
 									className={cn(
 										'rounded-full px-2.5 py-1 text-xs',
 										compareMode === 'none'
@@ -152,6 +170,19 @@ export default function AdminDashboardPage() {
 									Off
 								</button>
 								<button
+									type="button"
+									className={cn(
+										'rounded-full px-2.5 py-1 text-xs',
+										compareMode === 'day'
+											? 'bg-[#333] text-white'
+											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setCompareMode('day')}
+								>
+									vs yesterday
+								</button>
+								<button
+									type="button"
 									className={cn(
 										'rounded-full px-2.5 py-1 text-xs',
 										compareMode === 'month'
@@ -163,6 +194,19 @@ export default function AdminDashboardPage() {
 									vs last month
 								</button>
 								<button
+									type="button"
+									className={cn(
+										'rounded-full px-2.5 py-1 text-xs',
+										compareMode === 'quarter'
+											? 'bg-[#333] text-white'
+											: 'text-[#666] hover:bg-[#F0EDE8]',
+									)}
+									onClick={() => setCompareMode('quarter')}
+								>
+									vs last quarter
+								</button>
+								<button
+									type="button"
 									className={cn(
 										'rounded-full px-2.5 py-1 text-xs',
 										compareMode === 'year'
@@ -206,9 +250,7 @@ export default function AdminDashboardPage() {
 								<p className="font-sans text-xs uppercase tracking-[0.18em] text-[#999]">
 									Analytics
 								</p>
-								<h2 className="mt-1 font-sans text-lg font-semibold text-[#333]">
-									Admin insights
-								</h2>
+								<h2 className="mt-1 font-sans text-lg font-semibold text-[#333]">Admin insights</h2>
 							</div>
 							<TabsList className="flex h-auto flex-col items-stretch gap-1 bg-transparent p-0">
 								<TabsTrigger
@@ -235,6 +277,12 @@ export default function AdminDashboardPage() {
 								>
 									Revenue &amp; Transactions
 								</TabsTrigger>
+								<TabsTrigger
+									value="subscriptions"
+									className="justify-start rounded-xl px-3 py-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+								>
+									Subscription Plans
+								</TabsTrigger>
 							</TabsList>
 						</div>
 
@@ -249,7 +297,7 @@ export default function AdminDashboardPage() {
 									</p>
 								</div>
 
-								<div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+								<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 									<SummaryCard
 										label="Total Users"
 										value={overview?.totalUsers ?? 0}
@@ -353,7 +401,7 @@ export default function AdminDashboardPage() {
 												config={{
 													users: { label: 'Users', color: '#F5B041' },
 												}}
-												className="aspect-[16/7]"
+												className="aspect-[16/9]"
 											>
 												<LineChart data={userGrowth ?? []}>
 													<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -371,7 +419,6 @@ export default function AdminDashboardPage() {
 											</ChartContainer>
 										</CardContent>
 									</Card>
-
 								</div>
 
 								<Card>
@@ -386,7 +433,7 @@ export default function AdminDashboardPage() {
 											config={{
 												users: { label: 'New users', color: '#C5B4E3' },
 											}}
-											className="aspect-[16/6]"
+											className="aspect-[16/9]"
 										>
 											<BarChart data={newUsersPerMonth ?? []}>
 												<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -422,7 +469,7 @@ export default function AdminDashboardPage() {
 												config={{
 													classrooms: { label: 'Classrooms', color: '#F5B041' },
 												}}
-												className="aspect-[16/6]"
+												className="aspect-[16/9]"
 											>
 												<BarChart data={classroomMonthly ?? []}>
 													<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -466,11 +513,7 @@ export default function AdminDashboardPage() {
 														width={120}
 													/>
 													<ChartTooltip content={<ChartTooltipContent />} />
-													<Bar
-														dataKey="score"
-														fill="var(--color-activity)"
-														radius={[0, 8, 8, 0]}
-													/>
+													<Bar dataKey="score" fill="var(--color-activity)" radius={[0, 8, 8, 0]} />
 												</BarChart>
 											</ChartContainer>
 										</CardContent>
@@ -529,7 +572,7 @@ export default function AdminDashboardPage() {
 												config={{
 													revenue: { label: 'Revenue', color: '#4CAF50' },
 												}}
-												className="aspect-[16/6]"
+												className="aspect-[4/3]"
 											>
 												<LineChart data={revenue ?? []}>
 													<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -559,7 +602,7 @@ export default function AdminDashboardPage() {
 													config={{
 														transactions: { label: 'Transactions', color: '#C5B4E3' },
 													}}
-													className="aspect-[4/3]"
+													className="aspect-[16/9]"
 												>
 													<BarChart data={transactionsMonthly ?? []}>
 														<CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -590,7 +633,7 @@ export default function AdminDashboardPage() {
 														PENDING: { label: 'Pending', color: '#F5B041' },
 														FAILED: { label: 'Failed', color: '#E57373' },
 													}}
-													className="aspect-[4/3]"
+													className="aspect-[16/9]"
 												>
 													<PieChart>
 														<ChartTooltip content={<ChartTooltipContent />} />
@@ -643,19 +686,15 @@ export default function AdminDashboardPage() {
 																		<div className="text-[13px] font-medium text-[#333]">
 																			{tx.userName}
 																		</div>
-																		<div className="text-[11px] text-[#999]">
-																			{tx.email}
-																		</div>
+																		<div className="text-[11px] text-[#999]">{tx.email}</div>
 																	</div>
 																</div>
 															</td>
-															<td className="px-4 py-3 text-[13px] text-[#333]">
-																{tx.planName}
-															</td>
+															<td className="px-4 py-3 text-[13px] text-[#333]">{tx.planName}</td>
 															<td className="px-4 py-3 text-right text-[13px] font-mono">
 																{new Intl.NumberFormat('en-US', {
 																	style: 'currency',
-																	currency: 'USD',
+																	currency: 'VND',
 																}).format(tx.amount)}
 															</td>
 															<td className="px-4 py-3 text-[13px] text-[#555]">
@@ -666,11 +705,11 @@ export default function AdminDashboardPage() {
 																	className={cn(
 																		'inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold',
 																		tx.status === 'SUCCESS' &&
-																		'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]',
+																			'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]',
 																		tx.status === 'PENDING' &&
-																		'bg-[#FFF8E1] text-[#FF8F00] border border-[#FFECB3]',
+																			'bg-[#FFF8E1] text-[#FF8F00] border border-[#FFECB3]',
 																		tx.status === 'FAILED' &&
-																		'bg-[#FEECEC] text-[#C62828] border border-[#FFCDD2]',
+																			'bg-[#FEECEC] text-[#C62828] border border-[#FFCDD2]',
 																	)}
 																>
 																	{tx.status}
@@ -695,6 +734,10 @@ export default function AdminDashboardPage() {
 								</Card>
 							</section>
 						</TabsContent>
+
+						<TabsContent value="subscriptions" className="space-y-8">
+							<SubscriptionPlanManagement />
+						</TabsContent>
 					</Tabs>
 				</main>
 			</div>
@@ -715,26 +758,31 @@ function SummaryCard({ label, value, delta, icon: Icon, isCurrency }: SummaryCar
 
 	const formatted = isCurrency
 		? new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			maximumFractionDigits: 0,
-		}).format(value)
+				style: 'currency',
+				currency: 'VND',
+				maximumFractionDigits: 0,
+			}).format(value)
 		: value.toLocaleString();
 
 	return (
-		<Card className="relative border-[#E0DCD5] bg-white/90 shadow-sm">
+		<Card className="relative overflow-hidden border-[#E0DCD5] bg-white/90 shadow-sm">
 			<CardContent className="flex flex-col gap-3 px-4 py-3.5">
 				<div className="flex items-center justify-between">
-					<span className="text-[11px] uppercase tracking-[0.18em] text-[#999]">{label}</span>
-					<span className="rounded-full bg-[#F0EDE8] p-1.5">
+					<span
+						className="truncate text-[11px] uppercase tracking-[0.18em] text-[#999]"
+						title={label}
+					>
+						{label}
+					</span>
+					<span className="shrink-0 rounded-full bg-[#F0EDE8] p-1.5">
 						<Icon className="h-3.5 w-3.5 text-[#333]" />
 					</span>
 				</div>
-				<div className="flex items-baseline justify-between gap-2">
-					<span className="font-sans text-xl font-semibold text-[#333]">{formatted}</span>
+				<div className="flex items-baseline justify-between gap-2 overflow-hidden">
+					<span className="truncate font-sans text-xl font-semibold text-[#333]">{formatted}</span>
 					<span
 						className={cn(
-							'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
+							'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
 							positive ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-[#FEECEC] text-[#C62828]',
 						)}
 					>
@@ -745,4 +793,3 @@ function SummaryCard({ label, value, delta, icon: Icon, isCurrency }: SummaryCar
 		</Card>
 	);
 }
-

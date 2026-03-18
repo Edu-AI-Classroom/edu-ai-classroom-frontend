@@ -2,7 +2,6 @@ import buildQueryString from '@/lib/utils/buildQueryString';
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
 import { httpDelete, httpGet, httpPost, httpPut } from '@/services/http.helpers';
 import type { ApiMetaResponse, PaginationParams } from '@/types/api';
-import type { ClassStudentQuizStat } from '@/types/class-stats';
 import type {
 	AddStudentPayload,
 	AddTeacherPayload,
@@ -20,6 +19,7 @@ import type {
 	UpdateStudentGroupPayload,
 	UsersInClassResponse,
 } from '@/types/class';
+import type { ClassStudentQuizStat } from '@/types/class-stats';
 
 export const ClassService = {
 	createClass: (payload: CreateClassroomPayload) =>

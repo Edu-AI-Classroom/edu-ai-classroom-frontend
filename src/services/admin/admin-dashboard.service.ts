@@ -1,11 +1,13 @@
-import { http } from '@/services/http';
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
+import { http } from '@/services/http';
 
 export type AdminDateFilters = {
-	mode: 'range' | 'month' | 'year';
+	mode: 'range' | 'month' | 'year' | 'quarter' | 'day';
 	month?: number;
 	year?: number;
-	compareMode?: 'none' | 'month' | 'year';
+	quarter?: number;
+	day?: string;
+	compareMode?: 'none' | 'month' | 'year' | 'quarter' | 'day';
 	from?: string;
 	to?: string;
 };
@@ -99,4 +101,3 @@ function buildQuery(filters: Record<string, any>): string {
 	const qs = params.toString();
 	return qs ? `?${qs}` : '';
 }
-

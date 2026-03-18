@@ -513,7 +513,6 @@ function PostCard({
 
 					{post.mediaUrl && !isEditingPost && (
 						<div className="mt-4 rounded-xl overflow-hidden border border-[#E0DCD5]">
-							{/* biome-ignore lint/performance/noImgElement: allow img for dynamic external media from S3/R2 */}
 							<img
 								src={post.mediaUrl}
 								alt="Post media"

@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries, useQuery } from '@tanstack/react-query';
 import {
 	AlertTriangle,
 	BarChart3,
@@ -8,8 +9,6 @@ import {
 	Clock,
 	FileText,
 	MessageSquare,
-	Plus,
-	Trash2,
 	TrendingUp,
 	Users,
 } from 'lucide-react';
@@ -25,17 +24,21 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents, useClassTeachers } from '@/hooks/queries/class/use-class-query';
+import {
+	useClassStudentStats,
+	useClassStudents,
+	useClassTeachers,
+} from '@/hooks/queries/class/use-class-query';
 import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
+import { queryKeys } from '@/services/api/query-keys';
+import { NewsService } from '@/services/classroom/news.service';
 import { QuizService } from '@/services/quiz/quiz.service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Teacher } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddTeacherModal } from './AddTeacherModal';
-import { useQueries } from '@tanstack/react-query';
 
 interface ClassOverviewProps {
 	classData: ClassroomUiData;
@@ -44,11 +47,18 @@ interface ClassOverviewProps {
 export default function ClassOverview({ classData }: ClassOverviewProps) {
 	const { data: studentResponse } = useClassStudents(classData.id);
 	const { data: teacherResponse } = useClassTeachers(classData.id);
+	const { data: studentStats } = useClassStudentStats(classData.id);
 	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
 	const { data: quizList } = useQuizList({ classId });
 	const { addTeacherToClassMutation, removeTeacherFromClassMutation } = useClassMutations();
 	const { user } = useAuthStore();
 	const { toast } = useToast();
+
+	const { data: newsResponse } = useQuery({
+		queryKey: [...queryKeys.news.list(classId), 'overview'] as const,
+		queryFn: () => NewsService.getNewsByClass(classId, { page: 1, limit: 10 }),
+		enabled: !!classId,
+	});
 
 	const [isAddTeacherModalOpen, setIsAddTeacherModalOpen] = useState(false);
 	const [removeTeacherDialogOpen, setRemoveTeacherDialogOpen] = useState(false);
@@ -58,7 +68,7 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	} | null>(null);
 
 	const students = studentResponse?.data ?? [];
-	const teachers = teacherResponse ?? [];
+	const _teachers = teacherResponse ?? [];
 	const quizzes = Array.isArray(quizList) ? quizList : [];
 
 	const submissionQueries = useQueries({
@@ -73,7 +83,10 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 		(sum, q) => sum + (q.data?.totalStudentsAttempted ?? 0),
 		0,
 	);
-	const totalStudentsCount = classData.studentCount ?? (studentResponse as any)?.data?.total ?? students.length;
+	const totalStudentsCount =
+		classData.studentCount ??
+		(studentResponse as any)?.data?.total ??
+		(Array.isArray(students) ? students.length : 0);
 	const possibleSubmissions = totalStudentsCount > 0 ? totalStudentsCount * quizzes.length : 0;
 	const submissionRatePct =
 		possibleSubmissions > 0 ? Math.round((totalAttempts / possibleSubmissions) * 100) : 0;
@@ -95,14 +108,14 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	})();
 
 	// Check if current user is the class owner
-	const isOwner = classData.isOwner || user?.userId === classData.createdBy;
+	const _isOwner = classData.isOwner || user?.userId === classData.createdBy;
 
 	// Type guard to check if user is a Teacher
 	const _isTeacher = (user: any): user is Teacher => {
 		return user && user.role === 'TEACHER';
 	};
 
-	const handleRemoveTeacher = (teacherId: number, teacherName: string) => {
+	const _handleRemoveTeacher = (teacherId: number, teacherName: string) => {
 		setTeacherToRemove({ teacherId, teacherName });
 		setRemoveTeacherDialogOpen(true);
 	};
@@ -132,19 +145,27 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	const stats = {
 		totalStudents: totalStudentsCount,
 		submissionRate: submissionRatePct,
-		needsAttention: 0,
+		needsAttention: (studentStats ?? []).filter((s) => (s.avgGradePct ?? 0) < 4).length,
 		avgGrade: avgScorePct,
-		avgAttendance: 0,
 	};
 
-	const attentionItems: Array<{
-		id: string;
-		type: 'meeting' | 'grading' | 'deadline';
-		title: string;
-		description: string;
-		dueDate?: string;
-		priority: 'high' | 'medium' | 'low';
-	}> = [];
+	const statsByStudentIdForName = new Map(
+		(Array.isArray(studentResponse?.data) ? studentResponse.data : []).map((s: any) => [
+			s.studentId ?? s.userId,
+			s.studentName ?? s.userName,
+		]),
+	);
+
+	const attentionItems = (Array.isArray(studentStats) ? studentStats : [])
+		.filter((s) => (s.avgGradePct ?? 0) < 4)
+		.map((s) => ({
+			id: `attention-${s.studentId}`,
+			type: 'grading' as 'meeting' | 'grading' | 'deadline',
+			title: statsByStudentIdForName.get(s.studentId) ?? 'Unknown Student',
+			description: `Low average grade: ${Math.round((s.avgGradePct ?? 0) * 10)}%`,
+			priority: 'high' as const,
+			dueDate: undefined,
+		}));
 
 	const recentActivity: Array<{
 		id: string;
@@ -152,6 +173,46 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 		description: string;
 		timestamp: string;
 	}> = [];
+
+	const newsData = (newsResponse as any)?.data || (Array.isArray(newsResponse) ? newsResponse : []);
+	if (Array.isArray(newsData)) {
+		newsData.forEach((post: any) => {
+			if (!post) return;
+			// Add post to activity
+			recentActivity.push({
+				id: `post-${post.id}`,
+				studentName: post.author || 'Member',
+				description: 'posted a new announcement',
+				timestamp: new Date(post.createdAt || Date.now()).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+				}),
+			});
+
+			// Add comments to activity
+			if (Array.isArray(post.comments)) {
+				post.comments.forEach((comment: any) => {
+					if (!comment) return;
+					recentActivity.push({
+						id: `comment-${comment.id}`,
+						studentName: comment.author || 'Member',
+						description: 'commented on an announcement',
+						timestamp: new Date(comment.createdAt || Date.now()).toLocaleDateString('en-US', {
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit',
+						}),
+					});
+				});
+			}
+		});
+	}
+
+	// Sort by date (descending)
+	recentActivity.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
 
 	return (
 		<div className="space-y-6">
@@ -244,10 +305,9 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 					<TrendingUp className="w-5 h-5 text-[#A8D5BA]" />
 					Class Performance
 				</h2>
-				<div className="grid sm:grid-cols-3 gap-6">
-					<MarkerStat label="Attendance" value={stats.avgAttendance} color="#A8D5BA" />
+				<div className="grid sm:grid-cols-2 gap-6 text-center">
 					<MarkerStat label="Average Grade" value={stats.avgGrade} color="#F5B041" />
-					<MarkerStat label="Engagement" value={85} color="#C5B4E3" />
+					<MarkerStat label="Submission Rate" value={stats.submissionRate} color="#C5B4E3" />
 				</div>
 			</div>
 

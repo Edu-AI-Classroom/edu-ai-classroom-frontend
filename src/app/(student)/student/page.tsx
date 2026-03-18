@@ -1,11 +1,9 @@
 'use client';
 
-import { Bell, BookOpen, ChevronRight, ClipboardList, Clock, FolderOpen, Star } from 'lucide-react';
+import { BookOpen, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { TeachifyIcon } from '@/components/common/Teachify';
 import WorkspaceHeader from '@/components/common/workspace-header';
-import { Button } from '@/components/ui/button';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import { useClassList } from '@/hooks/queries/class/use-class-query';
 
@@ -32,7 +30,7 @@ export default function StudentHome() {
 		},
 	];
 
-	const quickInsights: any[] = [];
+	const _quickInsights: any[] = [];
 
 	return (
 		<div className="bg-[#FAF9F6] grid-paper">

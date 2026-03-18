@@ -1,10 +1,9 @@
 'use client';
 
-import { ArrowLeft, Bell, BookOpen, Clock, FileWarning, Search, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import WorkspaceHeader from '@/components/common/workspace-header';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';

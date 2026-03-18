@@ -8,13 +8,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 type HttpOptions = Omit<RequestInit, 'body'> & {
 	body?: unknown;
 	retry?: boolean; // tránh infinite retry
+	timeout?: number;
 };
 
 export async function http<T>(url: string, options: HttpOptions = {}): Promise<T> {
 	const token = useAuthStore.getState().token;
 
 	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+	const timeoutId = setTimeout(() => controller.abort(), options.timeout ?? DEFAULT_TIMEOUT);
 
 	try {
 		const isFormData = options.body instanceof FormData;

@@ -9,12 +9,10 @@ import {
 	FileText,
 	Home,
 	LogOut,
-	Megaphone,
 	Menu,
 	MessageCircle,
 	Newspaper,
-	PlayCircle,
-	Plus,
+	Presentation,
 	Settings,
 	Users,
 	X,
@@ -35,6 +33,7 @@ import type { ClassroomUiData } from './classroom.mapper';
 import ClassAssignments from './components/class-assignments';
 import ClassFeed from './components/class-feed';
 import ClassGrades from './components/class-grades';
+import ClassLessons from './components/class-lessons';
 import ClassOverview from './components/class-overview';
 import { ClassroomSettings } from './components/class-setting';
 import ClassStudents from './components/class-students';
@@ -46,7 +45,8 @@ type TabType =
 	| 'assignments'
 	| 'grades'
 	| 'conversation'
-	| 'settings';
+	| 'settings'
+	| 'lessons';
 
 interface ClassroomWorkspaceProps {
 	classData: ClassroomUiData;
@@ -57,6 +57,7 @@ interface ClassroomWorkspaceProps {
 
 const tabs = [
 	{ id: 'overview' as TabType, label: 'Overview', icon: Home },
+	{ id: 'lessons' as TabType, label: 'Lessons', icon: Presentation },
 	{ id: 'feed' as TabType, label: 'Feed', icon: Newspaper },
 	{ id: 'students' as TabType, label: 'Students', icon: Users },
 	{ id: 'assignments' as TabType, label: 'Assignments', icon: FileText },
@@ -88,6 +89,8 @@ export default function ClassroomWorkspace({
 		switch (activeTab) {
 			case 'overview':
 				return <ClassOverview classData={classData} />;
+			case 'lessons':
+				return <ClassLessons classData={classData} />;
 			case 'feed':
 				return <ClassFeed classData={classData} />;
 			case 'students':

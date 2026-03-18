@@ -2,7 +2,6 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-	ChevronDown,
 	Image as ImageIcon,
 	MessageCircle,
 	MoreHorizontal,
@@ -91,18 +90,21 @@ export default function ClassFeed({ classData }: ClassFeedProps) {
 				limit: 10,
 			}),
 		initialPageParam: 1,
-		getNextPageParam: (lastPage: unknown) => {
-			const pageData = lastPage as PageResponse;
-			const page = Number(pageData?.page) || 1;
-			const limit = Number(pageData?.limit) || 10;
-			const total = Number(pageData?.total) || 0;
+		getNextPageParam: (lastPage: any) => {
+			if (!lastPage) return undefined;
+			const page = Number(lastPage.page) || 1;
+			const limit = Number(lastPage.limit) || 10;
+			const total = Number(lastPage.total) || 0;
+			if (total === 0) return undefined;
 			return page * limit < total ? page + 1 : undefined;
 		},
 		enabled: !!classId,
 	});
 
 	const announcements: PostData[] =
-		(newsResponse?.pages as PageResponse[])?.flatMap((page) => page?.data || []) || [];
+		(newsResponse?.pages as any[])?.flatMap((page) =>
+			Array.isArray(page?.data) ? page.data : [],
+		) || [];
 
 	const createNewsMutation = useMutation({
 		mutationFn: NewsService.createNews,
@@ -400,10 +402,10 @@ function PostCard({
 				<div className="p-5">
 					<div className="flex items-center gap-3 mb-3">
 						<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-							{post.author
+							{(post.author || 'Member')
 								.split(' ')
 								.slice(0, 2)
-								.map((n: string) => n[0])
+								.map((n: string) => (n ? n[0] : ''))
 								.join('')}
 						</div>
 						<div className="flex-1">
@@ -496,7 +498,6 @@ function PostCard({
 
 					{post.mediaUrl && !isEditingPost && (
 						<div className="mt-4 rounded-xl overflow-hidden border border-[#E0DCD5]">
-							{/* biome-ignore lint/performance/noImgElement: allow img for dynamic external media from S3/R2 */}
 							<img
 								src={post.mediaUrl}
 								alt="Post media"

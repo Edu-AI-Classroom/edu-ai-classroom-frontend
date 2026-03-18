@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle, ClipboardList, Clock, Loader2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
@@ -14,15 +14,27 @@ import type { StudentQuizQuestion } from '@/types/student-quiz';
 
 type UiStatus = 'pending' | 'submitted' | 'graded' | 'late';
 
-const statusConfig: Record<UiStatus, { label: string; icon: React.ElementType; className: string }> = {
+const statusConfig: Record<
+	UiStatus,
+	{ label: string; icon: React.ElementType; className: string }
+> = {
 	pending: { label: 'Not Submitted', icon: AlertTriangle, className: 'bg-warning/15 text-warning' },
 	submitted: { label: 'Submitted', icon: Clock, className: 'bg-primary/15 text-primary' },
 	graded: { label: 'Graded', icon: CheckCircle, className: 'bg-success/15 text-success' },
-	late: { label: 'Late Submission', icon: AlertTriangle, className: 'bg-destructive/15 text-destructive' },
+	late: {
+		label: 'Late Submission',
+		icon: AlertTriangle,
+		className: 'bg-destructive/15 text-destructive',
+	},
 };
 
 function mapAttemptStatus(status?: string | null, score?: number | null): UiStatus {
-	if (String(status ?? '').toUpperCase().includes('LATE')) return 'late';
+	if (
+		String(status ?? '')
+			.toUpperCase()
+			.includes('LATE')
+	)
+		return 'late';
 	if (score != null) return 'graded';
 	if (!status) return 'pending';
 	if (String(status).toUpperCase().includes('SUBMITTED')) return 'submitted';
@@ -72,7 +84,7 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 		setAttemptStartedAt(started.startedAt);
 	};
 
-	const handleSubmit = async () => {
+	const handleSubmit = useCallback(async () => {
 		if (!activeQuizId || attemptId == null) return;
 		const payload = {
 			answers: Object.entries(answers).map(([blockId, answer]) => ({ blockId, answer })),
@@ -82,7 +94,7 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 		setAttemptId(null);
 		setAttemptStartedAt(null);
 		setRemainingSeconds(null);
-	};
+	}, [activeQuizId, answers, attemptId, submitAttempt]);
 
 	useEffect(() => {
 		if (!attemptId || !attemptStartedAt) return;
@@ -112,8 +124,7 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 		if (attemptId != null && !submitAttempt.isPending) {
 			handleSubmit();
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [remainingSeconds]);
+	}, [attemptId, handleSubmit, remainingSeconds, submitAttempt.isPending]);
 
 	if (isLoading) {
 		return (
@@ -179,7 +190,8 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 
 				{attemptId == null ? (
 					<div className="bg-card rounded-xl border border-border p-4 text-sm text-muted-foreground">
-						Questions will be shown after you press <span className="font-semibold">Start quiz</span>.
+						Questions will be shown after you press{' '}
+						<span className="font-semibold">Start quiz</span>.
 					</div>
 				) : isQuestionsLoading ? (
 					<div className="flex items-center py-10 text-muted-foreground">
@@ -203,10 +215,11 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 												<button
 													type="button"
 													key={String(i)}
-													className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${checked
-														? 'border-primary bg-primary/10 text-foreground'
-														: 'border-border hover:bg-secondary'
-														}`}
+													className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+														checked
+															? 'border-primary bg-primary/10 text-foreground'
+															: 'border-border hover:bg-secondary'
+													}`}
 													onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: { index: i } }))}
 												>
 													<span className="text-sm">{opt}</span>
@@ -251,7 +264,10 @@ const CourseAssignments = ({ classData }: CourseAssignmentsProps) => {
 
 			<div className="space-y-3">
 				{list.map((q) => {
-					const uiStatus = mapAttemptStatus(q.lastAttempt?.status, q.lastAttempt?.totalScore ?? null);
+					const uiStatus = mapAttemptStatus(
+						q.lastAttempt?.status,
+						q.lastAttempt?.totalScore ?? null,
+					);
 					const config = statusConfig[uiStatus];
 					const StatusIcon = config.icon;
 					return (
