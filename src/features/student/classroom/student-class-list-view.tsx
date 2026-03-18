@@ -1,12 +1,24 @@
 'use client';
 
-import { ArrowLeft, BookOpen, Clock, Search, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Loader2, Plus, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import WorkspaceHeader from '@/components/common/workspace-header';
+import { Button } from '@/components/ui/button';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
+import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
 
 interface StudentClassListViewProps {
 	classes: ClassroomUiData[];
@@ -19,7 +31,25 @@ export default function StudentClassListView({
 }: StudentClassListViewProps) {
 	const authUser = useAuthUser();
 	const [searchQuery, setSearchQuery] = useState('');
+	const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+	const [classCode, setClassCode] = useState('');
+	const { joinClassMutation, classError, clearClassError } = useClassMutations();
+
 	const studentName = authUser?.userName ?? 'Student';
+
+	const handleJoinClass = () => {
+		if (!classCode.trim()) return;
+		clearClassError();
+		joinClassMutation.mutate(
+			{ classCode: classCode.trim() },
+			{
+				onSuccess: () => {
+					setIsJoinDialogOpen(false);
+					setClassCode('');
+				},
+			},
+		);
+	};
 
 	const filteredClasses = classes.filter(
 		(c) =>
@@ -49,6 +79,64 @@ export default function StudentClassListView({
 							<p className="font-serif text-lg text-[#666]">
 								Select a class to access materials and assignments
 							</p>
+						</div>
+						<div className="flex items-center gap-3">
+							<Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
+								<DialogTrigger asChild>
+									<Button className="bg-[#F5B041] hover:bg-[#F39C12] text-white rounded-xl gap-2 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]">
+										<Plus className="w-5 h-5" />
+										Join Class
+									</Button>
+								</DialogTrigger>
+								<DialogContent className="sm:max-w-md rounded-2xl border-[#E0DCD5]">
+									<DialogHeader>
+										<DialogTitle className="text-2xl font-bold">Join Classroom</DialogTitle>
+										<DialogDescription className="text-muted-foreground">
+											Enter the class code shared by your teacher to join.
+										</DialogDescription>
+									</DialogHeader>
+									<div className="space-y-4 py-4">
+										<div className="space-y-2">
+											<Label htmlFor="classCode" className="font-semibold text-[#333]">
+												Class Code
+											</Label>
+											<Input
+												id="classCode"
+												placeholder="e.g. 123"
+												value={classCode}
+												onChange={(e) => setClassCode(e.target.value)}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') handleJoinClass();
+												}}
+												className="rounded-xl border-[#E0DCD5] focus:ring-[#F5B041] focus:border-[#F5B041]"
+											/>
+											{classError && (
+												<p className="text-sm text-red-500 font-medium">{classError}</p>
+											)}
+										</div>
+									</div>
+									<DialogFooter>
+										<Button
+											variant="ghost"
+											onClick={() => {
+												setIsJoinDialogOpen(false);
+												clearClassError();
+											}}
+											className="rounded-xl"
+										>
+											Cancel
+										</Button>
+										<Button
+											onClick={handleJoinClass}
+											disabled={joinClassMutation.isPending || !classCode.trim()}
+											className="bg-[#F5B041] hover:bg-[#F39C12] text-white rounded-xl gap-2"
+										>
+											{joinClassMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+											Join Now
+										</Button>
+									</DialogFooter>
+								</DialogContent>
+							</Dialog>
 						</div>
 					</div>
 				</div>

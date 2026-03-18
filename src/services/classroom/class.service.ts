@@ -12,6 +12,7 @@ import type {
 	CreateStudentGroupPayload,
 	Group,
 	GroupListResponse,
+	JoinClassPayload,
 	Student,
 	Teacher,
 	TeacherApiResponse,
@@ -34,6 +35,9 @@ export const ClassService = {
 		httpPut<Classroom>(API_ENDPOINTS.CLASS.UPDATE_DETAIL(classId), payload),
 
 	deleteClass: (classId: number) => httpDelete<void>(API_ENDPOINTS.CLASS.DELETE_CLASS(classId)),
+
+	joinClassByCode: (payload: JoinClassPayload) =>
+		httpPost<Classroom>(API_ENDPOINTS.CLASS.JOIN_CLASS, payload),
 
 	addTeacherToClass: (classId: number, payload: AddTeacherPayload) =>
 		httpPost<Teacher>(API_ENDPOINTS.CLASS.ADD_TEACHER_TO_CLASS(classId), payload),
