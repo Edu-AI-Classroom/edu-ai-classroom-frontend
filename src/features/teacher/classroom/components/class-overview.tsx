@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries, useQuery } from '@tanstack/react-query';
 import {
 	AlertTriangle,
 	BarChart3,
@@ -8,8 +9,6 @@ import {
 	Clock,
 	FileText,
 	MessageSquare,
-	Plus,
-	Trash2,
 	TrendingUp,
 	Users,
 } from 'lucide-react';
@@ -25,10 +24,17 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents, useClassTeachers } from '@/hooks/queries/class/use-class-query';
+import {
+	useClassStudentStats,
+	useClassStudents,
+	useClassTeachers,
+} from '@/hooks/queries/class/use-class-query';
+import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
+import { queryKeys } from '@/services/api/query-keys';
+import { NewsService } from '@/services/classroom/news.service';
+import { QuizService } from '@/services/quiz/quiz.service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Teacher } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
@@ -41,9 +47,18 @@ interface ClassOverviewProps {
 export default function ClassOverview({ classData }: ClassOverviewProps) {
 	const { data: studentResponse } = useClassStudents(classData.id);
 	const { data: teacherResponse } = useClassTeachers(classData.id);
+	const { data: studentStats } = useClassStudentStats(classData.id);
+	const classId = typeof classData.id === 'string' ? Number(classData.id) : classData.id;
+	const { data: quizList } = useQuizList({ classId });
 	const { addTeacherToClassMutation, removeTeacherFromClassMutation } = useClassMutations();
 	const { user } = useAuthStore();
 	const { toast } = useToast();
+
+	const { data: newsResponse } = useQuery({
+		queryKey: [...queryKeys.news.list(classId), 'overview'] as const,
+		queryFn: () => NewsService.getNewsByClass(classId, { page: 1, limit: 10 }),
+		enabled: !!classId,
+	});
 
 	const [isAddTeacherModalOpen, setIsAddTeacherModalOpen] = useState(false);
 	const [removeTeacherDialogOpen, setRemoveTeacherDialogOpen] = useState(false);
@@ -53,17 +68,54 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	} | null>(null);
 
 	const students = studentResponse?.data ?? [];
-	const teachers = teacherResponse ?? [];
+	const _teachers = teacherResponse ?? [];
+	const quizzes = Array.isArray(quizList) ? quizList : [];
+
+	const submissionQueries = useQueries({
+		queries: quizzes.map((q) => ({
+			queryKey: ['teacherQuiz', 'submissions', q.id] as const,
+			queryFn: () => QuizService.getSubmissionsOverview(q.id),
+			enabled: !!q.id,
+		})),
+	});
+
+	const totalAttempts = submissionQueries.reduce(
+		(sum, q) => sum + (q.data?.totalStudentsAttempted ?? 0),
+		0,
+	);
+	const totalStudentsCount =
+		classData.studentCount ??
+		(studentResponse as any)?.data?.total ??
+		(Array.isArray(students) ? students.length : 0);
+	const possibleSubmissions = totalStudentsCount > 0 ? totalStudentsCount * quizzes.length : 0;
+	const submissionRatePct =
+		possibleSubmissions > 0 ? Math.round((totalAttempts / possibleSubmissions) * 100) : 0;
+
+	const avgScorePct = (() => {
+		let weightedPctSum = 0;
+		let weightedCount = 0;
+
+		submissionQueries.forEach((q, idx) => {
+			const attempted = q.data?.totalStudentsAttempted ?? 0;
+			const avgScore = q.data?.averageScore ?? 0;
+			const totalPoints = (quizzes[idx] as any)?.totalPoints ?? 100;
+			if (attempted <= 0 || totalPoints <= 0) return;
+			weightedPctSum += (avgScore / totalPoints) * 100 * attempted;
+			weightedCount += attempted;
+		});
+
+		return weightedCount > 0 ? Math.round(weightedPctSum / weightedCount) : 0;
+	})();
 
 	// Check if current user is the class owner
-	const isOwner = classData.isOwner || user?.userId === classData.createdBy;
+	const _isOwner = classData.isOwner || user?.userId === classData.createdBy;
 
 	// Type guard to check if user is a Teacher
 	const _isTeacher = (user: any): user is Teacher => {
 		return user && user.role === 'TEACHER';
 	};
 
-	const handleRemoveTeacher = (teacherId: number, teacherName: string) => {
+	const _handleRemoveTeacher = (teacherId: number, teacherName: string) => {
 		setTeacherToRemove({ teacherId, teacherName });
 		setRemoveTeacherDialogOpen(true);
 	};
@@ -91,21 +143,29 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 	};
 
 	const stats = {
-		totalStudents: classData.studentCount ?? students.length,
-		submissionRate: 0,
-		needsAttention: 0,
-		avgGrade: 0,
-		avgAttendance: 0,
+		totalStudents: totalStudentsCount,
+		submissionRate: submissionRatePct,
+		needsAttention: (studentStats ?? []).filter((s) => (s.avgGradePct ?? 0) < 4).length,
+		avgGrade: avgScorePct,
 	};
 
-	const attentionItems: Array<{
-		id: string;
-		type: 'meeting' | 'grading' | 'deadline';
-		title: string;
-		description: string;
-		dueDate?: string;
-		priority: 'high' | 'medium' | 'low';
-	}> = [];
+	const statsByStudentIdForName = new Map(
+		(Array.isArray(studentResponse?.data) ? studentResponse.data : []).map((s: any) => [
+			s.studentId ?? s.userId,
+			s.studentName ?? s.userName,
+		]),
+	);
+
+	const attentionItems = (Array.isArray(studentStats) ? studentStats : [])
+		.filter((s) => (s.avgGradePct ?? 0) < 4)
+		.map((s) => ({
+			id: `attention-${s.studentId}`,
+			type: 'grading' as 'meeting' | 'grading' | 'deadline',
+			title: statsByStudentIdForName.get(s.studentId) ?? 'Unknown Student',
+			description: `Low average grade: ${Math.round((s.avgGradePct ?? 0) * 10)}%`,
+			priority: 'high' as const,
+			dueDate: undefined,
+		}));
 
 	const recentActivity: Array<{
 		id: string;
@@ -113,6 +173,46 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 		description: string;
 		timestamp: string;
 	}> = [];
+
+	const newsData = (newsResponse as any)?.data || (Array.isArray(newsResponse) ? newsResponse : []);
+	if (Array.isArray(newsData)) {
+		newsData.forEach((post: any) => {
+			if (!post) return;
+			// Add post to activity
+			recentActivity.push({
+				id: `post-${post.id}`,
+				studentName: post.author || 'Member',
+				description: 'posted a new announcement',
+				timestamp: new Date(post.createdAt || Date.now()).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+				}),
+			});
+
+			// Add comments to activity
+			if (Array.isArray(post.comments)) {
+				post.comments.forEach((comment: any) => {
+					if (!comment) return;
+					recentActivity.push({
+						id: `comment-${comment.id}`,
+						studentName: comment.author || 'Member',
+						description: 'commented on an announcement',
+						timestamp: new Date(comment.createdAt || Date.now()).toLocaleDateString('en-US', {
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit',
+						}),
+					});
+				});
+			}
+		});
+	}
+
+	// Sort by date (descending)
+	recentActivity.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
 
 	return (
 		<div className="space-y-6">
@@ -174,13 +274,6 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 					rotation={-0.5}
 				/>
 				<StatCard
-					icon={Users}
-					label="Teachers"
-					value={teachers.length}
-					color="#C5B4E3"
-					rotation={0.3}
-				/>
-				<StatCard
 					icon={CheckCircle2}
 					label="Submission Rate"
 					value={`${stats.submissionRate}%`}
@@ -203,89 +296,6 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 				/>
 			</div>
 
-			{/* Teachers Section */}
-			<div
-				className="bg-white rounded-2xl p-6 shadow-sm border border-[#E0DCD5]"
-				style={{ transform: 'rotate(-0.1deg)' }}
-			>
-				<div className="flex items-center justify-between mb-4">
-					<h2 className="font-sans font-bold text-lg text-[#333] flex items-center gap-2">
-						<Users className="w-5 h-5 text-[#C5B4E3]" />
-						Teachers ({teachers.length})
-					</h2>
-					{isOwner && (
-						<Button
-							onClick={() => setIsAddTeacherModalOpen(true)}
-							size="sm"
-							className="rounded-xl bg-[#C5B4E3] text-white border-0 shadow-sm hover:shadow-md transition-all"
-							disabled={addTeacherToClassMutation.isPending}
-						>
-							<Plus className="w-4 h-4 mr-2" />
-							Add Teacher
-						</Button>
-					)}
-				</div>
-
-				{teachers.length > 0 ? (
-					<div className="space-y-3">
-						{teachers.map((teacher) => {
-							const teacherIsOwner = teacher.isOwner;
-							const teacherUserId = teacher.teacherId;
-							const teacherUserName = teacher.teacherName;
-							const teacherEmail = teacher.email;
-
-							return (
-								<div
-									key={teacherUserId}
-									className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F6] border border-[#E0DCD5]"
-								>
-									<div className="flex items-center gap-3">
-										<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white text-sm font-semibold shrink-0">
-											{teacherUserName
-												?.split(' ')
-												.map((n: string) => n[0])
-												.join('') || 'T'}
-										</div>
-										<div>
-											<p className="font-semibold text-sm text-[#333]">
-												{teacherUserName}
-												{teacherIsOwner && (
-													<span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-[#C5B4E3]/20 text-[#C5B4E3]">
-														Owner
-													</span>
-												)}
-											</p>
-											<p className="text-xs text-[#666]">{teacherEmail}</p>
-										</div>
-									</div>
-									{isOwner && !teacherIsOwner && (
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => handleRemoveTeacher(teacherUserId, teacherUserName)}
-											disabled={removeTeacherFromClassMutation.isPending}
-											className="text-[#E57373] hover:text-[#C62828] hover:bg-[#E57373]/10 rounded-xl"
-										>
-											<Trash2 className="w-4 h-4" />
-										</Button>
-									)}
-								</div>
-							);
-						})}
-					</div>
-				) : (
-					<div className="text-center py-8 text-[#666]">
-						<Users className="w-10 h-10 mx-auto mb-2 text-[#C5B4E3]" />
-						<p className="font-serif">No teachers assigned yet.</p>
-						{isOwner && (
-							<p className="text-sm text-[#999] mt-1">
-								Click "Add Teacher" to invite teachers to this class.
-							</p>
-						)}
-					</div>
-				)}
-			</div>
-
 			{/* Marker-style Stats */}
 			<div
 				className="bg-white rounded-2xl p-6 shadow-sm border border-[#E0DCD5]"
@@ -295,10 +305,9 @@ export default function ClassOverview({ classData }: ClassOverviewProps) {
 					<TrendingUp className="w-5 h-5 text-[#A8D5BA]" />
 					Class Performance
 				</h2>
-				<div className="grid sm:grid-cols-3 gap-6">
-					<MarkerStat label="Attendance" value={stats.avgAttendance} color="#A8D5BA" />
+				<div className="grid sm:grid-cols-2 gap-6 text-center">
 					<MarkerStat label="Average Grade" value={stats.avgGrade} color="#F5B041" />
-					<MarkerStat label="Engagement" value={85} color="#C5B4E3" />
+					<MarkerStat label="Submission Rate" value={stats.submissionRate} color="#C5B4E3" />
 				</div>
 			</div>
 

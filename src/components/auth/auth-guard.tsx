@@ -10,9 +10,17 @@ interface AuthGuardProps {
 	children: React.ReactNode;
 	allowedRoles?: Role[];
 	redirectTo?: string;
+	redirectUnauthenticatedTo?: string;
+	redirectForbiddenTo?: string;
 }
 
-export function AuthGuard({ children, allowedRoles, redirectTo = '/login' }: AuthGuardProps) {
+export function AuthGuard({
+	children,
+	allowedRoles,
+	redirectTo = '/login',
+	redirectUnauthenticatedTo,
+	redirectForbiddenTo,
+}: AuthGuardProps) {
 	const router = useRouter();
 	const { token, user, hasHydrated } = useAuthStore();
 	const isAuthenticated = !!token;
@@ -24,11 +32,21 @@ export function AuthGuard({ children, allowedRoles, redirectTo = '/login' }: Aut
 		return allowedRoles.includes(user.role);
 	}, [allowedRoles, hasHydrated, isAuthenticated, user]);
 
+	const unauthRedirect = redirectUnauthenticatedTo ?? redirectTo;
+	const forbiddenRedirect = redirectForbiddenTo ?? redirectTo;
+
 	useEffect(() => {
-		if (hasHydrated && !isAllowed) {
-			router.replace(redirectTo);
+		if (!hasHydrated) return;
+
+		if (!isAuthenticated || !user) {
+			router.replace(unauthRedirect);
+			return;
 		}
-	}, [hasHydrated, isAllowed, redirectTo, router]);
+
+		if (!isAllowed) {
+			router.replace(forbiddenRedirect);
+		}
+	}, [hasHydrated, isAuthenticated, user, isAllowed, unauthRedirect, forbiddenRedirect, router]);
 
 	if (!hasHydrated || !isAllowed) {
 		return (

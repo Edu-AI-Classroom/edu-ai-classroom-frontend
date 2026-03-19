@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Loader2, Mail, MoreHorizontal, Search, User } from 'lucide-react';
+import { AlertTriangle, Loader2, MoreHorizontal, Search, User } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,10 +12,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/common/use-toast';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
-import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import { useClassStudentStats, useClassStudents } from '@/hooks/queries/class/use-class-query';
 import type { AddStudentPayload } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddStudentDialog } from './add-student-dialog';
+import { ConfirmActionModal } from './confirm-action-modal';
 import { StudentProfileModal } from './student-profile-modal';
 
 interface ClassStudentsProps {
@@ -28,16 +29,18 @@ type UiStudent = {
 	id: number;
 	name: string;
 	email: string;
-	attendance?: number;
 	averageGrade?: number;
 	submissionRate?: number;
+	submittedCount?: number;
+	totalAssigned?: number;
 	status?: Exclude<UiStudentStatus, 'all'>;
 };
 
 export default function ClassStudents({ classData }: ClassStudentsProps) {
 	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
 	const { data: studentsResponse, isLoading } = useClassStudents(classId);
-	const { addStudentToClassMutation } = useClassMutations();
+	const { data: studentStats } = useClassStudentStats(classId);
+	const { addStudentToClassMutation, removeStudentFromClassMutation } = useClassMutations();
 	const { toast } = useToast();
 
 	const [searchQuery, setSearchQuery] = useState('');
@@ -47,17 +50,28 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 	const [selectedStudent, setSelectedStudent] = useState<any>(null);
 	const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+	const statsByStudentId = new Map((studentStats ?? []).map((s) => [s.studentId, s]));
+
 	const students = (studentsResponse?.data ?? [])
 		.filter((user: any) => user.role === 'STUDENT')
-		.map((student: any) => ({
-			id: student.studentId ?? student.userId ?? 0,
-			name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
-			email: student.email ?? '',
-			attendance: 0,
-			averageGrade: 0,
-			submissionRate: 0,
-			status: 'on-track' as const,
-		}));
+		.map((student: any) => {
+			const id = student.studentId ?? student.userId ?? 0;
+			const avg = statsByStudentId.get(id)?.avgGradePct ?? 0;
+
+			const status: Exclude<UiStudentStatus, 'all'> =
+				avg > 8 ? 'excellent' : avg < 4 ? 'needs-attention' : 'on-track';
+
+			return {
+				id,
+				name: student.studentName ?? student.user_name ?? student.userName ?? 'Unknown',
+				email: student.email ?? '',
+				averageGrade: avg,
+				submissionRate: statsByStudentId.get(id)?.submittedPct ?? 0,
+				submittedCount: statsByStudentId.get(id)?.submittedCount ?? 0,
+				totalAssigned: statsByStudentId.get(id)?.totalAssigned ?? 0,
+				status,
+			};
+		});
 
 	const filteredStudents = students.filter((student) => {
 		const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -67,9 +81,9 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 
 	const statusCounts = {
 		all: students.length,
-		excellent: 0,
-		'on-track': students.length,
-		'needs-attention': 0,
+		excellent: students.filter((s) => s.status === 'excellent').length,
+		'on-track': students.filter((s) => s.status === 'on-track').length,
+		'needs-attention': students.filter((s) => s.status === 'needs-attention').length,
 	};
 
 	const handleAddStudent = async (payload: AddStudentPayload) => {
@@ -97,11 +111,12 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 	};
 
 	const handleRemoveStudent = async (studentId: number, studentName: string) => {
-		if (!confirm(`Remove ${studentName} from this class?`)) return;
-
 		setRemovingStudentId(studentId);
 		try {
-			// TODO: Implement remove student API call using ClassService
+			await removeStudentFromClassMutation.mutateAsync({
+				classId,
+				studentId,
+			});
 			toast({
 				title: 'Success',
 				description: `${studentName} removed from class`,
@@ -222,39 +237,39 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 										<User className="w-4 h-4 mr-2" />
 										View Profile
 									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => handleRemoveStudent(student.id, student.name)}
-										disabled={removingStudentId === student.id}
-										className="text-red-600"
-									>
-										{removingStudentId === student.id ? (
-											<>
-												<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-												Removing...
-											</>
-										) : (
-											<>
+									<ConfirmActionModal
+										title="Remove Student?"
+										description={`Are you sure you want to remove ${student.name} from this class? This action cannot be undone.`}
+										confirmLabel="Remove"
+										isPending={
+											removeStudentFromClassMutation.isPending && removingStudentId === student.id
+										}
+										onConfirm={() => handleRemoveStudent(student.id, student.name)}
+										trigger={
+											<DropdownMenuItem
+												onSelect={(e) => e.preventDefault()}
+												disabled={removingStudentId === student.id}
+												className="text-red-600 focus:text-red-600 focus:bg-red-50"
+											>
 												<AlertTriangle className="w-4 h-4 mr-2" />
 												Remove from Class
-											</>
-										)}
-									</DropdownMenuItem>
+											</DropdownMenuItem>
+										}
+									/>
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</div>
 
 						{/* Stats */}
-						<div className="grid grid-cols-3 gap-2 text-center">
-							<div className="p-2 rounded-xl bg-[#FAF9F6]">
-								<p className="font-sans font-bold text-lg text-[#333]">{student.attendance}%</p>
-								<p className="text-xs text-[#666]">Attendance</p>
-							</div>
+						<div className="grid grid-cols-2 gap-2 text-center">
 							<div className="p-2 rounded-xl bg-[#FAF9F6]">
 								<p className="font-sans font-bold text-lg text-[#333]">{student.averageGrade}%</p>
 								<p className="text-xs text-[#666]">Avg Grade</p>
 							</div>
 							<div className="p-2 rounded-xl bg-[#FAF9F6]">
-								<p className="font-sans font-bold text-lg text-[#333]">{student.submissionRate}%</p>
+								<p className="font-sans font-bold text-lg text-[#333]">
+									{student.submittedCount}/{student.totalAssigned}
+								</p>
 								<p className="text-xs text-[#666]">Submitted</p>
 							</div>
 						</div>

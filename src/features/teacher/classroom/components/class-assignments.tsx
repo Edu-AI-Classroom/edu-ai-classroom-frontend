@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueries } from '@tanstack/react-query';
 import {
 	AlertCircle,
 	Award,
@@ -7,15 +8,12 @@ import {
 	CheckCircle2,
 	Clock,
 	Eye,
-	FileText,
-	FolderOpen,
-	HelpCircle,
 	Loader2,
 	MoreHorizontal,
 	Search,
-	Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -24,92 +22,78 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/common/use-toast';
-import {
-	useAssignmentsByClassroom,
-	useCreateAssignment,
-	useDeleteAssignment,
-	useUpdateAssignment,
-} from '@/hooks/queries/assignment/use-assignment-query';
-import type { Assignment } from '@/types/class';
+import { useClassStudents } from '@/hooks/queries/class/use-class-query';
+import { useQuizList } from '@/hooks/queries/quiz/use-quiz-query';
+import { QuizService } from '@/services/quiz/quiz.service';
 import type { ClassroomUiData } from '../classroom.mapper';
-import { AssignmentDetailModal } from './assignment-detail-modal';
-import { CreateAssignmentDialog } from './create-assignment-dialog';
 
 interface ClassAssignmentsProps {
 	classData: ClassroomUiData;
 }
 
 const typeIcons = {
-	homework: FileText,
-	quiz: HelpCircle,
-	project: FolderOpen,
+	quiz: Eye,
 	exam: Award,
 };
 
 const typeColors = {
-	homework: '#A8D5BA',
 	quiz: '#F5B041',
-	project: '#C5B4E3',
 	exam: '#E57373',
 };
 
 type AssignmentStatus = 'PUBLISHED' | 'OVERDUE' | 'GRADED';
 
-function getUiStatus(assignment: Assignment): AssignmentStatus {
-	if (assignment.status === 'graded' || assignment.status === 'archived') {
-		return 'GRADED';
-	}
-
-	const _due = assignment.dueDate ? new Date(assignment.dueDate) : new Date(assignment.updatedAt);
-	const _now = new Date();
-
-	// if (due < now) {
-	// 	return 'OVERDUE';
-	// }
-
+function getUiStatus(status: string | undefined): AssignmentStatus {
+	if (!status) return 'PUBLISHED';
+	if (status.toUpperCase() === 'ARCHIVED') return 'GRADED';
 	return 'PUBLISHED';
 }
 
 export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
-	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
-	const {
-		data: assignmentsResponse,
-		isLoading,
-		error: queryError,
-	} = useAssignmentsByClassroom(classId);
-	const createMutation = useCreateAssignment(classId);
-	const updateMutation = useUpdateAssignment(classId);
-	const deleteMutation = useDeleteAssignment(classId);
-	const { toast } = useToast();
+	const rawClassId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
+	const classId = Number.isFinite(rawClassId) ? rawClassId : 0;
+	const { data: quizList, isLoading } = useQuizList({ classId });
+	const { data: studentResponse } = useClassStudents(classId);
+	const totalStudents =
+		classData.studentCount ??
+		(studentResponse as any)?.data?.total ??
+		(studentResponse as any)?.data?.data?.length ??
+		0;
 
 	const [searchQuery, setSearchQuery] = useState('');
-	const [filterType, setFilterType] = useState<'all' | 'homework' | 'quiz' | 'project' | 'exam'>(
-		'all',
-	);
+	const [filterType, setFilterType] = useState<'all' | 'quiz' | 'exam'>('all');
 	const [filterStatus, setFilterStatus] = useState<AssignmentStatus | 'ALL'>('ALL');
-	const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
-	const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-	const assignments = (
-		Array.isArray(assignmentsResponse) ? assignmentsResponse : []
-	) as Assignment[];
+	const quizzes = Array.isArray(quizList) ? quizList : [];
 
-	const mappedAssignments = assignments.map((assignment) => {
-		const uiStatus = getUiStatus(assignment);
-		return {
-			raw: assignment,
-			id: String(assignment.docId),
-			title: assignment.docTitle,
-			description: assignment.note || 'No description',
-			dueDate: assignment.dueDate || assignment.updatedAt,
-			totalPoints: 100,
-			submissionCount: 0,
-			totalStudents: 0,
-			type: 'homework' as const,
-			status: uiStatus,
-		};
+	const submissionQueries = useQueries({
+		queries: quizzes.map((q) => ({
+			queryKey: ['teacherQuiz', 'submissions', q.id] as const,
+			queryFn: () => QuizService.getSubmissionsOverview(q.id),
+			enabled: !!q.id,
+		})),
 	});
+
+	const mappedAssignments = useMemo(() => {
+		return quizzes.map((q, idx) => {
+			const uiStatus = getUiStatus(q.status);
+			const submissions = submissionQueries[idx]?.data;
+			const submissionCount = submissions?.totalStudentsAttempted ?? 0;
+
+			return {
+				raw: q,
+				id: q.id,
+				title: q.title,
+				description: q.description || 'No description',
+				dueDate: q.createdAt,
+				totalPoints: q.questionCount,
+				submissionCount,
+				totalStudents,
+				type: q.documentType === 'EXAM' ? ('exam' as const) : ('quiz' as const),
+				status: uiStatus,
+			};
+		});
+	}, [quizzes, submissionQueries, totalStudents]);
 
 	const filteredAssignments = mappedAssignments.filter((assignment) => {
 		const matchesSearch = assignment.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -117,46 +101,6 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 		const matchesStatus = filterStatus === 'ALL' || assignment.status === filterStatus;
 		return matchesSearch && matchesType && matchesStatus;
 	});
-
-	const handleCreateAssignment = async (payload: {
-		title: string;
-		note?: string;
-		gradeLevel?: number;
-		subjectId?: number;
-		classId: number;
-	}) => {
-		try {
-			await createMutation.mutateAsync(payload);
-			toast({
-				title: 'Success',
-				description: 'Assignment created successfully',
-			});
-		} catch (_error) {
-			toast({
-				title: 'Error',
-				description: 'Failed to create assignment',
-				variant: 'destructive',
-			});
-		}
-	};
-
-	const handleDeleteAssignment = async (assignmentId: string) => {
-		if (!confirm('Delete this assignment?')) return;
-
-		try {
-			await deleteMutation.mutateAsync(parseInt(assignmentId, 10));
-			toast({
-				title: 'Success',
-				description: 'Assignment deleted successfully',
-			});
-		} catch (_error) {
-			toast({
-				title: 'Error',
-				description: 'Failed to delete assignment',
-				variant: 'destructive',
-			});
-		}
-	};
 
 	if (isLoading) {
 		return (
@@ -169,35 +113,26 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 		);
 	}
 
-	if (queryError) {
-		return (
-			<div className="space-y-6">
-				<div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3">
-					<AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-					<div>
-						<h3 className="font-semibold mb-1">Failed to load assignments</h3>
-						<p className="text-sm">{String(queryError)}</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-6">
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
-					<h1 className="font-sans font-bold text-2xl text-[#333]">Assignments</h1>
-					<p className="font-serif text-lg text-[#666]">
-						{mappedAssignments.length} total assignments
-					</p>
+					<h1 className="font-sans font-bold text-2xl text-[#333]">Quizzes</h1>
+					<p className="font-serif text-lg text-[#666]">{mappedAssignments.length} total quizzes</p>
 				</div>
-				<CreateAssignmentDialog
-					onSubmit={handleCreateAssignment}
-					classId={classId}
-					isLoading={createMutation.isPending}
-				/>
+				<div className="flex items-center gap-2">
+					<Button asChild className="rounded-xl bg-[#333] text-white hover:bg-[#111]">
+						<Link href="/quizzes">Open Quiz Dashboard</Link>
+					</Button>
+					<Button
+						asChild
+						variant="outline"
+						className="rounded-xl border-[#E0DCD5] bg-white text-[#333] hover:bg-[#F0EDE8]"
+					>
+						<Link href="/quizzes">Create Quiz</Link>
+					</Button>
+				</div>
 			</div>
 
 			{/* Filters */}
@@ -213,8 +148,8 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 				</div>
 
 				<div className="flex flex-wrap gap-2">
-					{(['all', 'homework', 'quiz', 'project', 'exam'] as const).map((type) => {
-						const Icon = type === 'all' ? FileText : typeIcons[type];
+					{(['all', 'quiz', 'exam'] as const).map((type) => {
+						const Icon = type === 'all' ? Eye : typeIcons[type];
 						return (
 							<button
 								type="button"
@@ -271,13 +206,7 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 							key={assignment.id}
 							assignment={assignment}
 							index={index}
-							onViewDetails={() => {
-								setSelectedAssignmentId(assignment.raw.docId);
-								setIsDetailOpen(true);
-							}}
-							onDelete={() => handleDeleteAssignment(assignment.id)}
-							isUpdating={updateMutation.isPending}
-							isDeleting={deleteMutation.isPending}
+							classId={classId}
 						/>
 					))}
 				</div>
@@ -285,24 +214,12 @@ export default function ClassAssignments({ classData }: ClassAssignmentsProps) {
 
 			{filteredAssignments.length === 0 && (
 				<div className="text-center py-16">
-					<FileText className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
-					<p className="text-[#666] font-serif text-lg">No assignments found.</p>
+					<Eye className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
+					<p className="text-[#666] font-serif text-lg">No quizzes found.</p>
 					<p className="text-sm text-[#999]">
-						Try adjusting your filters or create a new assignment.
+						Try adjusting your filters or create a new quiz in the dashboard.
 					</p>
 				</div>
-			)}
-			{selectedAssignmentId !== null && (
-				<AssignmentDetailModal
-					open={isDetailOpen}
-					onOpenChange={(open) => {
-						setIsDetailOpen(open);
-						if (!open) {
-							setSelectedAssignmentId(null);
-						}
-					}}
-					assignmentId={selectedAssignmentId}
-				/>
 			)}
 		</div>
 	);
@@ -317,28 +234,25 @@ interface AssignmentCardProps {
 		totalPoints: number;
 		submissionCount: number;
 		totalStudents: number;
-		type: 'homework' | 'quiz' | 'project' | 'exam';
+		type: 'quiz' | 'exam';
 		status: AssignmentStatus;
 	};
 	index: number;
-	onViewDetails: () => void;
-	onDelete: () => void;
-	isUpdating: boolean;
-	isDeleting: boolean;
+	classId: number;
 }
 
-function AssignmentCard({
-	assignment,
-	index,
-	onViewDetails,
-	onDelete,
-	isUpdating,
-	isDeleting,
-}: AssignmentCardProps) {
+function AssignmentCard({ assignment, index, classId }: AssignmentCardProps) {
 	const Icon = typeIcons[assignment.type];
 	const color = typeColors[assignment.type];
-	const submissionRate = Math.round((assignment.submissionCount / assignment.totalStudents) * 100);
+	const submissionRate =
+		assignment.totalStudents > 0
+			? Math.round((assignment.submissionCount / assignment.totalStudents) * 100)
+			: 0;
 	const _isOverdue = assignment.status === 'OVERDUE';
+	const parsedDueDate = new Date(assignment.dueDate);
+	const dueDateLabel = Number.isNaN(parsedDueDate.getTime())
+		? 'No date'
+		: parsedDueDate.toLocaleDateString();
 
 	return (
 		<div
@@ -366,13 +280,23 @@ function AssignmentCard({
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="rounded-xl">
-						<DropdownMenuItem onClick={onViewDetails}>
-							<Eye className="w-4 h-4 mr-2" />
-							View Details
+						<DropdownMenuItem asChild>
+							<Link href="/quizzes">
+								<Eye className="w-4 h-4 mr-2" />
+								Open in Quiz Dashboard
+							</Link>
 						</DropdownMenuItem>
-						<DropdownMenuItem onClick={onDelete} disabled={isDeleting} className="text-[#E57373]">
-							<Trash2 className="w-4 h-4 mr-2" />
-							{isDeleting ? 'Deleting...' : 'Delete'}
+						<DropdownMenuItem asChild>
+							<Link href={`/quizzes/${assignment.id}`}>
+								<Eye className="w-4 h-4 mr-2" />
+								View Quiz Detail
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link href={`/quizzes/${assignment.id}/edit`}>
+								<Eye className="w-4 h-4 mr-2" />
+								Edit Quiz
+							</Link>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -383,9 +307,9 @@ function AssignmentCard({
 			<div className="flex items-center justify-between text-sm mb-4">
 				<div className="flex items-center gap-1.5 text-[#666]">
 					<Calendar className="w-4 h-4" />
-					<span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+					<span>{dueDateLabel}</span>
 				</div>
-				<span className="font-semibold text-[#333]">{assignment.totalPoints} pts</span>
+				<span className="font-semibold text-[#333]">{assignment.totalPoints} questions</span>
 			</div>
 
 			{/* Submission Progress */}
@@ -424,11 +348,9 @@ function AssignmentCard({
 					{assignment.status}
 				</span>
 
-				{assignment.status === 'PUBLISHED' && (
-					<Button variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
-						View Submissions
-					</Button>
-				)}
+				<Button asChild variant="outline" size="sm" className="rounded-xl text-xs bg-transparent">
+					<Link href={`/quizzes/${assignment.id}`}>View</Link>
+				</Button>
 			</div>
 		</div>
 	);

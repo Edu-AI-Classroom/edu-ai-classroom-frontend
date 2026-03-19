@@ -10,6 +10,7 @@ import type {
 	AssignStudentToGroupPayload,
 	CreateClassroomPayload,
 	CreateStudentGroupPayload,
+	JoinClassPayload,
 	UpdateClassroomPayload,
 	UpdateStudentGroupPayload,
 } from '@/types/class';
@@ -113,6 +114,17 @@ export const useClassMutations = () => {
 		queryClient.invalidateQueries({
 			queryKey: ['class', classId, 'groups'],
 		});
+
+	const joinClassMutation = useMutation({
+		mutationFn: (payload: JoinClassPayload) => ClassService.joinClassByCode(payload),
+		onSuccess: async () => {
+			setClassError(null);
+			await invalidateClassList();
+		},
+		onError: (error: unknown) => {
+			setClassError(getErrorMessage(error, 'Join class failed'));
+		},
+	});
 
 	const createClassMutation = useMutation({
 		mutationFn: (payload: CreateClassroomPayload) => ClassService.createClass(payload),
@@ -315,6 +327,7 @@ export const useClassMutations = () => {
 		clearClassError,
 
 		createClassMutation,
+		joinClassMutation,
 		updateClassMutation,
 		deleteClassMutation,
 

@@ -20,9 +20,12 @@ export const API_ENDPOINTS = {
 		GET_DETAIL: (classId: number) => `/api/classrooms/${classId}`,
 		UPDATE_DETAIL: (classId: number) => `/api/classrooms/${classId}`,
 		DELETE_CLASS: (classId: number) => `/api/classrooms/${classId}`,
+		GRADEBOOK: (classId: number) => `/api/classrooms/${classId}/gradebook`,
+		JOIN_CLASS: '/api/classrooms/join',
 
 		ASSIGN_STUDENT_TO_CLASS: (classId: number) => `/api/classrooms/${classId}/students`,
 		GET_STUDENTS: (classId: number) => `/api/classrooms/${classId}/students`,
+		GET_STUDENT_STATS: (classId: number) => `/api/classrooms/${classId}/students/stats`,
 		REMOVE_STUDENT_FROM_CLASS: (classId: number, studentId: number) =>
 			`/api/classrooms/${classId}/students/${studentId}`,
 
@@ -53,6 +56,7 @@ export const API_ENDPOINTS = {
 	TRANSACTION: {
 		CREATE_PAYMENT_LINK: '/api/transactions/payment-link',
 	},
+
 	NEWS: {
 		CREATE: '/api/news',
 		GET_BY_CLASS: (classId: number) => `/api/news/class/${classId}`,
@@ -74,5 +78,49 @@ export const API_ENDPOINTS = {
 		GET_ASSIGNMENT_DETAIL: (assignmentId: number) => `/api/assignments/${assignmentId}`,
 		UPDATE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
 		DELETE_ASSIGNMENT: (assignmentId: number) => `/api/assignments/${assignmentId}`,
+	},
+
+	QUIZ: {
+		OVERVIEW: '/api/teacher/quizzes/overview',
+		LIST: '/api/teacher/quizzes',
+		DETAIL: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
+		UPDATE: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
+		DELETE: (quizId: string) => `/api/teacher/quizzes/${quizId}`,
+
+		AI_GENERATE: (quizId: string) => `/api/teacher/quizzes/${quizId}/ai-generate`,
+
+		QUESTIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/questions`,
+		CREATE_QUESTION: '/api/teacher/questions',
+		UPDATE_QUESTION: (questionId: string) => `/api/teacher/questions/${questionId}`,
+		DELETE_QUESTION: (questionId: string) => `/api/teacher/questions/${questionId}`,
+		REORDER_QUESTIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/questions/reorder`,
+
+		SUBMISSIONS: (quizId: string) => `/api/teacher/quizzes/${quizId}/submissions`,
+	},
+
+	STUDENT_QUIZ: {
+		LIST: '/api/student/quizzes',
+		DETAIL: (quizId: string) => `/api/student/quizzes/${quizId}`,
+		QUESTIONS: (quizId: string) => `/api/student/quizzes/${quizId}/questions`,
+		START_ATTEMPT: (quizId: string) => `/api/student/quizzes/${quizId}/attempts/start`,
+		SUBMIT_ATTEMPT: (quizId: string, attemptId: number) =>
+			`/api/student/quizzes/${quizId}/attempts/${attemptId}/submit`,
+	},
+
+	ADMIN_DASHBOARD: {
+		OVERVIEW: '/api/admin/dashboard/overview',
+		USER_GROWTH: '/api/admin/dashboard/user-growth',
+		REVENUE: '/api/admin/dashboard/revenue',
+		TRANSACTIONS: '/api/admin/dashboard/transactions',
+		AI_USAGE: '/api/admin/dashboard/ai-usage',
+		CLASSROOMS: '/api/admin/dashboard/classrooms',
+	},
+
+	LESSON: {
+		CREATE: '/api/lessons',
+		GET_BY_CLASS: (classId: number) => `/api/lessons/class/${classId}`,
+		GET_DETAIL: (id: string) => `/api/lessons/${id}`,
+		UPDATE: (id: string) => `/api/lessons/${id}`,
+		DELETE: (id: string) => `/api/lessons/${id}`,
 	},
 };

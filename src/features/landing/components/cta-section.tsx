@@ -1,6 +1,7 @@
 'use client';
 
 import { Heart, Rocket, Sparkles, Star } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { StickerIcon } from './sticker-icon';
 
@@ -43,17 +44,13 @@ export function CTASection() {
 						<div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
 							<Button
 								size="lg"
+								asChild
 								className="group relative rounded-full bg-[#F5B041] px-10 py-7 text-lg font-bold text-charcoal shadow-lg transition-all hover:scale-105 hover:bg-[#F5B041]/90 hover:shadow-xl"
 							>
-								<Rocket className="mr-2 h-6 w-6 transition-transform group-hover:-translate-y-1" />
-								Get Started Free
-							</Button>
-							<Button
-								variant="outline"
-								size="lg"
-								className="rounded-full border-2 border-charcoal/20 px-8 py-7 text-lg font-bold text-charcoal bg-transparent hover:bg-charcoal/5"
-							>
-								Schedule a Demo
+								<Link href="/login">
+									<Rocket className="mr-2 h-6 w-6 transition-transform group-hover:-translate-y-1" />
+									Get Started Free
+								</Link>
 							</Button>
 						</div>
 

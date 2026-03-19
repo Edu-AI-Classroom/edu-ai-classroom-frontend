@@ -3,6 +3,7 @@
 import { Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
@@ -43,6 +44,21 @@ export const ClassroomSettings: React.FC<ClassroomSettingsProps> = ({ classData,
 		router.replace('/classroom');
 	};
 
+	const handleCopy = async (classId: number) => {
+		if (!classId) {
+			alert('No class code available to copy');
+			return;
+		}
+
+		try {
+			await navigator.clipboard.writeText(classId.toString());
+			toast.success('Copied!');
+		} catch (err) {
+			console.error(err);
+			toast.error('Failed to copy!');
+		}
+	};
+
 	return (
 		<div className="space-y-8 max-w-2xl m-auto">
 			{/* General Settings */}
@@ -74,7 +90,11 @@ export const ClassroomSettings: React.FC<ClassroomSettingsProps> = ({ classData,
 					<div className="flex-1 px-4 py-3 bg-muted rounded-lg font-mono text-lg tracking-wider">
 						{classData.id ?? 'N/A'}
 					</div>
-					<Button variant="outline" className="gap-2 rounded-full">
+					<Button
+						variant="outline"
+						className="gap-2 rounded-full"
+						onClick={() => handleCopy(classData.id ?? null)}
+					>
 						<Copy className="w-4 h-4" />
 						Copy
 					</Button>

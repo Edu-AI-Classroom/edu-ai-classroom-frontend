@@ -6,6 +6,10 @@ import type * as React from 'react';
 
 import { cn } from '@/lib/utils/utils';
 
+type WithChildren<T> = Omit<T, 'children'> & {
+	children?: React.ReactNode;
+};
+
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
 	return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
@@ -92,12 +96,17 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
 	);
 }
 
-function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+function DialogTitle({
+	className,
+	...props
+}: WithChildren<React.ComponentProps<typeof DialogPrimitive.Title>> & {
+	className?: string;
+}) {
 	return (
 		<DialogPrimitive.Title
 			data-slot="dialog-title"
 			className={cn('text-lg leading-none font-semibold', className)}
-			{...props}
+			{...(props as any)}
 		/>
 	);
 }

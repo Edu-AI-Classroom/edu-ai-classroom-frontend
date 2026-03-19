@@ -71,6 +71,16 @@ export const queryKeys = {
 		detail: (assignmentId: string | number) => ['assignment', 'detail', assignmentId] as const,
 	},
 
+	quiz: {
+		all: ['quiz'] as const,
+		overview: () => ['quiz', 'overview'] as const,
+		list: (params?: { search?: string; classId?: number; type?: 'ASSIGNMENT' | 'EXAM' }) =>
+			['quiz', 'list', params ?? {}] as const,
+		detail: (quizId: string) => ['quiz', 'detail', quizId] as const,
+		questions: (quizId: string) => ['quiz', quizId, 'questions'] as const,
+		submissions: (quizId: string) => ['quiz', quizId, 'submissions'] as const,
+	},
+
 	subject: {
 		all: ['subject'] as const,
 	},
@@ -79,5 +89,21 @@ export const queryKeys = {
 		all: ['news'] as const,
 		list: (classId: number, params?: any) => ['news', 'class', classId, params ?? {}] as const,
 		detail: (id: number | string) => ['news', 'detail', id] as const,
+	},
+
+	adminDashboard: {
+		all: ['adminDashboard'] as const,
+		overview: (filters: unknown) => ['adminDashboard', 'overview', filters] as const,
+		userGrowth: (filters: unknown) => ['adminDashboard', 'userGrowth', filters] as const,
+		revenue: (filters: unknown) => ['adminDashboard', 'revenue', filters] as const,
+		transactions: (filters: unknown) => ['adminDashboard', 'transactions', filters] as const,
+		aiUsage: (filters: unknown) => ['adminDashboard', 'aiUsage', filters] as const,
+		classrooms: (filters: unknown) => ['adminDashboard', 'classrooms', filters] as const,
+	},
+
+	lesson: {
+		all: ['lesson'] as const,
+		list: (classId: number) => ['lesson', 'class', classId] as const,
+		detail: (id: string) => ['lesson', 'detail', id] as const,
 	},
 };

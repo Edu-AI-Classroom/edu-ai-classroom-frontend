@@ -12,6 +12,7 @@ import type {
 	CreateStudentGroupPayload,
 	Group,
 	GroupListResponse,
+	JoinClassPayload,
 	Student,
 	Teacher,
 	TeacherApiResponse,
@@ -19,6 +20,7 @@ import type {
 	UpdateStudentGroupPayload,
 	UsersInClassResponse,
 } from '@/types/class';
+import type { ClassStudentQuizStat } from '@/types/class-stats';
 
 export const ClassService = {
 	createClass: (payload: CreateClassroomPayload) =>
@@ -33,6 +35,9 @@ export const ClassService = {
 		httpPut<Classroom>(API_ENDPOINTS.CLASS.UPDATE_DETAIL(classId), payload),
 
 	deleteClass: (classId: number) => httpDelete<void>(API_ENDPOINTS.CLASS.DELETE_CLASS(classId)),
+
+	joinClassByCode: (payload: JoinClassPayload) =>
+		httpPost<Classroom>(API_ENDPOINTS.CLASS.JOIN_CLASS, payload),
 
 	addTeacherToClass: (classId: number, payload: AddTeacherPayload) =>
 		httpPost<Teacher>(API_ENDPOINTS.CLASS.ADD_TEACHER_TO_CLASS(classId), payload),
@@ -52,6 +57,9 @@ export const ClassService = {
 		httpGet<UsersInClassResponse>(
 			`${API_ENDPOINTS.CLASS.GET_STUDENTS(classId)}${buildQueryString(params)}`,
 		),
+
+	getStudentStats: (classId: number) =>
+		httpGet<ClassStudentQuizStat[]>(API_ENDPOINTS.CLASS.GET_STUDENT_STATS(classId)),
 
 	removeStudentFromClass: (classId: number, studentId: number) =>
 		httpDelete<void>(API_ENDPOINTS.CLASS.REMOVE_STUDENT_FROM_CLASS(classId, studentId)),

@@ -11,7 +11,6 @@ const AUTH_ERROR_CODES = new Set([
 	'INVALID_TOKEN',
 	'MISSING_TOKEN',
 	'UNAUTHORIZED',
-	'FORBIDDEN',
 ]);
 
 function isAuthRelatedError(error: ApiError) {
@@ -47,7 +46,6 @@ function clearAuthState() {
 	const { logout } = useAuthStore.getState();
 	logout();
 
-	useAuthStore.persist.clearStorage();
 	if (typeof window !== 'undefined') {
 		localStorage.removeItem('auth-store');
 	}
@@ -73,8 +71,14 @@ export async function handleAuthError(error?: ApiError) {
 
 	if (!token) throw error;
 
-	if (error.status === 403 && !isTokenIssueError(error)) {
+	// 403 is a real permission issue in this app (not refreshable)
+	if (error.status === 403) {
 		goToForbiddenPage();
+		throw error;
+	}
+
+	// Only attempt refresh flow on 401 token issues
+	if (error.status !== 401 || !isTokenIssueError(error)) {
 		throw error;
 	}
 
