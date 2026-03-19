@@ -43,3 +43,7 @@ next-env.d.ts
 # Vercel
 .vercel
 .env*.local
+
+.agent
+.agents
+.github
