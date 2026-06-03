@@ -2,6 +2,7 @@ import { API_ENDPOINTS } from '@/services/api/api.endpoint';
 import { httpGet, httpPost } from '@/services/http.helpers';
 import type { PaginatedResponse } from '@/types/api';
 import type {
+	AuthGoogleCompletePayload,
 	AuthLoginPayload,
 	AuthRegisterPayload,
 	AuthTokenResponse,
@@ -14,6 +15,9 @@ export const AuthService = {
 
 	register: (payload: AuthRegisterPayload) =>
 		httpPost<AuthTokenResponse>(API_ENDPOINTS.AUTH.REGISTER, payload),
+
+	completeGoogleRegistration: (payload: AuthGoogleCompletePayload) =>
+		httpPost<AuthTokenResponse>(API_ENDPOINTS.AUTH.GOOGLE_COMPLETE_REGISTRATION, payload),
 
 	refreshToken: (_token?: string) => httpPost<AuthTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN),
 

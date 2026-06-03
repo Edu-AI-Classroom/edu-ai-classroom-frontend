@@ -28,7 +28,11 @@ export default function ClassListView({ classes, onSelectClass }: ClassListViewP
 	return (
 		<div className=" bg-[#FAF9F6] grid-paper">
 			{/* Header */}
-			<WorkspaceHeader userName={teacherName} userRole={authUser?.role ?? 'TEACHER'} />
+			<WorkspaceHeader
+				userName={teacherName}
+				userRole={authUser?.role ?? 'TEACHER'}
+				avatarUrl={authUser?.profilePicture}
+			/>
 
 			{/* Main Content */}
 			<main className="flex-1 min-h-[80vh] max-w-6xl mx-auto px-6 py-10">

@@ -16,9 +16,10 @@ import { TeachifyIcon } from './Teachify';
 interface WorkspaceHeaderProps {
 	userName: string;
 	userRole: string | Role;
+	avatarUrl?: string | null;
 }
 
-export default function WorkspaceHeader({ userName, userRole }: WorkspaceHeaderProps) {
+export default function WorkspaceHeader({ userName, userRole, avatarUrl }: WorkspaceHeaderProps) {
 	const router = useRouter();
 	const logout = useAuthStore((state) => state.logout);
 
@@ -47,12 +48,16 @@ export default function WorkspaceHeader({ userName, userRole }: WorkspaceHeaderP
 								className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5] rounded-lg hover:bg-black/5 px-2 py-1"
 								aria-label="Open user menu"
 							>
-								<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
-									{userName
-										.split(' ')
-										.map((n) => n[0])
-										.join('')}
-								</div>
+								{avatarUrl ? (
+									<img src={avatarUrl} alt="User avatar" className="w-10 h-10 rounded-full" />
+								) : (
+									<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
+										{userName
+											.split(' ')
+											.map((n) => n[0])
+											.join('')}
+									</div>
+								)}
 								<div className="hidden sm:block text-left">
 									<p className="font-sans font-semibold text-sm text-[#333]">{userName}</p>
 									<p className="text-xs text-[#666]">{userRole}</p>

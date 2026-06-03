@@ -60,7 +60,11 @@ export default function StudentClassListView({
 	return (
 		<div className=" bg-[#FAF9F6] grid-paper">
 			{/* Header */}
-			<WorkspaceHeader userName={studentName} userRole="STUDENT" />
+			<WorkspaceHeader
+				userName={studentName}
+				userRole="STUDENT"
+				avatarUrl={authUser?.profilePicture}
+			/>
 
 			{/* Main Content */}
 			<main className="flex-1 min-h-[80vh] max-w-6xl mx-auto px-6 py-10">
