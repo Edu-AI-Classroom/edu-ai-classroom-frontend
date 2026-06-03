@@ -6,11 +6,12 @@ import { TeachifyIcon } from '@/components/common/Teachify';
 import { Button } from '@/components/ui/button';
 import { AuthFlipBook } from '@/features/auth/auth-flip-book';
 import { useAuthMutations } from '@/hooks/queries/auth/use-auth-mutation';
+import { useGoogleAuth } from '@/hooks/queries/auth/use-google-auth';
 import { RoleSelectionStep } from './components/role-selection-step';
 import { StudentOnboardingStep } from './components/student-onboarding-step';
 import { WelcomeStep } from './components/welcome-step';
-import { clearRegisterDraft, REGISTER_DRAFT_KEY } from './register-draft';
-import type { RegisterFormData, RegisterStep } from './types';
+import { clearRegisterDraft, getRegisterDraft, saveRegisterDraft } from './register-draft';
+import type { RegisterAuthMethod, RegisterFormData, RegisterStep } from './types';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,7 +31,16 @@ export function RegisterFlow() {
 	const [formData, setFormData] = useState<RegisterFormData>(INITIAL_FORM);
 	const [stepError, setStepError] = useState<string | null>(null);
 	const [isHydrated, setIsHydrated] = useState(false);
-	const { clearAuthError, registerMutation } = useAuthMutations();
+	const [authMethod, setAuthMethod] = useState<RegisterAuthMethod>('credentials');
+	const { clearAuthError, completeGoogleRegistrationMutation, registerMutation } =
+		useAuthMutations();
+
+	const { startGoogleSignup } = useGoogleAuth();
+
+	const isGoogleSignup = authMethod === 'google';
+	const isSubmitting = isGoogleSignup
+		? completeGoogleRegistrationMutation.isPending
+		: registerMutation.isPending;
 
 	const isStudentFlow = formData.role === 'STUDENT';
 	const totalSteps = isStudentFlow ? 6 : 3;
@@ -42,23 +52,22 @@ export function RegisterFlow() {
 	useEffect(() => {
 		if (typeof window === 'undefined') return;
 		try {
-			const rawDraft = localStorage.getItem(REGISTER_DRAFT_KEY);
-			if (!rawDraft) {
+			const draft = getRegisterDraft();
+			if (!draft) {
 				setIsHydrated(true);
 				return;
 			}
 
-			const parsedDraft = JSON.parse(rawDraft) as {
-				step?: RegisterStep;
-				formData?: RegisterFormData;
-			};
-
-			if (parsedDraft.formData) {
-				setFormData({ ...INITIAL_FORM, ...parsedDraft.formData });
+			if (draft.formData) {
+				setFormData({ ...INITIAL_FORM, ...draft.formData });
 			}
 
-			if (parsedDraft.step) {
-				setStep(parsedDraft.step);
+			if (draft.step) {
+				setStep(draft.step);
+			}
+
+			if (draft.authMethod) {
+				setAuthMethod(draft.authMethod);
 			}
 		} catch {
 			clearRegisterDraft();
@@ -69,23 +78,32 @@ export function RegisterFlow() {
 
 	useEffect(() => {
 		if (!isHydrated || typeof window === 'undefined') return;
-		localStorage.setItem(
-			REGISTER_DRAFT_KEY,
-			JSON.stringify({
-				step,
-				formData,
-			}),
-		);
-	}, [formData, isHydrated, step]);
+		saveRegisterDraft({
+			step,
+			formData,
+			authMethod,
+		});
+	}, [authMethod, formData, isHydrated, step]);
 
 	const primaryLabel = useMemo(() => {
 		if (step === totalSteps) {
+			if (isGoogleSignup) {
+				return completeGoogleRegistrationMutation.isPending
+					? 'Completing Google Sign Up...'
+					: 'Complete Registration';
+			}
 			return registerMutation.isPending ? 'Creating Your Account...' : 'Complete Registration';
 		}
 		return 'Next Step';
-	}, [registerMutation.isPending, step, totalSteps]);
+	}, [
+		completeGoogleRegistrationMutation.isPending,
+		isGoogleSignup,
+		registerMutation.isPending,
+		step,
+		totalSteps,
+	]);
 
-	const isNextDisabled = registerMutation.isPending || (step === 2 && !formData.role);
+	const isNextDisabled = isSubmitting || (step === 2 && !formData.role);
 
 	const updateForm = (field: keyof RegisterFormData, value: string) => {
 		setStepError(null);
@@ -96,6 +114,7 @@ export function RegisterFlow() {
 	const handleBasicInfoNext = (data: { name: string; email: string; password: string }) => {
 		setStepError(null);
 		clearAuthError();
+		setAuthMethod('credentials');
 		setFormData((prev) => ({
 			...prev,
 			name: data.name,
@@ -150,6 +169,21 @@ export function RegisterFlow() {
 
 		if (!formData.role) {
 			setStepError('Please select a role.');
+			return;
+		}
+
+		if (isGoogleSignup) {
+			completeGoogleRegistrationMutation.mutate(
+				{
+					role: formData.role,
+					name: formData.name.trim(),
+				},
+				{
+					onSuccess: () => {
+						clearDraft();
+					},
+				},
+			);
 			return;
 		}
 
@@ -209,6 +243,7 @@ export function RegisterFlow() {
 					}));
 				}}
 				onRegisterNextStep={handleBasicInfoNext}
+				onGoogleSignup={startGoogleSignup}
 			/>
 		);
 	}

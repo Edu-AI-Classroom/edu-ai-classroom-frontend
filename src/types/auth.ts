@@ -24,6 +24,11 @@ export interface AuthRegisterPayload {
 	role: Extract<Role, 'TEACHER' | 'STUDENT'>;
 }
 
+export interface AuthGoogleCompletePayload {
+	name: string;
+	role: Extract<Role, 'TEACHER' | 'STUDENT'>;
+}
+
 export interface AuthUserResponse {
 	userId: string;
 	userName: string;

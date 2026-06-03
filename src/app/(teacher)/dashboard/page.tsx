@@ -41,7 +41,11 @@ export default function TeacherDashboard() {
 	return (
 		<div className="bg-[#FAF9F6] grid-paper">
 			{/* Header */}
-			<WorkspaceHeader userName={teacherName} userRole={teacherRole} />
+			<WorkspaceHeader
+				userName={teacherName}
+				userRole={teacherRole}
+				avatarUrl={authUser?.profilePicture}
+			/>
 
 			{/* Main Content */}
 			<main className="flex-1 min-h-[80vh]">

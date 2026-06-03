@@ -83,11 +83,31 @@ export const useAuthMutations = () => {
 		},
 	});
 
+	const completeGoogleRegistrationMutation = useMutation({
+		mutationFn: AuthService.completeGoogleRegistration,
+		onSuccess: async (data) => {
+			try {
+				setAuthError(null);
+				await bootstrapAuth(data);
+			} catch (error) {
+				setAuthError(getErrorMessage(error, 'Google sign up completion failed'));
+			}
+		},
+		onError: async (error: ApiError) => {
+			try {
+				await handleAuthError(error);
+			} catch (err) {
+				setAuthError(getErrorMessage(err, 'Google sign up completion failed'));
+			}
+		},
+	});
+
 	const clearAuthError = useCallback(() => setAuthError(null), []);
 
 	return {
 		authError,
 		clearAuthError,
+		completeGoogleRegistrationMutation,
 		loginMutation,
 		registerMutation,
 	};

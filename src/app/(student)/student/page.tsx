@@ -35,7 +35,11 @@ export default function StudentHome() {
 	return (
 		<div className="bg-[#FAF9F6] grid-paper">
 			{/* Header */}
-			<WorkspaceHeader userName={studentName} userRole={studentRole} />
+			<WorkspaceHeader
+				userName={studentName}
+				userRole={studentRole}
+				avatarUrl={authUser?.profilePicture}
+			/>
 
 			{/* Main Content */}
 			<main className="flex-1 min-h-[80vh]">
