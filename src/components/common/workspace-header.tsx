@@ -1,10 +1,10 @@
 'use client';
 
-import { Bell, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { NotificationBell } from '@/features/notification/notification-bell';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/types/auth';
-import { Button } from '../ui/button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -34,12 +34,7 @@ export default function WorkspaceHeader({ userName, userRole, avatarUrl }: Works
 				<TeachifyIcon />
 
 				<div className="flex items-center gap-4">
-					<Button variant="ghost" size="icon" className="relative">
-						<Bell className="w-5 h-5 text-[#666]" />
-						<span className="absolute -top-1 -right-1 w-5 h-5 bg-[#E57373] text-white text-xs rounded-full flex items-center justify-center">
-							0
-						</span>
-					</Button>
+					<NotificationBell />
 
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>

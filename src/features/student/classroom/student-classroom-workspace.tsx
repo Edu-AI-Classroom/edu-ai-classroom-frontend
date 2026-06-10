@@ -3,7 +3,6 @@
 import {
 	ArrowLeft,
 	BarChart3,
-	Bell,
 	BookOpen,
 	ChevronDown,
 	FileText,
@@ -17,6 +16,7 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/features/notification/notification-bell';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -30,6 +30,7 @@ import CourseFeed from './components/CourseFeed';
 import CourseGrades from './components/CourseGrades';
 import CourseOverview from './components/CourseOverview';
 import StudentClassLessons from './components/student-class-lessons';
+import StudentClassConversation from './components/student-class-conversation';
 
 type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation' | 'lessons';
 
@@ -74,14 +75,7 @@ export default function StudentClassroomWorkspace({
 			case 'grades':
 				return <CourseGrades classData={classData} />;
 			case 'conversation':
-				return (
-					<div className="flex items-center justify-center h-64 text-[#666]">
-						<div className="text-center">
-							<MessageCircle className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
-							<p className="font-serif text-lg">Conversation feature coming soon!</p>
-						</div>
-					</div>
-				);
+				return <StudentClassConversation classId={classData.id} />;
 			default:
 				return <CourseOverview classData={classData} />;
 		}
@@ -235,12 +229,7 @@ export default function StudentClassroomWorkspace({
 
 						{/* Notifications & Profile */}
 						<div className="flex items-center gap-3">
-							<Button variant="ghost" size="icon" className="relative">
-								<Bell className="w-5 h-5 text-[#666]" />
-								<span className="absolute -top-1 -right-1 w-5 h-5 bg-[#E57373] text-white text-xs rounded-full flex items-center justify-center">
-									2
-								</span>
-							</Button>
+							<NotificationBell />
 
 							<div className="hidden sm:flex items-center gap-3 pl-3 border-l border-[#E0DCD5]">
 								<div className="w-9 h-9 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold text-sm">

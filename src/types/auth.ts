@@ -21,12 +21,12 @@ export interface AuthRegisterPayload {
 	name: string;
 	email: string;
 	password: string;
-	role: Extract<Role, 'TEACHER' | 'STUDENT'>;
+	role: Extract<Role, 'TEACHER' | 'STUDENT' | 'PARENT'>;
 }
 
 export interface AuthGoogleCompletePayload {
 	name: string;
-	role: Extract<Role, 'TEACHER' | 'STUDENT'>;
+	role: Extract<Role, 'TEACHER' | 'STUDENT' | 'PARENT'>;
 }
 
 export interface AuthUserResponse {

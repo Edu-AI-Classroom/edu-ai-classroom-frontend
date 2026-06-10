@@ -1,4 +1,4 @@
-export type RegisterRole = 'STUDENT' | 'TEACHER';
+export type RegisterRole = 'STUDENT' | 'TEACHER' | 'PARENT';
 export type RegisterAuthMethod = 'credentials' | 'google';
 
 export type RegisterFormData = {
