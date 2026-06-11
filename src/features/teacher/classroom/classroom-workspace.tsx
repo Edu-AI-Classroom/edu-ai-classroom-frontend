@@ -3,7 +3,6 @@
 import {
 	ArrowLeft,
 	BarChart3,
-	Bell,
 	BookOpen,
 	ChevronDown,
 	FileText,
@@ -21,6 +20,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/features/notification/notification-bell';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -37,6 +37,7 @@ import ClassLessons from './components/class-lessons';
 import ClassOverview from './components/class-overview';
 import { ClassroomSettings } from './components/class-setting';
 import ClassStudents from './components/class-students';
+import TeacherClassConversation from './components/teacher-class-conversation';
 
 type TabType =
 	| 'overview'
@@ -100,14 +101,7 @@ export default function ClassroomWorkspace({
 			case 'grades':
 				return <ClassGrades classData={classData} />;
 			case 'conversation':
-				return (
-					<div className="flex items-center justify-center h-64 text-[#666]">
-						<div className="text-center">
-							<MessageCircle className="w-12 h-12 mx-auto mb-4 text-[#C5B4E3]" />
-							<p className="font-serif text-lg">Conversation feature coming soon!</p>
-						</div>
-					</div>
-				);
+				return <TeacherClassConversation classId={classData.id} />;
 			case 'settings':
 				return <ClassroomSettings classData={classData} onDeleted={onBack} />;
 			default:
@@ -261,12 +255,7 @@ export default function ClassroomWorkspace({
 
 						{/* Notifications & Profile */}
 						<div className="flex items-center gap-3">
-							<Button variant="ghost" size="icon" className="relative">
-								<Bell className="w-5 h-5 text-[#666]" />
-								<span className="absolute -top-1 -right-1 w-5 h-5 bg-[#E57373] text-white text-xs rounded-full flex items-center justify-center">
-									0
-								</span>
-							</Button>
+							<NotificationBell />
 
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>

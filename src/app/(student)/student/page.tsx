@@ -1,15 +1,24 @@
 'use client';
 
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronRight, Copy, LinkIcon, RefreshCw, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import WorkspaceHeader from '@/components/common/workspace-header';
+import { Button } from '@/components/ui/button';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import { useClassList } from '@/hooks/queries/class/use-class-query';
+import {
+	useCreateStudentParentLinkCode,
+	useRevokeStudentParentLinkCode,
+	useStudentParentLinkCode,
+} from '@/hooks/queries/parent/use-parent-query';
 
 export default function StudentHome() {
 	const authUser = useAuthUser();
 	const { data: classListResponse } = useClassList();
+	const { data: activeLinkCode } = useStudentParentLinkCode();
+	const createLinkCode = useCreateStudentParentLinkCode();
+	const revokeLinkCode = useRevokeStudentParentLinkCode();
 	const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
 	const classes = classListResponse?.data ?? [];
@@ -93,6 +102,73 @@ export default function StudentHome() {
 									</div>
 								</Link>
 							))}
+						</div>
+					</section>
+
+					<section className="mb-12">
+						<div className="rounded-2xl border border-[#E0DCD5] bg-white p-6 shadow-sm">
+							<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+								<div>
+									<h2 className="flex items-center gap-2 font-sans text-lg font-bold text-[#333]">
+										<LinkIcon className="h-5 w-5 text-[#F5B041]" />
+										Parent Access
+									</h2>
+									<p className="mt-1 text-sm text-[#666]">
+										Create a one-time code so your parent can view your class progress.
+									</p>
+								</div>
+								<div className="flex flex-wrap gap-2">
+									<Button
+										type="button"
+										className="rounded-xl bg-[#F5B041] text-[#333] hover:bg-[#e5a23c]"
+										disabled={createLinkCode.isPending}
+										onClick={() => createLinkCode.mutate()}
+									>
+										<RefreshCw className="mr-2 h-4 w-4" />
+										Generate code
+									</Button>
+									{activeLinkCode?.code && (
+										<Button
+											type="button"
+											variant="outline"
+											className="rounded-xl"
+											onClick={() => revokeLinkCode.mutate(activeLinkCode.code)}
+										>
+											<XCircle className="mr-2 h-4 w-4" />
+											Revoke
+										</Button>
+									)}
+								</div>
+							</div>
+
+							<div className="mt-4 rounded-xl bg-[#FAF9F6] p-4">
+								{activeLinkCode?.code ? (
+									<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+										<div>
+											<p className="text-sm text-[#666]">Active code</p>
+											<p className="font-mono text-2xl font-bold tracking-wider text-[#333]">
+												{activeLinkCode.code}
+											</p>
+											{activeLinkCode.expires_at && (
+												<p className="text-xs text-[#666]">
+													Expires {new Date(activeLinkCode.expires_at).toLocaleString()}
+												</p>
+											)}
+										</div>
+										<Button
+											type="button"
+											variant="outline"
+											className="rounded-xl"
+											onClick={() => navigator.clipboard?.writeText(activeLinkCode.code)}
+										>
+											<Copy className="mr-2 h-4 w-4" />
+											Copy
+										</Button>
+									</div>
+								) : (
+									<p className="text-sm text-[#666]">No active code. Generate one when needed.</p>
+								)}
+							</div>
 						</div>
 					</section>
 				</div>

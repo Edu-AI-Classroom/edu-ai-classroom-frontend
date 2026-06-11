@@ -12,6 +12,7 @@ export function RoleSelectionStep({ selectedRole, onSelectRole }: RoleSelectionS
 	const [hoveredCard, setHoveredCard] = useState<RegisterRole | null>(null);
 	const isTeacherSelected = selectedRole === 'TEACHER';
 	const isStudentSelected = selectedRole === 'STUDENT';
+	const isParentSelected = selectedRole === 'PARENT';
 
 	return (
 		<div className="relative space-y-10">
@@ -28,7 +29,7 @@ export function RoleSelectionStep({ selectedRole, onSelectRole }: RoleSelectionS
 				</p>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+			<div className="grid grid-cols-1 gap-6 md:grid-cols-3">
 				<button
 					type="button"
 					onMouseEnter={() => setHoveredCard('TEACHER')}
@@ -111,6 +112,47 @@ export function RoleSelectionStep({ selectedRole, onSelectRole }: RoleSelectionS
 						</div>
 						<p className="font-handwritten text-2xl text-card-foreground text-center pb-2">
 							I am a Student
+						</p>
+					</div>
+				</button>
+
+				<button
+					type="button"
+					onMouseEnter={() => setHoveredCard('PARENT')}
+					onMouseLeave={() => setHoveredCard(null)}
+					onClick={() => onSelectRole('PARENT')}
+					className="group relative focus:outline-none focus:ring-4 focus:ring-primary/50 rounded-lg"
+				>
+					<div
+						className={`absolute -top-4 right-6 z-10 w-20 h-7 rounded-sm transition-all duration-300 ${
+							hoveredCard === 'PARENT' || isParentSelected
+								? 'opacity-100 scale-100'
+								: 'opacity-0 scale-75'
+						}`}
+						style={{
+							background: 'linear-gradient(135deg, var(--pastel-blue), var(--golden-yellow))',
+							transform: `rotate(4deg) ${hoveredCard === 'PARENT' || isParentSelected ? 'scale(1)' : 'scale(0.75)'}`,
+						}}
+					/>
+
+					<div
+						className={`polaroid w-64 md:w-72 cursor-pointer transition-all duration-300 ease-out ${
+							isParentSelected ? 'ring-2 ring-primary/60' : ''
+						}`}
+						style={{
+							transform:
+								hoveredCard === 'PARENT' || isParentSelected
+									? 'rotate(1deg) translateY(-8px)'
+									: 'rotate(-1deg)',
+						}}
+					>
+						<div className="bg-linear-to-br from-pastel-blue to-pastel-green rounded-md h-48 flex items-center justify-center mb-4">
+							<div className="text-7xl flex gap-3">
+								<span className="inline-block hover-scale">Family</span>
+							</div>
+						</div>
+						<p className="font-handwritten text-2xl text-card-foreground text-center pb-2">
+							I am a Parent
 						</p>
 					</div>
 				</button>

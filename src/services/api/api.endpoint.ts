@@ -109,6 +109,37 @@ export const API_ENDPOINTS = {
 			`/api/student/quizzes/${quizId}/attempts/${attemptId}/submit`,
 	},
 
+	PARENT: {
+		CONSUME_LINK_CODE: '/api/parent/link-codes/consume',
+		STUDENTS: '/api/parent/students',
+		STUDENT_CLASSES: (studentId: number) => `/api/parent/students/${studentId}/classes`,
+		STUDENT_CLASS_GRADEBOOK: (studentId: number, classId: number) =>
+			`/api/parent/students/${studentId}/classes/${classId}/gradebook`,
+		CONVERSATIONS: '/api/parent/conversations',
+	},
+
+	STUDENT_PARENT_LINK: {
+		CREATE: '/api/student/parent-link-codes',
+		ACTIVE: '/api/student/parent-link-codes/active',
+		REVOKE: (code: string) => `/api/student/parent-link-codes/${code}`,
+	},
+
+	CHAT: {
+		TEACHER_CONVERSATIONS: '/api/chat/teacher/conversations',
+		STUDENT_CONVERSATIONS: '/api/chat/student/conversations',
+		MESSAGES: (conversationId: number) => `/api/chat/conversations/${conversationId}/messages`,
+		MESSAGES_WITH_FILES: (conversationId: number) =>
+			`/api/chat/conversations/${conversationId}/messages/with-files`,
+		MARK_READ: (conversationId: number) => `/api/chat/conversations/${conversationId}/read`,
+	},
+
+	NOTIFICATION: {
+		LIST: '/api/notifications',
+		UNREAD_COUNT: '/api/notifications/unread-count',
+		MARK_READ: (notificationId: number) => `/api/notifications/${notificationId}/read`,
+		MARK_ALL_READ: '/api/notifications/read-all',
+	},
+
 	ADMIN_DASHBOARD: {
 		OVERVIEW: '/api/admin/dashboard/overview',
 		USER_GROWTH: '/api/admin/dashboard/user-growth',
