@@ -294,7 +294,7 @@ export default function ParentHome() {
 	};
 
 	return (
-		<div className="flex h-screen w-full min-w-0 overflow-hidden bg-[#FAF9F6]">
+		<div className="flex h-screen w-full min-w-0 overflow-hidden bg-[#FAF9F6] text-[#333]">
 			{mobileSidebarOpen && (
 				<button
 					type="button"
@@ -305,14 +305,14 @@ export default function ParentHome() {
 			)}
 
 			<aside
-				className={`fixed inset-y-0 left-0 z-50 h-full bg-white border-r-4 border-double border-[#E8B4B8] transition-all duration-300 lg:sticky lg:top-0 lg:translate-x-0 ${
+				className={`fixed inset-y-0 left-0 z-50 h-full bg-white/95 shadow-xl shadow-black/5 ring-1 ring-[#E0DCD5]/70 transition-all duration-300 lg:sticky lg:top-0 lg:translate-x-0 lg:shadow-none ${
 					mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
 				} ${sidebarOpen ? 'w-64' : 'w-20'}`}
 			>
 				<div className="flex h-full flex-col">
 					<div className="border-b border-[#E0DCD5] p-4">
 						<Link href="/parent" className="flex items-center gap-2">
-							<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F5B041]">
+							<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#F5B041] shadow-sm shadow-[#F5B041]/30 ring-1 ring-black/5">
 								<BookOpen className="h-5 w-5 text-[#333]" />
 							</div>
 							{sidebarOpen && <span className="font-sans text-xl font-bold text-[#333]">Teachify</span>}
@@ -327,7 +327,7 @@ export default function ParentHome() {
 								onClick={() => switchTab(tab.id)}
 								className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all ${
 									activeTab === tab.id
-										? 'bg-[#F5B041]/20 font-semibold text-[#333]'
+										? 'bg-[#F5B041]/20 font-semibold text-[#333] shadow-sm ring-1 ring-[#F5B041]/25'
 										: 'text-[#666] hover:bg-[#F0EDE8] hover:text-[#333]'
 								} ${sidebarOpen ? '' : 'justify-center'}`}
 							>
@@ -343,7 +343,7 @@ export default function ParentHome() {
 			</aside>
 
 			<div className="flex min-w-0 flex-1 flex-col">
-				<header className="sticky top-0 z-30 border-b border-[#E0DCD5] bg-[#FAF9F6]/95 backdrop-blur-sm">
+				<header className="sticky top-0 z-30 border-b border-[#E0DCD5] bg-[#FAF9F6]/90 backdrop-blur-md">
 					<div className="flex items-center justify-between gap-4 px-4 py-4 lg:px-6">
 						<div className="flex items-center gap-3">
 							<button
@@ -398,7 +398,9 @@ export default function ParentHome() {
 					</div>
 				</header>
 
-				<main className="grid-paper flex-1 overflow-auto p-4 lg:p-6">{renderContent()}</main>
+				<main className="grid-paper flex-1 overflow-auto p-4 lg:p-6">
+					<div className="mx-auto w-full max-w-7xl">{renderContent()}</div>
+				</main>
 			</div>
 		</div>
 	);
@@ -425,10 +427,12 @@ function MetricCard({
 	color: string;
 }) {
 	return (
-		<div className="rounded-xl border border-[#E0DCD5] bg-white p-5 shadow-sm">
-			<Icon className="mb-3 h-6 w-6" style={{ color }} />
-			<p className="text-sm text-[#666]">{label}</p>
-			<p className="font-sans text-3xl font-bold text-[#333]">{value}</p>
+		<div className="rounded-2xl border border-[#E0DCD5] bg-white/95 p-5 shadow-sm shadow-black/5 transition hover:-translate-y-0.5 hover:shadow-md">
+			<div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FAF9F6] ring-1 ring-[#E0DCD5]">
+				<Icon className="h-5 w-5" style={{ color }} />
+			</div>
+			<p className="text-xs font-medium uppercase tracking-[0.14em] text-[#999]">{label}</p>
+			<p className="mt-1 font-sans text-3xl font-bold text-[#333]">{value}</p>
 		</div>
 	);
 }
@@ -450,7 +454,7 @@ function ProgressDashboard({
 }) {
 	return (
 		<div className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-			<div className="rounded-xl border border-[#E0DCD5] bg-white p-5 shadow-sm">
+			<div className="rounded-2xl border border-[#E0DCD5] bg-white/95 p-5 shadow-sm shadow-black/5">
 				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div>
 						<h2 className="font-sans text-xl font-bold text-[#333]">Progress Dashboard</h2>
@@ -470,13 +474,13 @@ function ProgressDashboard({
 						const scoreWidth =
 							item.averageScore != null ? Math.max(4, Math.min(100, item.averageScore * 10)) : 0;
 						return (
-							<div key={item.classId} className="rounded-xl bg-[#FAF9F6] p-4">
+							<div key={item.classId} className="rounded-2xl border border-[#E0DCD5]/70 bg-[#FAF9F6] p-4">
 								<div className="mb-3 flex items-start justify-between gap-3">
 									<div className="min-w-0">
 										<p className="truncate font-semibold text-[#333]">{item.className}</p>
 										<p className="text-sm text-[#666]">{item.subjectName ?? 'Subject'}</p>
 									</div>
-									<span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#333]">
+									<span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#333] shadow-sm">
 										{item.averageScore ?? '-'}
 									</span>
 								</div>
@@ -516,7 +520,7 @@ function ProgressDashboard({
 			</div>
 
 			<div className="space-y-4">
-				<div className="rounded-xl border border-[#E0DCD5] bg-white p-5 shadow-sm">
+				<div className="rounded-2xl border border-[#E0DCD5] bg-white/95 p-5 shadow-sm shadow-black/5">
 					<h2 className="font-sans text-xl font-bold text-[#333]">Weekly summary</h2>
 					<div className="mt-4 space-y-3">
 						<SummaryLine
@@ -532,7 +536,7 @@ function ProgressDashboard({
 						/>
 					</div>
 				</div>
-				<div className="rounded-xl border border-[#E0DCD5] bg-white p-5 shadow-sm">
+				<div className="rounded-2xl border border-[#E0DCD5] bg-white/95 p-5 shadow-sm shadow-black/5">
 					<h2 className="font-sans text-xl font-bold text-[#333]">Attention list</h2>
 					{summary.needsAttention.length === 0 ? (
 						<p className="mt-3 text-sm text-[#666]">Everything looks on track.</p>
@@ -565,7 +569,7 @@ function SummaryLine({
 	value: string | number;
 }) {
 	return (
-		<div className="flex items-center justify-between gap-3 rounded-lg bg-[#FAF9F6] p-3">
+		<div className="flex items-center justify-between gap-3 rounded-xl border border-[#E0DCD5]/70 bg-[#FAF9F6] p-3">
 			<div className="flex items-center gap-2">
 				<Icon className="h-4 w-4 text-[#F5B041]" />
 				<span className="text-sm text-[#666]">{label}</span>
@@ -587,7 +591,7 @@ function StudentPicker({
 	tall?: boolean;
 }) {
 	return (
-		<div className={`rounded-xl border border-[#E0DCD5] bg-white p-4 shadow-sm ${tall ? 'min-h-[420px]' : ''}`}>
+		<div className={`rounded-2xl border border-[#E0DCD5] bg-white/95 p-4 shadow-sm shadow-black/5 ${tall ? 'min-h-[420px]' : ''}`}>
 			<h2 className="mb-3 font-sans text-lg font-bold text-[#333]">Students</h2>
 			{students.length === 0 ? (
 				<p className="text-sm text-[#666]">Ask your student to create a parent link code.</p>
@@ -598,10 +602,10 @@ function StudentPicker({
 							key={student.studentId}
 							type="button"
 							onClick={() => onSelect(student.studentId)}
-							className={`w-full rounded-xl border p-3 text-left ${
+							className={`w-full rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${
 								activeStudentId === student.studentId
-									? 'border-[#F5B041] bg-[#F5B041]/10'
-									: 'border-[#E0DCD5] bg-white'
+									? 'border-[#F5B041] bg-[#F5B041]/10 shadow-sm'
+									: 'border-[#E0DCD5] bg-white hover:bg-[#FAF9F6]'
 							}`}
 						>
 							<p className="font-semibold text-[#333]">{student.student.studentName}</p>
@@ -626,7 +630,7 @@ function ClassCards({
 	onChat: (classId: number) => void;
 }) {
 	return (
-		<div className="rounded-xl border border-[#E0DCD5] bg-white p-5 shadow-sm">
+		<div className="rounded-2xl border border-[#E0DCD5] bg-white/95 p-5 shadow-sm shadow-black/5">
 			<h2 className="mb-4 font-sans text-xl font-bold text-[#333]">Classes</h2>
 			<div className="grid gap-3 md:grid-cols-2">
 				{classes.map((item) => (
@@ -634,10 +638,10 @@ function ClassCards({
 						type="button"
 						key={item.classId}
 						onClick={() => onSelect(item.classId)}
-						className={`rounded-xl border p-4 text-left ${
+						className={`rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${
 							activeClassId === item.classId
-								? 'border-[#F5B041] bg-[#F5B041]/10'
-								: 'border-[#E0DCD5] bg-[#FAF9F6]'
+								? 'border-[#F5B041] bg-[#F5B041]/10 shadow-sm'
+								: 'border-[#E0DCD5] bg-[#FAF9F6] hover:bg-white'
 						}`}
 					>
 						<div className="flex items-start justify-between gap-3">
@@ -684,7 +688,7 @@ function GradebookTable({
 	gradebook: any;
 }) {
 	return (
-		<div className="rounded-xl border border-[#E0DCD5] bg-white p-5 shadow-sm">
+		<div className="rounded-2xl border border-[#E0DCD5] bg-white/95 p-5 shadow-sm shadow-black/5">
 			<div className="mb-4">
 				<h2 className="font-sans text-xl font-bold text-[#333]">Class gradebook</h2>
 				<p className="text-sm text-[#666]">
