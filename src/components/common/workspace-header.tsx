@@ -29,8 +29,8 @@ export default function WorkspaceHeader({ userName, userRole, avatarUrl }: Works
 	};
 
 	return (
-		<header className="sticky top-0 z-50 w-full border-b border-border/50 bg-cream/95 backdrop-blur supports-backdrop-filter:bg-cream/80">
-			<div className="container mx-auto flex h-16 items-center justify-between px-4">
+		<header className="sticky top-0 z-50 w-full border-b border-[#E0DCD5] bg-[#FAF9F6]/90 shadow-[0_8px_24px_rgba(51,51,51,0.04)] backdrop-blur-md supports-backdrop-filter:bg-[#FAF9F6]/80">
+			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
 				<TeachifyIcon />
 
 				<div className="flex items-center gap-4">
@@ -40,20 +40,24 @@ export default function WorkspaceHeader({ userName, userRole, avatarUrl }: Works
 						<DropdownMenuTrigger asChild>
 							<button
 								type="button"
-								className="flex items-center gap-3 pl-4 border-l border-[#E0DCD5] rounded-lg hover:bg-black/5 px-2 py-1"
+								className="flex items-center gap-3 rounded-2xl border border-transparent px-2 py-1 transition hover:border-[#E0DCD5] hover:bg-white/80 hover:shadow-sm"
 								aria-label="Open user menu"
 							>
 								{avatarUrl ? (
-									<img src={avatarUrl} alt="User avatar" className="w-10 h-10 rounded-full" />
+									<img
+										src={avatarUrl}
+										alt="User avatar"
+										className="h-10 w-10 rounded-full ring-2 ring-white"
+									/>
 								) : (
-									<div className="w-10 h-10 rounded-full bg-[#C5B4E3] flex items-center justify-center text-white font-semibold">
+									<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C5B4E3] font-semibold text-white ring-2 ring-white">
 										{userName
 											.split(' ')
 											.map((n) => n[0])
 											.join('')}
 									</div>
 								)}
-								<div className="hidden sm:block text-left">
+								<div className="hidden text-left sm:block">
 									<p className="font-sans font-semibold text-sm text-[#333]">{userName}</p>
 									<p className="text-xs text-[#666]">{userRole}</p>
 								</div>

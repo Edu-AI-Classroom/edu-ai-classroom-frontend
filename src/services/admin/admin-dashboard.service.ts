@@ -18,9 +18,17 @@ export const AdminDashboardService = {
 			totalUsers: number;
 			totalTeachers: number;
 			totalStudents: number;
+			totalParents: number;
 			totalClassrooms: number;
 			totalRevenue: number;
 			totalTransactions: number;
+			newUsersInPeriod: number;
+			aiRequests: number;
+			aiCost: number;
+			aiTokens: number;
+			trialTransactions: number;
+			paidTransactions: number;
+			averageClassSize: number;
 			usersGrowth: number;
 			teachersGrowth: number;
 			studentsGrowth: number;
