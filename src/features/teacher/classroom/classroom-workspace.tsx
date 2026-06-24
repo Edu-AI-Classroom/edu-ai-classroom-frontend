@@ -110,7 +110,7 @@ export default function ClassroomWorkspace({
 	};
 
 	return (
-		<div className="h-screen bg-[#FAF9F6] flex overflow-hidden">
+		<div className="flex h-screen overflow-hidden bg-[#FAF9F6] text-[#333]">
 			{/* Mobile Sidebar Overlay */}
 			{mobileSidebarOpen && (
 				<button
@@ -123,7 +123,7 @@ export default function ClassroomWorkspace({
 
 			{/* Sidebar */}
 			<aside
-				className={`fixed lg:sticky lg:top-0 lg:self-start inset-y-0 left-0 z-50 h-full lg:h-screen w-64 bg-white border-r-4 border-double border-[#E8B4B8] transform transition-transform duration-300 lg:transform-none ${
+				className={`fixed inset-y-0 left-0 z-50 h-full w-64 bg-white/95 shadow-xl shadow-black/5 ring-1 ring-[#E0DCD5]/70 transform transition-transform duration-300 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:transform-none lg:shadow-none ${
 					mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 				} ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}
 			>
@@ -131,7 +131,7 @@ export default function ClassroomWorkspace({
 					{/* Logo */}
 					<div className="p-4 border-b border-[#E0DCD5]">
 						<Link href="/dashboard" className="flex items-center gap-2">
-							<div className="w-10 h-10 rounded-xl bg-[#F5B041] flex items-center justify-center shrink-0">
+							<div className="w-10 h-10 rounded-2xl bg-[#F5B041] flex items-center justify-center shrink-0 shadow-sm shadow-[#F5B041]/30 ring-1 ring-black/5">
 								<BookOpen className="w-5 h-5 text-[#333]" />
 							</div>
 							{sidebarOpen && (
@@ -188,7 +188,7 @@ export default function ClassroomWorkspace({
 								}}
 								className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
 									activeTab === tab.id
-										? 'bg-[#F5B041]/20 text-[#333] font-semibold'
+										? 'bg-[#F5B041]/20 text-[#333] font-semibold shadow-sm ring-1 ring-[#F5B041]/25'
 										: 'text-[#666] hover:bg-[#F0EDE8] hover:text-[#333]'
 								} ${sidebarOpen ? '' : 'justify-center'}`}
 							>
@@ -220,7 +220,7 @@ export default function ClassroomWorkspace({
 			{/* Main Area */}
 			<div className="flex-1 flex flex-col min-w-0 h-full">
 				{/* Top Bar */}
-				<header className="sticky top-0 z-30 bg-[#FAF9F6]/95 backdrop-blur-sm border-b border-[#E0DCD5]">
+				<header className="sticky top-0 z-30 bg-[#FAF9F6]/90 backdrop-blur-md border-b border-[#E0DCD5]">
 					<div className="px-4 lg:px-6 py-4 flex items-center justify-between gap-4">
 						{/* Mobile Menu Button */}
 						<button
@@ -284,7 +284,9 @@ export default function ClassroomWorkspace({
 				</header>
 
 				{/* Content Area */}
-				<main className="flex-1 p-4 lg:p-6 overflow-auto grid-paper">{renderContent()}</main>
+				<main className="flex-1 p-4 lg:p-6 overflow-auto grid-paper">
+					<div className="mx-auto w-full max-w-7xl">{renderContent()}</div>
+				</main>
 			</div>
 		</div>
 	);
