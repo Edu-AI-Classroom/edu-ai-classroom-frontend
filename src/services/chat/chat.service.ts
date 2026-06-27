@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from '@/services/api/api.endpoint';
-import { http, } from '@/services/http';
+import { http } from '@/services/http';
 import { httpGet, httpPatch, httpPost } from '@/services/http.helpers';
 import type { ChatMessage, Conversation } from '@/types/chat';
 
@@ -16,6 +16,15 @@ export const ChatService = {
 
 	createStudentConversation: (classId: number) =>
 		httpPost<Conversation>(API_ENDPOINTS.CHAT.STUDENT_CONVERSATIONS, { classId }),
+
+	createTeacherStudentConversation: (classId: number, studentId: number) =>
+		httpPost<Conversation>(API_ENDPOINTS.CHAT.TEACHER_STUDENT_CONVERSATIONS, {
+			classId,
+			studentId,
+		}),
+
+	createTeacherParentConversation: (classId: number, studentId: number) =>
+		httpPost<Conversation>(API_ENDPOINTS.CHAT.TEACHER_PARENT_CONVERSATIONS, { classId, studentId }),
 
 	getMessages: (conversationId: number) =>
 		httpGet<ChatMessage[]>(API_ENDPOINTS.CHAT.MESSAGES(conversationId)),

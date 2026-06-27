@@ -284,10 +284,10 @@ export default function SubscriptionPage() {
 											disabled={
 												!hasHydrated ||
 												paymentLoading !== null ||
-												userSubscription?.subId === plan.subId
+												userSubscription?.subscriptionCode === plan.subCode
 											}
 											className={`w-full mb-8 font-semibold ${
-												userSubscription?.subId === plan.subId
+												userSubscription?.subscriptionCode === plan.subCode
 													? 'bg-[#a8d5ba] hover:bg-[#9dcaa9] text-[#333333]'
 													: isPopular
 														? 'bg-[#f5b041] hover:bg-[#e5a030] text-[#333333] disabled:bg-[#d4a037]'
@@ -299,7 +299,7 @@ export default function SubscriptionPage() {
 													<div className="w-4 h-4 border-2 border-[#333333] border-t-transparent rounded-full animate-spin mr-2" />
 													Processing...
 												</>
-											) : userSubscription?.subId === plan.subId ? (
+											) : userSubscription?.subscriptionCode === plan.subCode ? (
 												<>
 													<Check className="w-4 h-4 mr-2" />
 													Bạn đã đăng ký

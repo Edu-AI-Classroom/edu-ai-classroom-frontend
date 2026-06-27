@@ -20,3 +20,10 @@ export interface PaymentLinkResponse {
 		status: string;
 	};
 }
+
+export interface ConfirmPaymentResponse {
+	transactionId: number;
+	orderCode: string;
+	status: string;
+	alreadyCompleted: boolean;
+}

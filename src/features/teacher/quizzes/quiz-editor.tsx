@@ -49,6 +49,8 @@ import {
 	useUpdateQuizQuestion,
 } from '@/hooks/queries/quiz/use-quiz-mutation';
 import { useQuizDetail, useQuizQuestions } from '@/hooks/queries/quiz/use-quiz-query';
+import { useUserSubscription } from '@/hooks/queries/subscription/use-user-subscription';
+import { useAuthStore } from '@/stores/auth-store';
 import type {
 	AiGeneratedQuizQuestion,
 	QuizDocumentType,
@@ -96,6 +98,9 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 	const { data: quiz, isLoading: isQuizLoading } = useQuizDetail(quizId);
 	const { data: questions, isLoading: isQuestionsLoading } = useQuizQuestions(quizId);
 	const { data: classes } = useClassList();
+	const { data: currentSubscription } = useUserSubscription();
+	const authUser = useAuthStore((state) => state.user);
+	const setUser = useAuthStore((state) => state.setUser);
 
 	const updateQuiz = useUpdateQuiz(quizId);
 	const createQuestion = useCreateQuizQuestion(quizId);
@@ -127,6 +132,10 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 	const [aiGenerated, setAiGenerated] = useState<AiGeneratedQuizQuestion[] | null>(null);
 	const [aiError, setAiError] = useState<string>('');
 	const [isAiToolboxOpen, setIsAiToolboxOpen] = useState(false);
+	const [latestAiUsage, setLatestAiUsage] = useState<{
+		tokensCharged: number;
+		tokensRemaining: number;
+	} | null>(null);
 
 	// Hydrate local form from server once
 	const [hydrated, setHydrated] = useState(false);
@@ -399,6 +408,18 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 				language: 'vi',
 			});
 			setAiGenerated(res.questions ?? []);
+			setLatestAiUsage(res.usage ?? null);
+			if (authUser) {
+				setUser({
+					...authUser,
+					credit: res.usage?.tokensRemaining ?? authUser.credit,
+				});
+			}
+			if (res.usage) {
+				toast.success('AI draft generated', {
+					description: `${res.usage.tokensCharged} tokens used. ${res.usage.tokensRemaining} tokens remaining.`,
+				});
+			}
 		} catch (e: any) {
 			const message = e?.message ?? 'AI generate failed';
 			setAiError(message);
@@ -958,6 +979,23 @@ export default function QuizEditor({ quizId }: { quizId: string }) {
 											Question: {aiTotalQuestions} | MCQ: {aiMcqCount} | Essay: {aiEssayCount}
 										</p>
 										<p>Points per question: {aiPointsPerQuestion}</p>
+									</div>
+
+									<div className="rounded-xl border border-[#F0D6A2] bg-[#FFF8EB] p-3 text-xs text-[#7A5A1F]">
+										<p className="font-semibold text-[#9A6A07]">AI token usage</p>
+										<p>
+											Remaining:{' '}
+											{latestAiUsage?.tokensRemaining ??
+												authUser?.credit ??
+												currentSubscription?.aiTokensRemaining ??
+												0}
+										</p>
+										{currentSubscription?.aiTokenLimit != null && (
+											<p>Plan allowance: {currentSubscription.aiTokenLimit}</p>
+										)}
+										{latestAiUsage && (
+											<p>Last generation used: {latestAiUsage.tokensCharged} tokens</p>
+										)}
 									</div>
 
 									{aiError && <p className="text-sm text-red-600">{aiError}</p>}
