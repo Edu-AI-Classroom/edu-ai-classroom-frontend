@@ -25,7 +25,7 @@ Frontend                    Server (NestJS)              Google
    │                             │                          │
    │                             │  4. Redirect to callback │
    │  ◄───────────────────────────────────────────────────  │
-   │                             │                          │
+   │                               │                          │
    │  5. GET /api/auth/google/callback?code=...&state=...   │
    │ ──────────────────────────► │                          │
    │                             │                          │

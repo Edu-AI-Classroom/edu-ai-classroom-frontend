@@ -91,7 +91,11 @@ export function useReorderQuizQuestions(quizId: string) {
 }
 
 export function useGenerateQuizWithAi(quizId: string) {
+	const qc = useQueryClient();
 	return useMutation({
 		mutationFn: (payload: GenerateQuizWithAiPayload) => QuizService.aiGenerate(quizId, payload),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: queryKeys.subscription.userCurrent() });
+		},
 	});
 }

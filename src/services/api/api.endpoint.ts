@@ -126,6 +126,8 @@ export const API_ENDPOINTS = {
 
 	CHAT: {
 		TEACHER_CONVERSATIONS: '/api/chat/teacher/conversations',
+		TEACHER_STUDENT_CONVERSATIONS: '/api/chat/teacher/student-conversations',
+		TEACHER_PARENT_CONVERSATIONS: '/api/chat/teacher/parent-conversations',
 		STUDENT_CONVERSATIONS: '/api/chat/student/conversations',
 		MESSAGES: (conversationId: number) => `/api/chat/conversations/${conversationId}/messages`,
 		MESSAGES_WITH_FILES: (conversationId: number) =>
