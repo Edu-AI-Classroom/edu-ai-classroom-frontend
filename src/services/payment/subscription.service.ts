@@ -1,4 +1,4 @@
-import type { SubscriptionPlan } from '@/types/subscription';
+import type { CurrentSubscription, SubscriptionPlan } from '@/types/subscription';
 import { http } from '../http';
 import { httpGet } from '../http.helpers';
 
@@ -24,7 +24,7 @@ export const subscriptionService = {
 	getPlans: () => httpGet<SubscriptionPlan[]>('/api/subscription-plans'),
 
 	getUserCurrentSubscription: () =>
-		httpGet<SubscriptionPlan>('/api/users/current-subscription').catch(() => null),
+		httpGet<CurrentSubscription>('/api/users/current-subscription').catch(() => null),
 
 	createPlan: (dto: Partial<SubscriptionPlan>) =>
 		http<SubscriptionPlan>('/api/subscription-plans', {

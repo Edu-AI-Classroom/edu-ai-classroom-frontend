@@ -146,4 +146,8 @@ export type AiGeneratedQuizQuestion =
 export type GenerateQuizWithAiResponse = {
 	quizId: string;
 	questions: AiGeneratedQuizQuestion[];
+	usage: {
+		tokensCharged: number;
+		tokensRemaining: number;
+	};
 };

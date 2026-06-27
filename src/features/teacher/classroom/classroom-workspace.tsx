@@ -20,13 +20,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { NotificationBell } from '@/features/notification/notification-bell';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { NotificationBell } from '@/features/notification/notification-bell';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import { useAuthStore } from '@/stores/auth-store';
 import type { ClassroomUiData } from './classroom.mapper';
@@ -80,6 +80,7 @@ export default function ClassroomWorkspace({
 	const [activeTab, setActiveTab] = useState<TabType>('overview');
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+	const [preferredConversationId, setPreferredConversationId] = useState<number | null>(null);
 
 	const handleLogout = () => {
 		logout();
@@ -95,13 +96,26 @@ export default function ClassroomWorkspace({
 			case 'feed':
 				return <ClassFeed classData={classData} />;
 			case 'students':
-				return <ClassStudents classData={classData} />;
+				return (
+					<ClassStudents
+						classData={classData}
+						onOpenConversation={(conversationId) => {
+							setPreferredConversationId(conversationId);
+							setActiveTab('conversation');
+						}}
+					/>
+				);
 			case 'assignments':
 				return <ClassAssignments classData={classData} />;
 			case 'grades':
 				return <ClassGrades classData={classData} />;
 			case 'conversation':
-				return <TeacherClassConversation classId={classData.id} />;
+				return (
+					<TeacherClassConversation
+						classId={classData.id}
+						preferredConversationId={preferredConversationId}
+					/>
+				);
 			case 'settings':
 				return <ClassroomSettings classData={classData} onDeleted={onBack} />;
 			default:

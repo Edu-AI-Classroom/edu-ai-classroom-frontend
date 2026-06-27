@@ -1,6 +1,14 @@
 'use client';
 
-import { AlertTriangle, Loader2, MoreHorizontal, Search, User } from 'lucide-react';
+import {
+	AlertTriangle,
+	Loader2,
+	MessageCircle,
+	MoreHorizontal,
+	Search,
+	User,
+	Users,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +19,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/common/use-toast';
+import {
+	useCreateTeacherParentConversation,
+	useCreateTeacherStudentConversation,
+} from '@/hooks/queries/chat/use-chat-query';
 import { useClassMutations } from '@/hooks/queries/class/use-class-mutation';
 import { useClassStudentStats, useClassStudents } from '@/hooks/queries/class/use-class-query';
+import type { ApiError } from '@/types/api';
 import type { AddStudentPayload } from '@/types/class';
 import type { ClassroomUiData } from '../classroom.mapper';
 import { AddStudentDialog } from './add-student-dialog';
@@ -21,6 +34,7 @@ import { StudentProfileModal } from './student-profile-modal';
 
 interface ClassStudentsProps {
 	classData: ClassroomUiData;
+	onOpenConversation?: (conversationId: number) => void;
 }
 
 type UiStudentStatus = 'all' | 'excellent' | 'on-track' | 'needs-attention';
@@ -36,11 +50,13 @@ type UiStudent = {
 	status?: Exclude<UiStudentStatus, 'all'>;
 };
 
-export default function ClassStudents({ classData }: ClassStudentsProps) {
+export default function ClassStudents({ classData, onOpenConversation }: ClassStudentsProps) {
 	const classId = typeof classData.id === 'string' ? parseInt(classData.id, 10) : classData.id;
 	const { data: studentsResponse, isLoading } = useClassStudents(classId);
 	const { data: studentStats } = useClassStudentStats(classId);
 	const { addStudentToClassMutation, removeStudentFromClassMutation } = useClassMutations();
+	const createTeacherStudentConversationMutation = useCreateTeacherStudentConversation();
+	const createTeacherParentConversationMutation = useCreateTeacherParentConversation();
 	const { toast } = useToast();
 
 	const [searchQuery, setSearchQuery] = useState('');
@@ -130,6 +146,50 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 			});
 		} finally {
 			setRemovingStudentId(null);
+		}
+	};
+
+	const handleOpenStudentConversation = async (studentId: number) => {
+		try {
+			const conversation = await createTeacherStudentConversationMutation.mutateAsync({
+				classId,
+				studentId,
+			});
+			onOpenConversation?.(conversation.conversationId);
+		} catch (error) {
+			const apiError = error as ApiError;
+			toast({
+				title: 'Unable to open student chat',
+				description: apiError.message || 'Something went wrong while creating the conversation.',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	const handleOpenParentConversation = async (studentId: number, studentName: string) => {
+		try {
+			const conversation = await createTeacherParentConversationMutation.mutateAsync({
+				classId,
+				studentId,
+			});
+			onOpenConversation?.(conversation.conversationId);
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError.message === 'Student has no linked parent') {
+				const toastRef = toast({
+					title: 'Parent not linked',
+					description: `${studentName} has not linked a parent account yet.`,
+					variant: 'destructive',
+				});
+				window.setTimeout(() => toastRef.dismiss(), 5000);
+				return;
+			}
+
+			toast({
+				title: 'Unable to open parent chat',
+				description: apiError.message || 'Something went wrong while creating the conversation.',
+				variant: 'destructive',
+			});
 		}
 	};
 
@@ -236,6 +296,16 @@ export default function ClassStudents({ classData }: ClassStudentsProps) {
 									>
 										<User className="w-4 h-4 mr-2" />
 										View Profile
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => void handleOpenStudentConversation(student.id)}>
+										<MessageCircle className="w-4 h-4 mr-2" />
+										Chat with student
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => void handleOpenParentConversation(student.id, student.name)}
+									>
+										<Users className="w-4 h-4 mr-2" />
+										Chat with parent
 									</DropdownMenuItem>
 									<ConfirmActionModal
 										title="Remove Student?"

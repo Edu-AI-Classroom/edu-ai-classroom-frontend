@@ -28,6 +28,30 @@ export function useCreateStudentConversation() {
 	});
 }
 
+export function useCreateTeacherStudentConversation() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ classId, studentId }: { classId: number; studentId: number }) =>
+			ChatService.createTeacherStudentConversation(classId, studentId),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ['chat', 'teacher', 'conversations'] });
+			void queryClient.invalidateQueries({ queryKey: ['chat'] });
+		},
+	});
+}
+
+export function useCreateTeacherParentConversation() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ classId, studentId }: { classId: number; studentId: number }) =>
+			ChatService.createTeacherParentConversation(classId, studentId),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ['chat', 'teacher', 'conversations'] });
+			void queryClient.invalidateQueries({ queryKey: ['chat'] });
+		},
+	});
+}
+
 export function useChatMessages(conversationId?: number) {
 	return useQuery({
 		queryKey: ['chat', 'messages', conversationId],
