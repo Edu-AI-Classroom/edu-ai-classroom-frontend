@@ -6,8 +6,8 @@ import type { SubscriptionPlan } from '@/types/subscription';
 
 export function useSubscriptionPlans() {
 	return useQuery({
-		queryKey: queryKeys.subscription.plans(),
-		queryFn: () => subscriptionService.getPlans(),
+		queryKey: queryKeys.subscription.plans(false),
+		queryFn: () => subscriptionService.getPlans(false),
 	});
 }
 
@@ -17,7 +17,7 @@ export function useCreateSubscriptionPlan() {
 	return useMutation({
 		mutationFn: (dto: Partial<SubscriptionPlan>) => subscriptionService.createPlan(dto),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.subscription.plans() });
+			queryClient.invalidateQueries({ queryKey: queryKeys.subscription.all });
 			toast.success('Subscription plan created successfully');
 		},
 		onError: (error: any) => {
@@ -33,7 +33,7 @@ export function useUpdateSubscriptionPlan() {
 		mutationFn: ({ id, dto }: { id: number; dto: Partial<SubscriptionPlan> }) =>
 			subscriptionService.updatePlan(id, dto),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.subscription.plans() });
+			queryClient.invalidateQueries({ queryKey: queryKeys.subscription.all });
 			toast.success('Subscription plan updated successfully');
 		},
 		onError: (error: any) => {
@@ -48,7 +48,7 @@ export function useDeleteSubscriptionPlan() {
 	return useMutation({
 		mutationFn: (id: number) => subscriptionService.deletePlan(id),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.subscription.plans() });
+			queryClient.invalidateQueries({ queryKey: queryKeys.subscription.all });
 			toast.success('Subscription plan deleted successfully');
 		},
 		onError: (error: any) => {

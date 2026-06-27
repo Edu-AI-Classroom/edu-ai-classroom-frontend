@@ -55,7 +55,8 @@ export const queryKeys = {
 
 	subscription: {
 		all: ['subscription'] as const,
-		plans: () => [...queryKeys.subscription.all, 'plans'] as const,
+		plans: (activeOnly?: boolean) =>
+			[...queryKeys.subscription.all, 'plans', { activeOnly: activeOnly ?? false }] as const,
 		userCurrent: () => [...queryKeys.subscription.all, 'user-current'] as const,
 	},
 
