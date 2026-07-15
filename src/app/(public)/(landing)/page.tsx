@@ -2,6 +2,7 @@ import { ClearRegisterDraftOnMount } from '@/features/auth/register/components/c
 import { CanvasSection } from '@/features/landing/components/canvas-section';
 import { CTASection } from '@/features/landing/components/cta-section';
 import { FeaturesSection } from '@/features/landing/components/features-section';
+import { FeedbackSection } from '@/features/landing/components/feedback-section';
 import { HeroSection } from '@/features/landing/components/hero-section';
 import { HowItWorksSection } from '@/features/landing/components/how-it-works-section';
 import { StudentExperienceSection } from '@/features/landing/components/student-experience-section';
@@ -16,6 +17,7 @@ export default function Home() {
 			<HowItWorksSection />
 			<CanvasSection />
 			<TrustSection />
+			<FeedbackSection />
 			<StudentExperienceSection />
 			<CTASection />
 		</>

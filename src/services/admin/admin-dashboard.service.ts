@@ -98,6 +98,41 @@ export const AdminDashboardService = {
 			}>;
 		}>(API_ENDPOINTS.ADMIN_DASHBOARD.TRANSACTIONS + buildQuery(filters));
 	},
+
+	getReviews(filters: AdminDateFilters) {
+		return http<{
+			totalReviews: number;
+			averageRating: number;
+			commentsCount: number;
+			ratingBreakdown: Array<{ rating: number; value: number }>;
+			recentComments: Array<{
+				id: string;
+				userName: string;
+				email: string;
+				role: string;
+				feature: string;
+				rating: number;
+				comment: string;
+				feedback: string;
+				createdAt: string;
+			}>;
+		}>(API_ENDPOINTS.ADMIN_DASHBOARD.REVIEWS + buildQuery(filters));
+	},
+
+	getUsers(filters: AdminDateFilters) {
+		return http<{
+			roleSummary: Array<{ role: string; value: number }>;
+			recentUsers: Array<{
+				id: number;
+				name: string;
+				email: string;
+				role: string;
+				isActive: boolean;
+				credit: number;
+				createdAt: string;
+			}>;
+		}>(API_ENDPOINTS.ADMIN_DASHBOARD.USERS + buildQuery(filters));
+	},
 };
 
 function buildQuery(filters: Record<string, any>): string {
