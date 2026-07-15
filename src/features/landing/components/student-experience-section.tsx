@@ -40,14 +40,14 @@ export function StudentExperienceSection() {
 												<span className="text-xs font-bold text-[#A8D5BA]">92%</span>
 											</div>
 											<div className="h-2 rounded-full bg-muted">
-												<div className="h-2 w-[92%] rounded-full bg-[#A8D5BA]" />
+												<div className="h-2 rounded-full bg-[#A8D5BA]" style={{ width: '92%' }} />
 											</div>
 											<div className="flex items-center justify-between">
 												<span className="text-xs text-muted-foreground">Science</span>
 												<span className="text-xs font-bold text-[#A8D4E6]">87%</span>
 											</div>
 											<div className="h-2 rounded-full bg-muted">
-												<div className="h-2 w-[87%] rounded-full bg-[#A8D4E6]" />
+												<div className="h-2 rounded-full bg-[#A8D4E6]" style={{ width: '87%' }} />
 											</div>
 										</div>
 									</div>

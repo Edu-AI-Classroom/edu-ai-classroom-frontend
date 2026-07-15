@@ -135,6 +135,33 @@ export const API_ENDPOINTS = {
 		MARK_READ: (conversationId: number) => `/api/chat/conversations/${conversationId}/read`,
 	},
 
+	AGORA: {
+		SESSIONS: (classId: number) => `/api/agora/classrooms/${classId}/sessions`,
+		SESSION_DETAIL: (classId: number, sessionId: string) =>
+			`/api/agora/classrooms/${classId}/sessions/${sessionId}`,
+		TOKEN: (classId: number, sessionId: string, speaker?: boolean) =>
+			`/api/agora/classrooms/${classId}/sessions/${sessionId}/token${
+				speaker ? '?speaker=true' : ''
+			}`,
+		JOIN: (classId: number, sessionId: string) =>
+			`/api/agora/classrooms/${classId}/sessions/${sessionId}/join`,
+		LEAVE: (classId: number, sessionId: string) =>
+			`/api/agora/classrooms/${classId}/sessions/${sessionId}/leave`,
+		END: (classId: number, sessionId: string) =>
+			`/api/agora/classrooms/${classId}/sessions/${sessionId}/end`,
+		PARTICIPANT: (classId: number, sessionId: string, participantId: number) =>
+			`/api/agora/classrooms/${classId}/sessions/${sessionId}/participants/${participantId}`,
+		START_CONVERSATION_CALL: (conversationId: number) =>
+			`/api/agora/conversations/${conversationId}/calls`,
+		ACTIVE_CONVERSATION_CALLS: '/api/agora/conversation-calls/active',
+		CONVERSATION_CALL: (callId: string) => `/api/agora/conversation-calls/${callId}`,
+		ACCEPT_CONVERSATION_CALL: (callId: string) => `/api/agora/conversation-calls/${callId}/accept`,
+		DECLINE_CONVERSATION_CALL: (callId: string) =>
+			`/api/agora/conversation-calls/${callId}/decline`,
+		END_CONVERSATION_CALL: (callId: string) => `/api/agora/conversation-calls/${callId}/end`,
+		CONVERSATION_CALL_TOKEN: (callId: string) => `/api/agora/conversation-calls/${callId}/token`,
+	},
+
 	NOTIFICATION: {
 		LIST: '/api/notifications',
 		UNREAD_COUNT: '/api/notifications/unread-count',
@@ -149,6 +176,13 @@ export const API_ENDPOINTS = {
 		TRANSACTIONS: '/api/admin/dashboard/transactions',
 		AI_USAGE: '/api/admin/dashboard/ai-usage',
 		CLASSROOMS: '/api/admin/dashboard/classrooms',
+		REVIEWS: '/api/admin/dashboard/reviews',
+		USERS: '/api/admin/dashboard/users',
+	},
+
+	SITE_FEEDBACK: {
+		LIST: '/api/site-feedback',
+		CREATE: '/api/site-feedback',
 	},
 
 	LESSON: {

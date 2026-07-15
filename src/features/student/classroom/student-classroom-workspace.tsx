@@ -11,28 +11,30 @@ import {
 	MessageCircle,
 	Newspaper,
 	Presentation,
+	Radio,
 	X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { NotificationBell } from '@/features/notification/notification-bell';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AgoraLiveSession } from '@/features/agora/agora-live-session';
+import { NotificationBell } from '@/features/notification/notification-bell';
 import type { ClassroomUiData } from '@/features/teacher/classroom/classroom.mapper';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import CourseAssignments from './components/CourseAssignments';
 import CourseFeed from './components/CourseFeed';
 import CourseGrades from './components/CourseGrades';
 import CourseOverview from './components/CourseOverview';
-import StudentClassLessons from './components/student-class-lessons';
 import StudentClassConversation from './components/student-class-conversation';
+import StudentClassLessons from './components/student-class-lessons';
 
-type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation' | 'lessons';
+type TabType = 'overview' | 'feed' | 'assignments' | 'grades' | 'conversation' | 'lessons' | 'live';
 
 interface StudentClassroomWorkspaceProps {
 	classData: ClassroomUiData;
@@ -48,6 +50,7 @@ const tabs = [
 	{ id: 'assignments' as TabType, label: 'Assignments', icon: FileText },
 	{ id: 'grades' as TabType, label: 'Grades', icon: BarChart3 },
 	{ id: 'conversation' as TabType, label: 'Conversation', icon: MessageCircle },
+	{ id: 'live' as TabType, label: 'Live', icon: Radio },
 ];
 
 export default function StudentClassroomWorkspace({
@@ -76,6 +79,8 @@ export default function StudentClassroomWorkspace({
 				return <CourseGrades classData={classData} />;
 			case 'conversation':
 				return <StudentClassConversation classId={classData.id} />;
+			case 'live':
+				return <AgoraLiveSession classId={classData.id} className={classData.name} />;
 			default:
 				return <CourseOverview classData={classData} />;
 		}

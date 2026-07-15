@@ -6,7 +6,7 @@ import type { SubscriptionPlan } from '@/types/subscription';
 
 export function useSubscriptionPlans() {
 	return useQuery<SubscriptionPlan[]>({
-		queryKey: queryKeys.subscription.plans(),
-		queryFn: () => subscriptionService.getPlans(),
+		queryKey: queryKeys.subscription.plans(true),
+		queryFn: () => subscriptionService.getPlans(true),
 	});
 }
