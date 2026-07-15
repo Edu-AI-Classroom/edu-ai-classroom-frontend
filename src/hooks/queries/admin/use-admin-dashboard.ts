@@ -16,6 +16,8 @@ export function useAdminDashboard(filters: AdminDateFilters) {
 		aiUsage,
 		revenue,
 		transactions,
+		reviews,
+		users,
 	] = useQueries({
 		queries: [
 			{
@@ -50,6 +52,14 @@ export function useAdminDashboard(filters: AdminDateFilters) {
 				queryKey: queryKeys.adminDashboard.transactions(filters),
 				queryFn: () => AdminDashboardService.getTransactions(filters),
 			},
+			{
+				queryKey: queryKeys.adminDashboard.reviews(filters),
+				queryFn: () => AdminDashboardService.getReviews(filters),
+			},
+			{
+				queryKey: queryKeys.adminDashboard.users(filters),
+				queryFn: () => AdminDashboardService.getUsers(filters),
+			},
 		],
 	});
 
@@ -65,6 +75,9 @@ export function useAdminDashboard(filters: AdminDateFilters) {
 		transactionsMonthly: transactions.data?.monthly,
 		transactionStatus: transactions.data?.statusBreakdown,
 		recentTransactions: transactions.data?.recent,
+		reviews: reviews.data,
+		userSummary: users.data?.roleSummary,
+		recentUsers: users.data?.recentUsers,
 		isLoading:
 			overview.isLoading ||
 			userGrowth.isLoading ||
@@ -73,6 +86,8 @@ export function useAdminDashboard(filters: AdminDateFilters) {
 			classrooms.isLoading ||
 			aiUsage.isLoading ||
 			revenue.isLoading ||
-			transactions.isLoading,
+			transactions.isLoading ||
+			reviews.isLoading ||
+			users.isLoading,
 	};
 }

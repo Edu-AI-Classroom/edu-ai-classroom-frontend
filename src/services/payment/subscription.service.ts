@@ -21,7 +21,10 @@ const mapToBackend = (dto: Partial<SubscriptionPlan>) => {
 };
 
 export const subscriptionService = {
-	getPlans: () => httpGet<SubscriptionPlan[]>('/api/subscription-plans'),
+	getPlans: (activeOnly?: boolean) =>
+		httpGet<SubscriptionPlan[]>(
+			activeOnly ? '/api/subscription-plans?activeOnly=true' : '/api/subscription-plans',
+		),
 
 	getUserCurrentSubscription: () =>
 		httpGet<CurrentSubscription>('/api/users/current-subscription').catch(() => null),

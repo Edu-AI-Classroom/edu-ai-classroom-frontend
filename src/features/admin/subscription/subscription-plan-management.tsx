@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { ConfirmActionModal } from '@/features/teacher/classroom/components/confirm-action-modal';
 import {
 	useCreateSubscriptionPlan,
@@ -32,6 +33,7 @@ export function SubscriptionPlanManagement() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
+	const [showInactive, setShowInactive] = useState(false);
 
 	// Form state
 	const [formData, setFormData] = useState<Partial<SubscriptionPlan>>({
@@ -86,6 +88,8 @@ export function SubscriptionPlanManagement() {
 		);
 	}
 
+	const visiblePlans = plans?.filter((plan) => showInactive || plan.isActive) ?? [];
+
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
@@ -95,17 +99,26 @@ export function SubscriptionPlanManagement() {
 					</h2>
 					<p className="text-sm text-[#999]">Manage pricing plans and feature limits.</p>
 				</div>
-				<Button
-					onClick={handleOpenCreate}
-					className="rounded-xl bg-[#333] text-white hover:bg-[#444]"
-				>
-					<Plus className="mr-2 h-4 w-4" />
-					Create New Plan
-				</Button>
+				<div className="flex items-center gap-4">
+					<div className="flex items-center gap-3 rounded-xl border border-[#E0DCD5] bg-white px-3 py-2">
+						<div>
+							<p className="text-sm font-medium text-[#333]">Show inactive plans</p>
+							<p className="text-xs text-[#999]">Keep inactive plans hidden by default.</p>
+						</div>
+						<Switch checked={showInactive} onCheckedChange={setShowInactive} />
+					</div>
+					<Button
+						onClick={handleOpenCreate}
+						className="rounded-xl bg-[#333] text-white hover:bg-[#444]"
+					>
+						<Plus className="mr-2 h-4 w-4" />
+						Create New Plan
+					</Button>
+				</div>
 			</div>
 
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-				{plans?.map((plan) => (
+				{visiblePlans.map((plan) => (
 					<Card
 						key={plan.subId}
 						className={cn(
@@ -190,6 +203,14 @@ export function SubscriptionPlanManagement() {
 					</Card>
 				))}
 			</div>
+			{!visiblePlans.length ? (
+				<div className="rounded-2xl border border-dashed border-[#E0DCD5] bg-white/80 px-6 py-10 text-center">
+					<p className="font-medium text-[#333]">No plans match this view.</p>
+					<p className="mt-1 text-sm text-[#999]">
+						Turn on inactive plans to review archived pricing entries.
+					</p>
+				</div>
+			) : null}
 
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 				<DialogContent className="max-w-md rounded-2xl sm:max-w-lg">

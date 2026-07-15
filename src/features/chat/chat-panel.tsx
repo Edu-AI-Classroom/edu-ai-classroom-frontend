@@ -1,9 +1,10 @@
 'use client';
 
-import { Paperclip, Send } from 'lucide-react';
+import { Paperclip, Send, Video } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useStartConversationCall } from '@/hooks/queries/agora/use-agora-query';
 import { useChatMessages, useSendChatMessage } from '@/hooks/queries/chat/use-chat-query';
 import type { Conversation } from '@/types/chat';
 
@@ -28,6 +29,7 @@ export function ChatPanel({
 	const sendMutation = useSendChatMessage(selectedConversation?.conversationId);
 	const [body, setBody] = useState('');
 	const [files, setFiles] = useState<File[]>([]);
+	const startCallMutation = useStartConversationCall();
 
 	const getConversationTitle = (conversation: Conversation) => {
 		if (conversation.viewerRole === 'PARENT' || conversation.viewerRole === 'STUDENT') {
@@ -43,6 +45,13 @@ export function ChatPanel({
 		await sendMutation.mutateAsync({ body, files });
 		setBody('');
 		setFiles([]);
+	};
+
+	const canUseVideoCall = !!selectedConversation;
+
+	const startVideoCall = async () => {
+		if (!selectedConversation) return;
+		await startCallMutation.mutateAsync(selectedConversation.conversationId);
 	};
 
 	return (
@@ -97,13 +106,29 @@ export function ChatPanel({
 			<section className="flex min-h-[560px] flex-col">
 				{selectedConversation ? (
 					<>
-						<header className="border-b border-[#E0DCD5] bg-white/90 p-5">
-							<h3 className="font-sans text-lg font-bold text-[#333]">
-								{getConversationTitle(selectedConversation)}
-							</h3>
-							<p className="text-sm text-[#666]">
-								{selectedConversation.className} - {selectedConversation.studentName}
-							</p>
+						<header className="flex flex-col gap-3 border-b border-[#E0DCD5] bg-white/90 p-5 sm:flex-row sm:items-center sm:justify-between">
+							<div>
+								<h3 className="font-sans text-lg font-bold text-[#333]">
+									{getConversationTitle(selectedConversation)}
+								</h3>
+								<p className="text-sm text-[#666]">
+									{selectedConversation.className} - {selectedConversation.studentName}
+								</p>
+							</div>
+							{canUseVideoCall && (
+								<Button
+									type="button"
+									variant="outline"
+									size="icon"
+									className="h-10 w-10 rounded-xl border-[#E0DCD5] bg-white shadow-sm hover:border-[#F5B041] hover:bg-[#FFF8EB]"
+									aria-label="Open video call"
+									title="Open video call"
+									onClick={() => void startVideoCall()}
+									disabled={startCallMutation.isPending}
+								>
+									<Video className="h-5 w-5 text-[#333]" />
+								</Button>
+							)}
 						</header>
 						<div className="flex-1 space-y-3 overflow-auto bg-[linear-gradient(#E9E3D8_1px,transparent_1px),linear-gradient(90deg,#E9E3D8_1px,transparent_1px)] bg-[length:32px_32px] bg-[#FAF9F6]/80 p-5">
 							{messages.map((message) => {

@@ -55,7 +55,8 @@ export const queryKeys = {
 
 	subscription: {
 		all: ['subscription'] as const,
-		plans: () => [...queryKeys.subscription.all, 'plans'] as const,
+		plans: (activeOnly?: boolean) =>
+			[...queryKeys.subscription.all, 'plans', { activeOnly: activeOnly ?? false }] as const,
 		userCurrent: () => [...queryKeys.subscription.all, 'user-current'] as const,
 	},
 
@@ -91,6 +92,13 @@ export const queryKeys = {
 		detail: (id: number | string) => ['news', 'detail', id] as const,
 	},
 
+	agora: {
+		all: ['agora'] as const,
+		sessions: (classId: number) => ['agora', 'sessions', classId] as const,
+		session: (classId: number, sessionId?: string) =>
+			['agora', 'session', classId, sessionId ?? 'none'] as const,
+	},
+
 	adminDashboard: {
 		all: ['adminDashboard'] as const,
 		overview: (filters: unknown) => ['adminDashboard', 'overview', filters] as const,
@@ -99,6 +107,13 @@ export const queryKeys = {
 		transactions: (filters: unknown) => ['adminDashboard', 'transactions', filters] as const,
 		aiUsage: (filters: unknown) => ['adminDashboard', 'aiUsage', filters] as const,
 		classrooms: (filters: unknown) => ['adminDashboard', 'classrooms', filters] as const,
+		reviews: (filters: unknown) => ['adminDashboard', 'reviews', filters] as const,
+		users: (filters: unknown) => ['adminDashboard', 'users', filters] as const,
+	},
+
+	siteFeedback: {
+		all: ['siteFeedback'] as const,
+		list: (limit?: number) => ['siteFeedback', 'list', limit ?? 6] as const,
 	},
 
 	lesson: {

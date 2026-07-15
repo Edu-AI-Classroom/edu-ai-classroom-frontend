@@ -12,6 +12,7 @@ import {
 	MessageCircle,
 	Newspaper,
 	Presentation,
+	Radio,
 	Settings,
 	Users,
 	X,
@@ -26,6 +27,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AgoraLiveSession } from '@/features/agora/agora-live-session';
 import { NotificationBell } from '@/features/notification/notification-bell';
 import { useAuthUser } from '@/hooks/queries/auth/use-auth-mutation';
 import { useAuthStore } from '@/stores/auth-store';
@@ -46,6 +48,7 @@ type TabType =
 	| 'assignments'
 	| 'grades'
 	| 'conversation'
+	| 'live'
 	| 'settings'
 	| 'lessons';
 
@@ -64,6 +67,7 @@ const tabs = [
 	{ id: 'assignments' as TabType, label: 'Assignments', icon: FileText },
 	{ id: 'grades' as TabType, label: 'Grades', icon: BarChart3 },
 	{ id: 'conversation' as TabType, label: 'Conversation', icon: MessageCircle },
+	{ id: 'live' as TabType, label: 'Live', icon: Radio },
 	{ id: 'settings' as TabType, label: 'Settings', icon: Settings },
 ];
 
@@ -116,6 +120,8 @@ export default function ClassroomWorkspace({
 						preferredConversationId={preferredConversationId}
 					/>
 				);
+			case 'live':
+				return <AgoraLiveSession classId={classData.id} className={classData.name} isTeacher />;
 			case 'settings':
 				return <ClassroomSettings classData={classData} onDeleted={onBack} />;
 			default:
