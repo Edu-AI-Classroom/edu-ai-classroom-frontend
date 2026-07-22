@@ -47,7 +47,7 @@ export function CreateAccountStep({ data, onChange }: CreateAccountStepProps) {
 					onChange={(event) => onChange('password', event.target.value)}
 					placeholder="••••••••"
 				/>
-				<p className="text-xs text-[#888]">Mật khẩu từ 6 đến 12 ký tự.</p>
+				<p className="text-xs text-[#888]">Mật khẩu tối thiểu 6 ký tự.</p>
 			</div>
 		</div>
 	);

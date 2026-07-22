@@ -101,14 +101,11 @@ export function AuthFlipBook({
 	const { clearAuthError, loginMutation } = useAuthMutations();
 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	const isLoginValid =
-		emailRegex.test(loginEmail.trim()) &&
-		loginPassword.trim().length >= 6 &&
-		loginPassword.trim().length <= 12;
+	const isLoginValid = emailRegex.test(loginEmail.trim()) && loginPassword.length >= 6;
 	const isRegisterValid =
 		registerName.trim().length > 0 &&
 		emailRegex.test(registerEmail.trim()) &&
-		registerPassword.trim().length >= 6;
+		registerPassword.length >= 6;
 
 	const syncRegisterForm = (patch: Partial<RegisterBasicInfo>) => {
 		const nextData = {
